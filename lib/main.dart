@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
+import 'src/utils/page_transitions.dart';
 import 'src/presentation/screens/splash_screen.dart';
 import 'src/data/services/storage_service.dart';
 import 'src/data/services/notification_service.dart';
@@ -42,8 +43,8 @@ void main() async {
         final zikr = await azkarRepo.getZikrById(zikrId);
         if (zikr != null && navigatorKey.currentContext != null) {
           Navigator.of(navigatorKey.currentContext!).push(
-            MaterialPageRoute(
-              builder: (context) => PlayerScreen(zikr: zikr),
+            CustomPageRoute(
+              child: PlayerScreen(zikr: zikr),
             ),
           );
         }
@@ -64,11 +65,13 @@ class BlingAzkarApp extends StatefulWidget {
 class _BlingAzkarAppState extends State<BlingAzkarApp> {
   final _storage = StorageService();
   Locale _locale = const Locale('en');
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
     _loadLanguage();
+    _loadThemeMode();
   }
 
   void _loadLanguage() {
@@ -81,16 +84,45 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
     }
   }
 
+  void _loadThemeMode() {
+    final prefs = _storage.getPreferences();
+    setState(() {
+      switch (prefs.themeMode) {
+        case 'light':
+          _themeMode = ThemeMode.light;
+          break;
+        case 'dark':
+          _themeMode = ThemeMode.dark;
+          break;
+        default:
+          _themeMode = ThemeMode.system;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Check for language changes
+    // Check for language and theme changes
     final prefs = _storage.getPreferences();
     final currentLocale = Locale(prefs.language);
-    if (_locale != currentLocale) {
+    ThemeMode currentThemeMode;
+    switch (prefs.themeMode) {
+      case 'light':
+        currentThemeMode = ThemeMode.light;
+        break;
+      case 'dark':
+        currentThemeMode = ThemeMode.dark;
+        break;
+      default:
+        currentThemeMode = ThemeMode.system;
+    }
+
+    if (_locale != currentLocale || _themeMode != currentThemeMode) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
             _locale = currentLocale;
+            _themeMode = currentThemeMode;
           });
         }
       });
@@ -102,7 +134,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: _themeMode,
       locale: _locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -114,6 +146,16 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
         Locale('en', ''),
         Locale('ar', ''),
       ],
+      // Custom page transitions
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: AppPageTransitionsBuilder(),
+          TargetPlatform.iOS: AppPageTransitionsBuilder(),
+          TargetPlatform.macOS: AppPageTransitionsBuilder(),
+          TargetPlatform.windows: AppPageTransitionsBuilder(),
+          TargetPlatform.linux: AppPageTransitionsBuilder(),
+        },
+      ),
       builder: (context, child) {
         final l10n = AppLocalizations.of(context);
         return Directionality(

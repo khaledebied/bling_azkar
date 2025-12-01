@@ -172,6 +172,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildAppearanceCard(AppLocalizations l10n) {
+    final currentThemeMode = _prefs.themeMode;
+    
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       elevation: 0,
@@ -181,13 +183,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       child: Column(
         children: [
-          ListTile(
-            leading: const Icon(Icons.brightness_6),
-            title: Text(l10n.theme),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-            onTap: () {
-              // Theme picker can be added here
+          RadioListTile<String>(
+            title: Row(
+              children: [
+                const Icon(Icons.light_mode, size: 20),
+                const SizedBox(width: 12),
+                Text(l10n.isArabic ? 'فاتح' : 'Light'),
+              ],
+            ),
+            value: 'light',
+            groupValue: currentThemeMode,
+            onChanged: (value) {
+              if (value != null) {
+                _updatePreferences(_prefs.copyWith(themeMode: value));
+              }
             },
+            activeColor: AppTheme.primaryGreen,
+          ),
+          const Divider(height: 1),
+          RadioListTile<String>(
+            title: Row(
+              children: [
+                const Icon(Icons.dark_mode, size: 20),
+                const SizedBox(width: 12),
+                Text(l10n.isArabic ? 'داكن' : 'Dark'),
+              ],
+            ),
+            value: 'dark',
+            groupValue: currentThemeMode,
+            onChanged: (value) {
+              if (value != null) {
+                _updatePreferences(_prefs.copyWith(themeMode: value));
+              }
+            },
+            activeColor: AppTheme.primaryGreen,
+          ),
+          const Divider(height: 1),
+          RadioListTile<String>(
+            title: Row(
+              children: [
+                const Icon(Icons.brightness_auto, size: 20),
+                const SizedBox(width: 12),
+                Text(l10n.isArabic ? 'نظام' : 'System'),
+              ],
+            ),
+            value: 'system',
+            groupValue: currentThemeMode,
+            onChanged: (value) {
+              if (value != null) {
+                _updatePreferences(_prefs.copyWith(themeMode: value));
+              }
+            },
+            activeColor: AppTheme.primaryGreen,
           ),
           const Divider(height: 1),
           ListTile(

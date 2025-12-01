@@ -3,6 +3,7 @@ import '../../domain/models/zikr.dart';
 import '../../domain/models/reminder.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
+import '../../utils/page_transitions.dart';
 import '../../data/services/audio_player_service.dart';
 import '../../data/services/reminder_service.dart';
 import '../../data/services/notification_service.dart';
@@ -87,9 +88,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => PlayerScreen(zikr: widget.zikr),
-            ),
+            CustomPageRoute(child: PlayerScreen(zikr: widget.zikr)),
           );
         },
         icon: const Icon(Icons.play_arrow),

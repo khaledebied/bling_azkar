@@ -3,6 +3,7 @@ import '../../domain/models/reminder.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
+import '../../utils/page_transitions.dart';
 import '../../data/services/reminder_service.dart';
 import '../../data/repositories/azkar_repository.dart';
 import 'zikr_detail_screen.dart';
@@ -107,9 +108,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ZikrDetailScreen(zikr: zikr),
-                ),
+                CustomPageRoute(child: ZikrDetailScreen(zikr: zikr)),
               );
             },
             borderRadius: BorderRadius.circular(16),

@@ -5,6 +5,7 @@ import '../../data/services/storage_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
+import '../../utils/page_transitions.dart';
 import 'zikr_detail_screen.dart';
 import 'reminders_screen.dart';
 import 'settings_screen.dart';
@@ -124,9 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const RemindersScreen(),
-            ),
+            CustomPageRoute(child: const RemindersScreen()),
           );
         },
         icon: const Icon(Icons.notifications_outlined),
@@ -146,6 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       collapsedHeight: 70,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
+          final l10n = AppLocalizations.ofWithFallback(context);
           return FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
@@ -192,9 +192,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
+                CustomPageRoute(child: const SettingsScreen()),
               );
             },
           ),
@@ -293,7 +291,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildSearchBar(AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -571,35 +569,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildTabBar() {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: _TabBarDelegate(
-        child: Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                color: AppTheme.primaryGreen,
-                borderRadius: BorderRadius.circular(14),
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.ofWithFallback(context);
+        return SliverPersistentHeader(
+          pinned: true,
+          delegate: _TabBarDelegate(
+            child: Container(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: AppTheme.textSecondary,
+                  tabs: [
+                    Tab(text: l10n.all),
+                    Tab(text: l10n.favorites),
+                    Tab(text: l10n.recent),
+                  ],
+                ),
               ),
-              labelColor: Colors.white,
-              unselectedLabelColor: AppTheme.textSecondary,
-              tabs: [
-                Tab(text: l10n.all),
-                Tab(text: l10n.favorites),
-                Tab(text: l10n.recent),
-              ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -674,9 +677,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => ZikrDetailScreen(zikr: zikr),
-                  ),
+                  CustomPageRoute(child: ZikrDetailScreen(zikr: zikr)),
                 );
               },
               onFavoriteToggle: () async {
@@ -736,9 +737,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => ZikrDetailScreen(zikr: favorites[index]),
-                  ),
+                  CustomPageRoute(child: ZikrDetailScreen(zikr: favorites[index])),
                 );
               },
               onFavoriteToggle: () async {
