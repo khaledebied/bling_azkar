@@ -321,5 +321,55 @@ class NotificationService {
       body,
       details,
     );
+    print('Test notification shown');
+  }
+
+  /// Schedule a test notification in X seconds (for simulator testing)
+  Future<void> scheduleTestNotificationInSeconds(
+    String title,
+    String body,
+    int seconds,
+  ) async {
+    if (!_initialized) {
+      await initialize();
+    }
+
+    await requestPermissions();
+
+    final scheduledTime = DateTime.now().add(Duration(seconds: seconds));
+    final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
+
+    const androidDetails = AndroidNotificationDetails(
+      'azkar_reminders',
+      'Azkar Reminders',
+      channelDescription: 'Local reminders for daily Azkar',
+      importance: Importance.high,
+      priority: Priority.high,
+      enableVibration: true,
+      playSound: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.zonedSchedule(
+      999998,
+      title,
+      body,
+      tzScheduledTime,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+    print('Test notification scheduled for $seconds seconds from now');
   }
 }

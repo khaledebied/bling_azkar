@@ -231,6 +231,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
             },
           ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.schedule, color: AppTheme.primaryTeal),
+            title: Text(l10n.isArabic ? 'اختبار بعد 10 ثواني' : 'Test in 10 seconds'),
+            subtitle: Text(l10n.isArabic 
+                ? 'جدولة إشعار تجريبي بعد 10 ثواني (للمحاكي)'
+                : 'Schedule a test notification in 10 seconds (for simulator)'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () async {
+              final notificationService = NotificationService();
+              final hasPermission = await notificationService.requestPermissions();
+              if (hasPermission) {
+                await notificationService.scheduleTestNotificationInSeconds(
+                  l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification',
+                  l10n.isArabic 
+                      ? 'هذا إشعار مجدول من تطبيق بلينج أذكار'
+                      : 'This is a scheduled test notification from Bling Azkar',
+                  10,
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.isArabic 
+                          ? 'سيتم إرسال الإشعار بعد 10 ثواني'
+                          : 'Notification will be sent in 10 seconds'),
+                      backgroundColor: AppTheme.primaryTeal,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.pleaseEnableNotifications),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
         ],
       ),
     );
