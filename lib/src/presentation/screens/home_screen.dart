@@ -438,3 +438,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 }
+
+// Delegate for the persistent tab bar header
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _TabBarDelegate({required this.child});
+
+  @override
+  double get minExtent => 80;
+
+  @override
+  double get maxExtent => 80;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_TabBarDelegate oldDelegate) {
+    return false;
+  }
+}
