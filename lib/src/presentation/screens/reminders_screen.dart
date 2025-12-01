@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/reminder.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/localizations.dart';
 import '../../data/services/reminder_service.dart';
 import '../../data/repositories/azkar_repository.dart';
 import 'zikr_detail_screen.dart';
@@ -20,32 +21,37 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = l10n.isArabic;
     final reminders = _reminderService.getAllReminders();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reminders'),
-        elevation: 0,
-      ),
-      body: reminders.isEmpty
-          ? _buildEmptyState()
-          : RefreshIndicator(
-              onRefresh: () async {
-                setState(() {});
-              },
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: reminders.length,
-                itemBuilder: (context, index) {
-                  final reminder = reminders[index];
-                  return _buildReminderCard(reminder);
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.reminders),
+          elevation: 0,
+        ),
+        body: reminders.isEmpty
+            ? _buildEmptyState(l10n)
+            : RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {});
                 },
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: reminders.length,
+                  itemBuilder: (context, index) {
+                    final reminder = reminders[index];
+                    return _buildReminderCard(context, reminder, l10n);
+                  },
+                ),
               ),
-            ),
+      ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -64,14 +70,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No Reminders',
+            l10n.noReminders,
             style: AppTheme.titleLarge.copyWith(
               color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Set reminders to get notified about your daily Azkar',
+            l10n.noRemindersDesc,
             style: AppTheme.bodyMedium.copyWith(
               color: AppTheme.textSecondary,
             ),
@@ -82,7 +88,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
   }
 
-  Widget _buildReminderCard(Reminder reminder) {
+  Widget _buildReminderCard(BuildContext context, Reminder reminder, AppLocalizations l10n) {
     return FutureBuilder<Zikr?>(
       future: _azkarRepo.getZikrById(reminder.zikrId),
       builder: (context, snapshot) {
@@ -150,7 +156,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _getReminderDescription(reminder),
+                              _getReminderDescription(reminder, l10n),
                               style: AppTheme.bodySmall.copyWith(
                                 color: AppTheme.textSecondary,
                               ),
@@ -182,7 +188,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             );
                           },
                           icon: const Icon(Icons.open_in_new, size: 16),
-                          label: const Text('View Zikr'),
+                          label: Text(l10n.viewZikr),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.primaryGreen,
                             side: BorderSide(color: AppTheme.primaryGreen),
@@ -196,19 +202,18 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Delete Reminder'),
-                              content: const Text(
-                                  'Are you sure you want to delete this reminder?'),
+                              title: Text(l10n.deleteReminder),
+                              content: Text(l10n.deleteReminderConfirm),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
+                                  child: Text(l10n.cancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
+                                  child: Text(
+                                    l10n.delete,
+                                    style: const TextStyle(color: Colors.red),
                                   ),
                                 ),
                               ],
@@ -231,28 +236,28 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
   }
 
-  String _getReminderDescription(Reminder reminder) {
+  String _getReminderDescription(Reminder reminder, AppLocalizations l10n) {
     if (reminder.type == ReminderType.fixedDaily && reminder.fixedTime != null) {
       final time = reminder.fixedTime!;
       final hour = time.hour.toString().padLeft(2, '0');
       final minute = time.minute.toString().padLeft(2, '0');
-      return 'Daily at $hour:$minute';
+      return '${l10n.dailyAtFixedTime} $hour:$minute';
     } else if (reminder.type == ReminderType.interval &&
         reminder.intervalMinutes != null) {
       final minutes = reminder.intervalMinutes!;
       if (minutes < 60) {
-        return 'Every $minutes minutes';
+        return '${l10n.every} $minutes ${minutes == 1 ? l10n.minute : l10n.minutes}';
       } else {
         final hours = minutes ~/ 60;
         final remainingMinutes = minutes % 60;
         if (remainingMinutes == 0) {
-          return 'Every $hours ${hours == 1 ? 'hour' : 'hours'}';
+          return '${l10n.every} $hours ${hours == 1 ? l10n.hour : l10n.hours}';
         } else {
-          return 'Every $hours h $remainingMinutes m';
+          return '${l10n.every} $hours ${hours == 1 ? l10n.hour : l10n.hours} $remainingMinutes ${remainingMinutes == 1 ? l10n.minute : l10n.minutes}';
         }
       }
     }
-    return 'Reminder';
+    return l10n.isArabic ? 'تذكير' : 'Reminder';
   }
 }
 

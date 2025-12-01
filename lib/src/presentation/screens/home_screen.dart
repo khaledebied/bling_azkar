@@ -4,8 +4,10 @@ import '../../data/repositories/azkar_repository.dart';
 import '../../data/services/storage_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/localizations.dart';
 import 'zikr_detail_screen.dart';
 import 'reminders_screen.dart';
+import 'settings_screen.dart';
 import '../widgets/category_card.dart';
 import '../widgets/zikr_list_item.dart';
 
@@ -17,31 +19,88 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _azkarRepo = AzkarRepository();
   final _storage = StorageService();
   
   late TabController _tabController;
+  late AnimationController _greetingController;
+  late Animation<double> _greetingAnimation;
   String _searchQuery = '';
   String? _selectedCategory;
   bool _isSearching = false;
+  
+  final List<String> _greetings = [
+    'السلام عليكم',
+    'Peace be upon you',
+    'May Allah bless you',
+    'بارك الله فيك',
+  ];
+  int _currentGreetingIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Greeting animation controller
+    _greetingController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    _greetingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _greetingController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    
+    // Start greeting animation
+    _greetingController.forward();
+    
+    // Auto-scroll greetings every 4 seconds
+    _startGreetingTimer();
+  }
+
+  void _startGreetingTimer() {
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        _changeGreeting();
+        _startGreetingTimer(); // Continue the cycle
+      }
+    });
+  }
+
+  void _changeGreeting() {
+    if (!mounted) return;
+    
+    _greetingController.reverse().then((_) {
+      if (mounted) {
+        setState(() {
+          _currentGreetingIndex = (_currentGreetingIndex + 1) % _greetings.length;
+        });
+        _greetingController.forward();
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _greetingController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: NestedScrollView(
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = l10n.isArabic;
+
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             _buildAppBar(),
@@ -71,8 +130,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           );
         },
         icon: const Icon(Icons.notifications_outlined),
-        label: const Text('Reminders'),
+        label: Text(l10n.reminders),
       ),
+    ),
     );
   }
 
@@ -104,25 +164,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (!_isSearching) ...[
-                        Text(
-                          'السلام عليكم',
-                          style: AppTheme.arabicMedium.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Peace be upon you',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
+                        _buildAnimatedGreeting(l10n),
                         const SizedBox(height: 12),
                       ],
-                      _buildSearchBar(),
+                      _buildSearchBar(l10n),
                       if (_selectedCategory != null && !_isSearching) ...[
                         const SizedBox(height: 8),
-                        _buildSelectedCategoryChip(),
+                        _buildSelectedCategoryChip(l10n),
                       ],
                     ],
                   ),
@@ -138,7 +186,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              // Navigate to settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
             },
           ),
         ),
@@ -146,7 +199,94 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildAnimatedGreeting(AppLocalizations l10n) {
+    final isArabic = l10n.isArabic;
+    final greeting = _greetings[_currentGreetingIndex];
+    final isArabicGreeting = greeting.contains('ال') || greeting.contains('ب');
+    
+    return AnimatedBuilder(
+      animation: _greetingAnimation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _greetingAnimation.value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - _greetingAnimation.value)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.0, 0.3),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        )),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    greeting,
+                    key: ValueKey(greeting),
+                    style: isArabicGreeting
+                        ? AppTheme.arabicMedium.copyWith(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          )
+                        : AppTheme.titleLarge.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // Decorative dots indicator
+                Row(
+                  children: List.generate(
+                    _greetings.length,
+                    (index) => Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentGreetingIndex == index
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.4),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchBar(AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -168,7 +308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           });
         },
         decoration: InputDecoration(
-          hintText: 'Search azkar...',
+          hintText: l10n.searchAzkar,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _isSearching || _selectedCategory != null
               ? IconButton(
@@ -192,7 +332,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildSelectedCategoryChip() {
+  Widget _buildSelectedCategoryChip(AppLocalizations l10n) {
     if (_selectedCategory == null) return const SizedBox.shrink();
     
     final categoryName = _azkarRepo.getCategoryDisplayName(_selectedCategory!);
@@ -244,50 +384,99 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildWelcomeBanner() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: AppTheme.goldGradient,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.accentGold.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, 30 * (1 - value)),
+              child: child,
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.accentGold,
+                  AppTheme.accentGold.withOpacity(0.8),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Azkar',
-                      style: AppTheme.titleLarge.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Keep your heart close to Allah',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.accentGold.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 0,
                 ),
-              ),
-              const Icon(
-                Icons.auto_awesome,
-                size: 48,
-                color: Colors.white,
-              ),
-            ],
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.dailyAzkar,
+                        style: AppTheme.titleLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.keepHeartClose,
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: Colors.white.withOpacity(0.95),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -295,6 +484,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCategoriesSection() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return FutureBuilder<List<String>>(
       future: _azkarRepo.getAllCategories(),
       builder: (context, snapshot) {
@@ -327,7 +518,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Categories',
+                      l10n.categories,
                       style: AppTheme.titleMedium.copyWith(
                         color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
@@ -396,10 +587,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
               labelColor: Colors.white,
               unselectedLabelColor: AppTheme.textSecondary,
-              tabs: const [
-                Tab(text: 'All'),
-                Tab(text: 'Favorites'),
-                Tab(text: 'Recent'),
+              tabs: [
+                Tab(text: l10n.all),
+                Tab(text: l10n.favorites),
+                Tab(text: l10n.recent),
               ],
             ),
           ),
@@ -410,6 +601,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
 
   Widget _buildAllAzkarTab() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return FutureBuilder<List<Zikr>>(
       future: _selectedCategory != null
           ? _azkarRepo.getAzkarByCategory(_selectedCategory!)
@@ -434,8 +627,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 const SizedBox(height: 16),
                 Text(
                   _selectedCategory != null
-                      ? 'No azkar found in this category'
-                      : 'No azkar found',
+                      ? l10n.noAzkarInCategory
+                      : l10n.noAzkarFound,
                   style: AppTheme.titleMedium.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -449,7 +642,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       });
                     },
                     icon: const Icon(Icons.clear),
-                    label: const Text('Clear filter'),
+                    label: Text(l10n.clearFilter),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryGreen,
                       foregroundColor: Colors.white,
@@ -556,9 +749,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildRecentTab() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Center(
       child: Text(
-        'Recent azkar will appear here',
+        l10n.isArabic ? 'ستظهر الأذكار الأخيرة هنا' : 'Recent azkar will appear here',
         style: AppTheme.bodyMedium.copyWith(
           color: AppTheme.textSecondary,
         ),

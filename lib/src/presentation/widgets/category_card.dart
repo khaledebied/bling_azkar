@@ -156,55 +156,55 @@ class _CategoryCardState extends State<CategoryCard>
     final lowerName = categoryName.toLowerCase();
     final hash = categoryName.hashCode;
     
-    // Create consistent gradients based on category
+    // Create consistent gradients based on category - More attractive colors
     final gradients = [
-      // Green/Teal gradients
+      // Vibrant Emerald gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF2D7F7B), Color(0xFF4A9B94)],
+        colors: [Color(0xFF10B981), Color(0xFF059669)],
       ),
-      // Blue gradients
+      // Bright Teal/Cyan gradients
+      const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF14B8A6), Color(0xFF06B6D4)],
+      ),
+      // Rich Blue gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
       ),
+      // Warm Amber/Gold gradients
+      const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)],
+      ),
       // Purple gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
+        colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
       ),
-      // Gold/Orange gradients
+      // Rose/Pink gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
-      ),
-      // Rose gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFE11D48), Color(0xFFF43F5E)],
-      ),
-      // Emerald gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF059669), Color(0xFF10B981)],
+        colors: [Color(0xFFEC4899), Color(0xFFF472B6)],
       ),
       // Indigo gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+        colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
       ),
-      // Teal gradients
+      // Emerald to Teal gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+        colors: [Color(0xFF10B981), Color(0xFF14B8A6)],
       ),
     ];
     

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Color Palette - Soft Green/Teal + Gold Accent
-  static const primaryGreen = Color(0xFF2D7F7B);
-  static const primaryTeal = Color(0xFF4A9B94);
-  static const accentGold = Color(0xFFD4AF37);
-  static const darkGreen = Color(0xFF1A5653);
+  // Color Palette - Rich Emerald/Teal + Gold Accent (More Attractive)
+  static const primaryGreen = Color(0xFF10B981); // Vibrant emerald green
+  static const primaryTeal = Color(0xFF14B8A6); // Bright teal
+  static const accentGold = Color(0xFFF59E0B); // Warm amber gold
+  static const darkGreen = Color(0xFF059669); // Deep emerald
+  static const lightGreen = Color(0xFF34D399); // Light emerald
+  static const gradientStart = Color(0xFF10B981); // Emerald
+  static const gradientEnd = Color(0xFF06B6D4); // Cyan
   
   static const backgroundLight = Color(0xFFF8F9FA);
   static const backgroundDark = Color(0xFF0F1419);
@@ -20,7 +23,19 @@ class AppTheme {
   static const primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryGreen, primaryTeal],
+    colors: [gradientStart, gradientEnd],
+  );
+  
+  static const emeraldGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF10B981), Color(0xFF059669)],
+  );
+  
+  static const tealGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF14B8A6), Color(0xFF06B6D4)],
   );
 
   static const cardGradient = LinearGradient(

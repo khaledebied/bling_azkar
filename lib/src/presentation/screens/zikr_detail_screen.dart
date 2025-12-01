@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/zikr.dart';
 import '../../domain/models/reminder.dart';
 import '../../utils/theme.dart';
+import '../../utils/localizations.dart';
 import '../../data/services/audio_player_service.dart';
 import '../../data/services/reminder_service.dart';
 import '../../data/services/notification_service.dart';
@@ -55,7 +56,12 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = l10n.isArabic;
+
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       body: CustomScrollView(
         slivers: [
           _buildAppBar(context),
@@ -374,6 +380,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Widget _buildReminderSection() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ElevatedButton.icon(
@@ -382,8 +390,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           if (!hasPermission) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please enable notifications in settings'),
+                SnackBar(
+                  content: Text(l10n.pleaseEnableNotifications),
                 ),
               );
             }
@@ -392,7 +400,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           _showReminderDialog(context);
         },
         icon: Icon(_hasActiveReminder ? Icons.notifications_active : Icons.notifications_outlined),
-        label: Text(_hasActiveReminder ? 'Manage Reminder' : 'Set Reminder'),
+        label: Text(_hasActiveReminder ? l10n.manageReminder : l10n.setReminder),
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -404,6 +412,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   void _showReminderDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final existingReminders = _reminderService.getRemindersForZikr(widget.zikr.id);
     
     showModalBottomSheet(
@@ -434,11 +443,11 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                 offset: const Offset(0, -5),
               ),
             ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
               // Handle bar
               Center(
                 child: Container(
@@ -474,14 +483,14 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Set Reminder',
+                            l10n.setReminder,
                             style: AppTheme.titleLarge.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            'Choose how you want to be reminded',
+            Text(
+                            l10n.chooseReminderType,
                             style: AppTheme.bodySmall.copyWith(
                               color: AppTheme.textSecondary,
                             ),
@@ -497,7 +506,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   child: Text(
-                    'Active Reminders',
+                    l10n.activeReminders,
                     style: AppTheme.bodyMedium.copyWith(
                       color: AppTheme.textSecondary,
                       fontWeight: FontWeight.w600,
@@ -551,8 +560,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                       child: _buildReminderOptionCard(
                         context,
                         icon: Icons.schedule,
-                        title: 'Daily at Fixed Time',
-                        subtitle: 'Get reminded at the same time every day',
+                        title: l10n.dailyAtFixedTime,
+                        subtitle: l10n.dailyAtFixedTimeDesc,
                         gradient: AppTheme.primaryGradient,
                         onTap: () {
                           Navigator.pop(context);
@@ -579,11 +588,11 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                       child: _buildReminderOptionCard(
                         context,
                         icon: Icons.timer,
-                        title: 'Every X Minutes',
-                        subtitle: 'Get reminded at regular intervals',
+                        title: l10n.everyXMinutes,
+                        subtitle: l10n.everyXMinutesDesc,
                         gradient: AppTheme.goldGradient,
-                        onTap: () {
-                          Navigator.pop(context);
+              onTap: () {
+                Navigator.pop(context);
                           Future.delayed(const Duration(milliseconds: 200), () {
                             _showIntervalPicker(context);
                           });
@@ -683,6 +692,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Widget _buildReminderListItem(BuildContext context, Reminder reminder) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
@@ -715,8 +726,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
         ),
         title: Text(
           reminder.type == ReminderType.fixedDaily
-              ? 'Daily at ${_formatTime(reminder.fixedTime)}'
-              : 'Every ${reminder.intervalMinutes} minutes',
+              ? '${l10n.dailyAtFixedTime} ${_formatTime(reminder.fixedTime)}'
+              : '${l10n.every} ${reminder.intervalMinutes} ${reminder.intervalMinutes == 1 ? l10n.minute : l10n.minutes}',
           style: AppTheme.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
@@ -732,7 +743,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            reminder.isActive ? 'Active' : 'Inactive',
+            reminder.isActive ? l10n.active : l10n.inactive,
             style: AppTheme.caption.copyWith(
               color: reminder.isActive ? AppTheme.primaryGreen : Colors.grey,
               fontWeight: FontWeight.w500,
@@ -758,22 +769,23 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
               icon: const Icon(Icons.delete_outline, size: 20),
               color: Colors.red.shade300,
               onPressed: () async {
+                final l10n = AppLocalizations.of(context)!;
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    title: const Text('Delete Reminder'),
-                    content: const Text('Are you sure you want to delete this reminder?'),
+                    title: Text(l10n.deleteReminder),
+                    content: Text(l10n.deleteReminderConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancel),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                        child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
                       ),
                     ],
                   ),
@@ -799,6 +811,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Future<void> _showTimePicker(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final picked = await showTimePicker(
       context: context,
@@ -853,7 +866,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                   const Icon(Icons.check_circle, color: Colors.white),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('Reminder set for ${_formatTime(scheduledTime)}'),
+                    child: Text('${l10n.reminderSetFor} ${_formatTime(scheduledTime)}'),
                   ),
                 ],
               ),
@@ -870,7 +883,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error creating reminder: $e'),
+              content: Text('${l10n.errorCreatingReminder}: $e'),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -884,6 +897,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Future<void> _showIntervalPicker(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     int selectedMinutes = 30;
 
     await showDialog(
@@ -917,7 +931,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                 child: const Icon(Icons.timer, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 12),
-              const Text('Set Interval'),
+              Text(l10n.setInterval),
             ],
           ),
           content: StatefulBuilder(
@@ -939,7 +953,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     child: Column(
                       children: [
                         Text(
-                          'Every',
+                          l10n.every,
                           style: AppTheme.bodyMedium.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -963,7 +977,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                           },
                         ),
                         Text(
-                          selectedMinutes == 1 ? 'minute' : 'minutes',
+                          selectedMinutes == 1 ? l10n.minute : l10n.minutes,
                           style: AppTheme.titleMedium.copyWith(
                             color: AppTheme.primaryGreen,
                             fontWeight: FontWeight.w600,
@@ -1068,7 +1082,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                'Cancel',
+                l10n.cancel,
                 style: TextStyle(color: AppTheme.textSecondary),
               ),
             ),
@@ -1095,7 +1109,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Reminder set for every $selectedMinutes minutes',
+                                  '${l10n.reminderSetEvery} $selectedMinutes ${selectedMinutes == 1 ? l10n.minute : l10n.minutes}',
                                 ),
                               ),
                             ],
@@ -1113,7 +1127,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Error creating reminder: $e'),
+                          content: Text('${l10n.errorCreatingReminder}: $e'),
                           backgroundColor: Colors.red,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
@@ -1132,9 +1146,9 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Set',
-                  style: TextStyle(
+                child: Text(
+                  l10n.set,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),

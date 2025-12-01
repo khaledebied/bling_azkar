@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/localizations.dart';
 import '../../data/services/audio_player_service.dart';
 import 'dart:math' as math;
 
@@ -79,8 +80,13 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = l10n.isArabic;
+
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -188,10 +194,12 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildCounter() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Column(
       children: [
         Text(
-          'Repetition Count',
+          l10n.repetitionCount,
           style: AppTheme.bodyMedium.copyWith(
             color: Colors.white.withOpacity(0.8),
           ),
@@ -253,7 +261,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                       ),
                       Text(
-                        'of $_targetCount',
+                        '${AppLocalizations.of(context)!.of} $_targetCount',
                         style: AppTheme.caption.copyWith(
                           color: AppTheme.textSecondary,
                         ),
@@ -281,7 +289,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             });
           },
           icon: const Icon(Icons.refresh),
-          label: const Text('Reset'),
+          label: Text(AppLocalizations.of(context)!.reset),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withOpacity(0.2),
             foregroundColor: Colors.white,
@@ -342,7 +350,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                 ),
                 Text(
-                  'Completed',
+                  AppLocalizations.of(context)!.completed,
                   style: AppTheme.bodyMedium.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
