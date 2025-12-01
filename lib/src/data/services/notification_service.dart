@@ -10,6 +10,17 @@ import '../repositories/azkar_repository.dart';
 import 'reminder_service.dart';
 import '../../presentation/screens/player_screen.dart';
 
+// Background notification handler (must be top-level function)
+@pragma('vm:entry-point')
+Future<void> notificationTapBackground(NotificationResponse response) async {
+  print('Background notification tapped: ${response.payload}');
+  if (response.payload != null) {
+    // Reschedule interval reminder if needed
+    final reminderService = ReminderService();
+    await reminderService.rescheduleAfterNotification(response.payload!);
+  }
+}
+
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -59,6 +70,7 @@ class NotificationService {
     final initialized = await _notifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     if (initialized != null && initialized) {
@@ -131,6 +143,7 @@ class NotificationService {
     print('  Type: ${reminder.type}');
     print('  Time until notification: ${scheduledTime.difference(DateTime.now()).inMinutes} minutes');
 
+    // Create beautiful notification with BigTextStyle for better UI
     final androidDetails = AndroidNotificationDetails(
       'azkar_reminders',
       'Azkar Reminders',
@@ -144,6 +157,20 @@ class NotificationService {
       autoCancel: true,
       showWhen: true,
       when: scheduledTime.millisecondsSinceEpoch,
+      icon: '@mipmap/ic_launcher',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+      color: const Color(0xFF10B981), // Primary green color
+      colorized: true,
+      styleInformation: BigTextStyleInformation(
+        zikrText,
+        contentTitle: zikrTitle,
+        summaryText: 'Bling Azkar',
+        htmlFormatBigText: false,
+      ),
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      fullScreenIntent: false,
+      ticker: 'Bling Azkar: $zikrTitle',
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -151,6 +178,8 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      interruptionLevel: InterruptionLevel.active,
+      threadIdentifier: 'azkar_reminders',
     );
 
     final details = NotificationDetails(
@@ -208,20 +237,22 @@ class NotificationService {
     final now = DateTime.now();
 
     if (reminder.type == ReminderType.fixedDaily && reminder.fixedTime != null) {
+      // Use exact time from reminder
       var scheduled = DateTime(
         now.year,
         now.month,
         now.day,
         reminder.fixedTime!.hour,
         reminder.fixedTime!.minute,
+        0, // Set seconds to 0 for exact timing
       );
 
       // If the time has passed today, schedule for tomorrow
-      if (scheduled.isBefore(now)) {
+      if (scheduled.isBefore(now) || scheduled.isAtSameMomentAs(now)) {
         scheduled = scheduled.add(const Duration(days: 1));
       }
 
-      print('Fixed daily reminder scheduled for: $scheduled');
+      print('Fixed daily reminder scheduled for: $scheduled (exact time: ${reminder.fixedTime!.hour}:${reminder.fixedTime!.minute.toString().padLeft(2, '0')})');
       return scheduled;
     } else if (reminder.type == ReminderType.interval &&
         reminder.intervalMinutes != null) {
@@ -233,12 +264,29 @@ class NotificationService {
             .add(Duration(minutes: reminder.intervalMinutes!));
         
         // If that time is in the past, schedule from now instead
-        if (scheduled.isBefore(now)) {
+        if (scheduled.isBefore(now) || scheduled.isAtSameMomentAs(now)) {
           scheduled = now.add(Duration(minutes: reminder.intervalMinutes!));
+          // Round to nearest minute for cleaner scheduling
+          scheduled = DateTime(
+            scheduled.year,
+            scheduled.month,
+            scheduled.day,
+            scheduled.hour,
+            scheduled.minute,
+            0,
+          );
         }
       } else {
-        // First time scheduling - schedule from now
+        // First time scheduling - schedule from now, rounded to next minute
         scheduled = now.add(Duration(minutes: reminder.intervalMinutes!));
+        scheduled = DateTime(
+          scheduled.year,
+          scheduled.month,
+          scheduled.day,
+          scheduled.hour,
+          scheduled.minute,
+          0,
+        );
       }
 
       print('Interval reminder scheduled for: $scheduled (in ${scheduled.difference(now).inMinutes} minutes)');
@@ -258,8 +306,12 @@ class NotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) async {
-    print('Notification tapped: ${response.payload}');
-    
+    print('Notification tapped (foreground): ${response.payload}');
+    await _handleNotificationTap(response);
+  }
+
+
+  Future<void> _handleNotificationTap(NotificationResponse response) async {
     if (response.payload != null) {
       final zikrId = response.payload!;
       
