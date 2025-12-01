@@ -75,7 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       snap: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
-      expandedHeight: _isSearching ? 100 : 140,
+      expandedHeight: _isSearching ? 120 : 200,
       collapsedHeight: 70,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
