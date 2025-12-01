@@ -21,7 +21,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
     final reminders = _reminderService.getAllReminders();
 

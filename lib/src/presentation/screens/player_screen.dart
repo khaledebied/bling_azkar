@@ -80,7 +80,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
 
     return Directionality(
@@ -194,7 +194,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildCounter() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return Column(
       children: [
@@ -261,7 +261,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                       ),
                       Text(
-                        '${AppLocalizations.of(context)!.of} $_targetCount',
+                        '${AppLocalizations.ofWithFallback(context).of} $_targetCount',
                         style: AppTheme.caption.copyWith(
                           color: AppTheme.textSecondary,
                         ),
@@ -289,7 +289,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             });
           },
           icon: const Icon(Icons.refresh),
-          label: Text(AppLocalizations.of(context)!.reset),
+          label: Text(AppLocalizations.ofWithFallback(context).reset),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withOpacity(0.2),
             foregroundColor: Colors.white,
@@ -350,7 +350,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                 ),
                 Text(
-                  AppLocalizations.of(context)!.completed,
+                  AppLocalizations.ofWithFallback(context).completed,
                   style: AppTheme.bodyMedium.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),

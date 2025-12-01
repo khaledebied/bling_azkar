@@ -56,7 +56,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
 
     return Directionality(
@@ -380,7 +380,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Widget _buildReminderSection() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -412,7 +412,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   void _showReminderDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     final existingReminders = _reminderService.getRemindersForZikr(widget.zikr.id);
     
     showModalBottomSheet(
@@ -692,7 +692,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Widget _buildReminderListItem(BuildContext context, Reminder reminder) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -769,7 +769,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
               icon: const Icon(Icons.delete_outline, size: 20),
               color: Colors.red.shade300,
               onPressed: () async {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.ofWithFallback(context);
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -811,7 +811,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Future<void> _showTimePicker(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     final now = DateTime.now();
     final picked = await showTimePicker(
       context: context,
@@ -897,7 +897,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Future<void> _showIntervalPicker(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     int selectedMinutes = 30;
 
     await showDialog(

@@ -9,6 +9,11 @@ class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
+  /// Get localizations with fallback to English
+  static AppLocalizations ofWithFallback(BuildContext context) {
+    return of(context) ?? AppLocalizations(const Locale('en'));
+  }
+
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 

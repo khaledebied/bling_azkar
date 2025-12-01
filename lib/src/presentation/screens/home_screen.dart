@@ -94,7 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
 
     return Directionality(
@@ -164,7 +164,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (!_isSearching) ...[
-                        _buildAnimatedGreeting(l10n),
+                        Builder(
+                          builder: (context) => _buildAnimatedGreeting(
+                            AppLocalizations.of(context),
+                          ),
+                        ),
                         const SizedBox(height: 12),
                       ],
                       _buildSearchBar(l10n),
@@ -199,8 +203,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildAnimatedGreeting(AppLocalizations l10n) {
-    final isArabic = l10n.isArabic;
+  Widget _buildAnimatedGreeting(AppLocalizations? l10n) {
+    final localizations = l10n ?? AppLocalizations.ofWithFallback(context);
     final greeting = _greetings[_currentGreetingIndex];
     final isArabicGreeting = greeting.contains('ال') || greeting.contains('ب');
     
@@ -384,7 +388,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildWelcomeBanner() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return SliverToBoxAdapter(
       child: TweenAnimationBuilder<double>(
@@ -484,7 +488,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCategoriesSection() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return FutureBuilder<List<String>>(
       future: _azkarRepo.getAllCategories(),
@@ -601,7 +605,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
 
   Widget _buildAllAzkarTab() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return FutureBuilder<List<Zikr>>(
       future: _selectedCategory != null
@@ -749,7 +753,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildRecentTab() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.ofWithFallback(context);
     
     return Center(
       child: Text(
