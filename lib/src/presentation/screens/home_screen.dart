@@ -75,51 +75,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       snap: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
-      expandedHeight: _isSearching ? 80 : 120,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!_isSearching) ...[
-                    Text(
-                      'السلام عليكم',
-                      style: AppTheme.arabicMedium.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Peace be upon you',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  _buildSearchBar(),
-                ],
+      expandedHeight: _isSearching ? 100 : 140,
+      collapsedHeight: 70,
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          return FlexibleSpaceBar(
+            background: Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 60, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!_isSearching) ...[
+                        Text(
+                          'السلام عليكم',
+                          style: AppTheme.arabicMedium.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Peace be upon you',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      _buildSearchBar(),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          onPressed: () {
-            // Navigate to settings
-          },
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              // Navigate to settings
+            },
+          ),
         ),
       ],
     );
