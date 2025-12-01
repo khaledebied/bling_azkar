@@ -8,6 +8,7 @@ class AzkarRepository {
   AzkarRepository._internal();
 
   List<Zikr>? _cachedAzkar;
+  Map<String, String>? _categoryMap; // Maps category Arabic name to itself (for consistency)
 
   Future<List<Zikr>> loadAzkar() async {
     if (_cachedAzkar != null) {
@@ -18,15 +19,14 @@ class AzkarRepository {
     final List<dynamic> jsonList = json.decode(jsonString);
     
     final List<Zikr> azkar = [];
-    final categoryMap = getCategoryDisplayNamesAr();
-    // Reverse map for lookup
-    final reverseCategoryMap = categoryMap.map((k, v) => MapEntry(v, k));
-    final englishCategoryMap = getCategoryDisplayNames();
+    _categoryMap = {};
 
     for (var categoryJson in jsonList) {
       final String categoryNameAr = categoryJson['category'];
-      final String categoryKey = reverseCategoryMap[categoryNameAr] ?? 'general';
-      final String categoryNameEn = englishCategoryMap[categoryKey] ?? 'General';
+      // Use the Arabic category name as the category key
+      final String categoryKey = categoryNameAr;
+      // Store category in map
+      _categoryMap![categoryKey] = categoryNameAr;
       
       final List<dynamic> zikrArray = categoryJson['array'];
       
@@ -42,7 +42,7 @@ class AzkarRepository {
         
         azkar.add(Zikr(
           id: '${categoryKey}_$id',
-          title: LocalizedText(en: categoryNameEn, ar: categoryNameAr),
+          title: LocalizedText(en: categoryNameAr, ar: categoryNameAr), // Use Arabic for both for now
           text: text,
           translation: null,
           category: categoryKey,
@@ -86,28 +86,24 @@ class AzkarRepository {
     }).toList();
   }
 
+  /// Get all unique categories from the JSON
   Future<List<String>> getAllCategories() async {
-    final azkar = await loadAzkar();
-    return azkar.map((z) => z.category).toSet().toList();
+    await loadAzkar();
+    return _categoryMap?.keys.toList() ?? [];
   }
 
+  /// Get category display name (Arabic)
+  String getCategoryDisplayName(String categoryKey) {
+    return _categoryMap?[categoryKey] ?? categoryKey;
+  }
+
+  /// Get all categories as a map (for backward compatibility)
   Map<String, String> getCategoryDisplayNames() {
-    return {
-      'morning': 'Morning',
-      'evening': 'Evening',
-      'after_prayer': 'After Prayer',
-      'before_sleep': 'Before Sleep',
-      'general': 'General',
-    };
+    return _categoryMap ?? {};
   }
 
+  /// Get all categories as a map (Arabic names)
   Map<String, String> getCategoryDisplayNamesAr() {
-    return {
-      'morning': 'أذكار الصباح',
-      'evening': 'أذكار المساء',
-      'after_prayer': 'أذكار بعد الصلاة',
-      'before_sleep': 'أذكار قبل النوم',
-      'general': 'أذكار عامة',
-    };
+    return _categoryMap ?? {};
   }
 }

@@ -73,6 +73,12 @@ class AppTheme {
     height: 1.5,
   );
 
+  static const bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    height: 1.4,
+  );
+
   static const caption = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,

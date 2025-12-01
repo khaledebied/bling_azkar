@@ -22,6 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   
   late TabController _tabController;
   String _searchQuery = '';
+  String? _selectedCategory;
   bool _isSearching = false;
 
   @override
@@ -113,6 +114,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         const SizedBox(height: 12),
                       ],
                       _buildSearchBar(),
+                      if (_selectedCategory != null && !_isSearching) ...[
+                        const SizedBox(height: 8),
+                        _buildSelectedCategoryChip(),
+                      ],
                     ],
                   ),
                 ),
@@ -153,18 +158,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           setState(() {
             _searchQuery = value;
             _isSearching = value.isNotEmpty;
+            _selectedCategory = null; // Clear category when searching
           });
         },
         decoration: InputDecoration(
           hintText: 'Search azkar...',
           prefixIcon: const Icon(Icons.search),
-          suffixIcon: _isSearching
+          suffixIcon: _isSearching || _selectedCategory != null
               ? IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     setState(() {
                       _searchQuery = '';
                       _isSearching = false;
+                      _selectedCategory = null;
                     });
                   },
                 )
@@ -175,6 +182,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             vertical: 14,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedCategoryChip() {
+    if (_selectedCategory == null) return const SizedBox.shrink();
+    
+    final categoryName = _azkarRepo.getCategoryDisplayName(_selectedCategory!);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.filter_alt,
+            size: 16,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              categoryName,
+              style: AppTheme.bodySmall.copyWith(
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedCategory = null;
+              });
+            },
+            child: Icon(
+              Icons.close,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -231,49 +289,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCategoriesSection() {
-    final categories = _azkarRepo.getCategoryDisplayNames();
-    final categoriesAr = _azkarRepo.getCategoryDisplayNamesAr();
+    return FutureBuilder<List<String>>(
+      future: _azkarRepo.getAllCategories(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
 
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Text(
-              'Categories',
-              style: AppTheme.titleMedium.copyWith(
-                color: AppTheme.textPrimary,
+        final categories = snapshot.data!;
+        final categoryMap = _azkarRepo.getCategoryDisplayNamesAr();
+
+        return SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.category,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Categories',
+                      style: AppTheme.titleMedium.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${categories.length}',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          SizedBox(
-            height: 140,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final categoryKey = categories.keys.elementAt(index);
-                final categoryName = categories[categoryKey]!;
-                final categoryNameAr = categoriesAr[categoryKey]!;
+              SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final categoryKey = categories[index];
+                    final categoryNameAr = categoryMap[categoryKey] ?? categoryKey;
 
-                return CategoryCard(
-                  title: categoryName,
-                  titleAr: categoryNameAr,
-                  onTap: () {
-                    _tabController.animateTo(0);
-                    setState(() {
-                      _searchQuery = categoryKey;
-                      _isSearching = true;
-                    });
+                    return CategoryCard(
+                      title: categoryNameAr,
+                      titleAr: categoryNameAr,
+                      onTap: () {
+                        _tabController.animateTo(0);
+                        setState(() {
+                          _selectedCategory = categoryKey;
+                          _searchQuery = '';
+                          _isSearching = false;
+                        });
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -313,9 +405,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildAllAzkarTab() {
     return FutureBuilder<List<Zikr>>(
-      future: _isSearching && _searchQuery.isNotEmpty
-          ? _azkarRepo.searchAzkar(_searchQuery)
-          : _azkarRepo.loadAzkar(),
+      future: _selectedCategory != null
+          ? _azkarRepo.getAzkarByCategory(_selectedCategory!)
+          : (_isSearching && _searchQuery.isNotEmpty
+              ? _azkarRepo.searchAzkar(_searchQuery)
+              : _azkarRepo.loadAzkar()),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -333,11 +427,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No azkar found',
+                  _selectedCategory != null
+                      ? 'No azkar found in this category'
+                      : 'No azkar found',
                   style: AppTheme.titleMedium.copyWith(
                     color: AppTheme.textSecondary,
                   ),
                 ),
+                if (_selectedCategory != null) ...[
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory = null;
+                      });
+                    },
+                    icon: const Icon(Icons.clear),
+                    label: const Text('Clear filter'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
               ],
             ),
           );
