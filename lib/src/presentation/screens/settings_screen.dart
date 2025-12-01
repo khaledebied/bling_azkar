@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
+import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
 import '../../domain/models/user_preferences.dart';
 
@@ -23,10 +24,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _updatePreferences(UserPreferences newPrefs) {
+    final oldPrefs = _prefs;
     setState(() {
       _prefs = newPrefs;
     });
     _storage.savePreferences(newPrefs);
+    
+    // Immediately update app state
+    final appState = AppStateNotifier();
+    if (newPrefs.language != oldPrefs.language) {
+      appState.updateLocale(Locale(newPrefs.language));
+    }
+    if (newPrefs.themeMode != oldPrefs.themeMode) {
+      switch (newPrefs.themeMode) {
+        case 'light':
+          appState.updateThemeMode(ThemeMode.light);
+          break;
+        case 'dark':
+          appState.updateThemeMode(ThemeMode.dark);
+          break;
+        default:
+          appState.updateThemeMode(ThemeMode.system);
+      }
+    }
   }
 
   @override
@@ -305,7 +325,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: Text(l10n.help),
             trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             onTap: () {
-              // Help screen
+              _showHelpDialog(l10n);
             },
           ),
           const Divider(height: 1),
@@ -314,7 +334,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: Text(l10n.feedback),
             trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             onTap: () {
-              // Feedback screen
+              _showFeedbackDialog(l10n);
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: Text(l10n.licenses),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: () {
+              showLicensePage(context: context);
             },
           ),
         ],
@@ -391,9 +420,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.clearAllData),
-        content: Text(l10n.isArabic
-            ? 'سيتم حذف جميع البيانات بما في ذلك التذكيرات والمفضلة. هل أنت متأكد؟'
-            : 'This will delete all data including reminders and favorites. Are you sure?'),
+        content: Text(l10n.confirmClearAllData),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -402,14 +429,97 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           TextButton(
             onPressed: () async {
               await _storage.clearAllData();
+              if (!mounted) return;
+              setState(() {
+                _prefs = _storage.getPreferences();
+              });
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.isArabic ? 'تم حذف جميع البيانات' : 'All data cleared'),
-                ),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.allDataCleared),
+                  ),
+                );
+              }
             },
             child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHelpDialog(AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.help),
+        content: SingleChildScrollView(
+          child: Text(
+            l10n.isArabic
+                ? 'تطبيق بلينج أذكار يساعدك على تذكر الأذكار اليومية.\n\n'
+                    '• تصفح الأذكار حسب الفئات\n'
+                    '• أضف الأذكار إلى المفضلة\n'
+                    '• استمع إلى الأذكار بصوت\n'
+                    '• اضبط التذكيرات اليومية\n'
+                    '• اختر بين الوضع الفاتح والداكن'
+                : 'Bling Azkar helps you remember daily supplications.\n\n'
+                    '• Browse azkar by categories\n'
+                    '• Add azkar to favorites\n'
+                    '• Listen to azkar with audio\n'
+                    '• Set daily reminders\n'
+                    '• Choose between light and dark theme',
+            style: AppTheme.bodyMedium,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFeedbackDialog(AppLocalizations l10n) {
+    final TextEditingController controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.feedback),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: InputDecoration(
+            hintText: l10n.isArabic
+                ? 'اكتب ملاحظاتك أو اقتراحاتك هنا...'
+                : 'Write your feedback or suggestions here...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              // In a real app, you would send this to a server
+              Navigator.pop(context);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.isArabic
+                        ? 'شكراً لملاحظاتك!'
+                        : 'Thank you for your feedback!'),
+                  ),
+                );
+              }
+            },
+            child: Text(l10n.send),
           ),
         ],
       ),

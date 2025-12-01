@@ -25,71 +25,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final _storage = StorageService();
   
   late TabController _tabController;
-  late AnimationController _greetingController;
-  late Animation<double> _greetingAnimation;
   String _searchQuery = '';
   String? _selectedCategory;
   bool _isSearching = false;
-  
-  final List<String> _greetings = [
-    'السلام عليكم',
-    'Peace be upon you',
-    'May Allah bless you',
-    'بارك الله فيك',
-  ];
-  int _currentGreetingIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
-    // Greeting animation controller
-    _greetingController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    
-    _greetingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _greetingController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-    
-    // Start greeting animation
-    _greetingController.forward();
-    
-    // Auto-scroll greetings every 4 seconds
-    _startGreetingTimer();
-  }
-
-  void _startGreetingTimer() {
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        _changeGreeting();
-        _startGreetingTimer(); // Continue the cycle
-      }
-    });
-  }
-
-  void _changeGreeting() {
-    if (!mounted) return;
-    
-    _greetingController.reverse().then((_) {
-      if (mounted) {
-        setState(() {
-          _currentGreetingIndex = (_currentGreetingIndex + 1) % _greetings.length;
-        });
-        _greetingController.forward();
-      }
-    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _greetingController.dispose();
     super.dispose();
   }
 
@@ -164,11 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (!_isSearching) ...[
-                        Builder(
-                          builder: (context) => _buildAnimatedGreeting(
-                            AppLocalizations.ofWithFallback(context),
-                          ),
-                        ),
+                        _buildGreeting(),
                         const SizedBox(height: 12),
                       ],
                       _buildSearchBar(l10n),
@@ -201,86 +145,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildAnimatedGreeting(AppLocalizations? l10n) {
-    final localizations = l10n ?? AppLocalizations.ofWithFallback(context);
-    final greeting = _greetings[_currentGreetingIndex];
-    final isArabicGreeting = greeting.contains('ال') || greeting.contains('ب');
-    
-    return AnimatedBuilder(
-      animation: _greetingAnimation,
-      builder: (context, child) {
+  Widget _buildGreeting() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
         return Opacity(
-          opacity: _greetingAnimation.value,
+          opacity: value,
           child: Transform.translate(
-            offset: Offset(0, 20 * (1 - _greetingAnimation.value)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.0, 0.3),
-                          end: Offset.zero,
-                        ).animate(CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOutCubic,
-                        )),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Text(
-                    greeting,
-                    key: ValueKey(greeting),
-                    style: isArabicGreeting
-                        ? AppTheme.arabicMedium.copyWith(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          )
-                        : AppTheme.titleLarge.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
+            offset: Offset(0, 20 * (1 - value)),
+            child: Text(
+              'SALAM 👋',
+              style: AppTheme.titleLarge.copyWith(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(height: 6),
-                // Decorative dots indicator
-                Row(
-                  children: List.generate(
-                    _greetings.length,
-                    (index) => Container(
-                      margin: const EdgeInsets.only(right: 6),
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _currentGreetingIndex == index
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.4),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -590,6 +479,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     gradient: AppTheme.primaryGradient,
                     borderRadius: BorderRadius.circular(14),
                   ),
+                  dividerColor: Colors.transparent,
                   labelColor: Colors.white,
                   unselectedLabelColor: AppTheme.textSecondary,
                   tabs: [

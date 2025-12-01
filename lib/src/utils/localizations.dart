@@ -129,6 +129,7 @@ class AppLocalizations {
   String get licenses => _get('licenses');
   String get help => _get('help');
   String get feedback => _get('feedback');
+  String get send => _get('send');
   String get hour => _get('hour');
   String get minute => _get('minute');
 
@@ -232,6 +233,7 @@ class AppLocalizations {
     'licenses': 'Licenses',
     'help': 'Help',
     'feedback': 'Feedback',
+    'send': 'Send',
     'hour': 'hour',
     'minute': 'minute',
   };
@@ -336,6 +338,7 @@ class AppLocalizations {
     'licenses': 'التراخيص',
     'help': 'المساعدة',
     'feedback': 'التعليقات',
+    'send': 'إرسال',
     'hour': 'ساعة',
     'minute': 'دقيقة',
   };

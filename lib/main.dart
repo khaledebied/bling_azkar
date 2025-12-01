@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
 import 'src/utils/page_transitions.dart';
+import 'src/utils/app_state_provider.dart';
 import 'src/presentation/screens/splash_screen.dart';
 import 'src/data/services/storage_service.dart';
 import 'src/data/services/notification_service.dart';
@@ -64,6 +65,7 @@ class BlingAzkarApp extends StatefulWidget {
 
 class _BlingAzkarAppState extends State<BlingAzkarApp> {
   final _storage = StorageService();
+  final _appState = AppStateNotifier();
   Locale _locale = const Locale('en');
   ThemeMode _themeMode = ThemeMode.system;
 
@@ -72,6 +74,26 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
     super.initState();
     _loadLanguage();
     _loadThemeMode();
+    _appState.addListener(_onAppStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _appState.removeListener(_onAppStateChanged);
+    super.dispose();
+  }
+
+  void _onAppStateChanged() {
+    if (_appState.locale != null) {
+      setState(() {
+        _locale = _appState.locale!;
+      });
+    }
+    if (_appState.themeMode != null) {
+      setState(() {
+        _themeMode = _appState.themeMode!;
+      });
+    }
   }
 
   void _loadLanguage() {
