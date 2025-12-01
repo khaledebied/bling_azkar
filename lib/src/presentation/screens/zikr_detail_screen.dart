@@ -193,7 +193,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Widget _buildTranslationSection() {
-    if (widget.zikr.translation.en.isEmpty) {
+    if (widget.zikr.translation?.en.isEmpty ?? true) {
       return const SizedBox.shrink();
     }
 
@@ -231,7 +231,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            widget.zikr.translation.en,
+            widget.zikr.translation!.en,
             style: AppTheme.bodyLarge.copyWith(
               color: AppTheme.textPrimary,
               height: 1.6,
@@ -331,14 +331,17 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     size: 20,
                   ),
                 ),
-                title: Text('Sheikh ${audio.sheikhId}'),
-                subtitle: const Text('Short preview'),
+                title: const Text('Audio Recitation'),
+                subtitle: const Text('Tap to play'),
                 trailing: IconButton(
                   icon: const Icon(Icons.play_circle_outline),
                   color: AppTheme.primaryGreen,
                   onPressed: () async {
                     try {
-                      await _audioService.playAudio(audio.shortFile);
+                      await _audioService.playAudio(
+                        audio.fullFileUrl,
+                        isLocal: false,
+                      );
                     } catch (e) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(

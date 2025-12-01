@@ -87,15 +87,17 @@ class _ZikrListItemState extends State<ZikrListItem>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.zikr.title.en,
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.textSecondary,
+                        if (widget.zikr.translation?.en.isNotEmpty ?? false) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.zikr.translation!.en,
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                         const SizedBox(height: 8),
                         Text(
                           widget.zikr.text,
