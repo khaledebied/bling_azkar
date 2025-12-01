@@ -94,6 +94,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
         icon: const Icon(Icons.play_arrow),
         label: const Text('Play Full Audio'),
       ),
+      ),
     );
   }
 

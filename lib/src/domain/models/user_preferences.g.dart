@@ -24,6 +24,7 @@ _$UserPreferencesImpl _$$UserPreferencesImplFromJson(
           : DateTime.parse(json['dndEndTime'] as String),
       dndEnabled: json['dndEnabled'] as bool? ?? false,
       textScale: (json['textScale'] as num?)?.toDouble() ?? 1.0,
+      themeMode: json['themeMode'] as String? ?? 'system',
     );
 
 Map<String, dynamic> _$$UserPreferencesImplToJson(
@@ -37,4 +38,5 @@ Map<String, dynamic> _$$UserPreferencesImplToJson(
       'dndEndTime': instance.dndEndTime?.toIso8601String(),
       'dndEnabled': instance.dndEnabled,
       'textScale': instance.textScale,
+      'themeMode': instance.themeMode,
     };

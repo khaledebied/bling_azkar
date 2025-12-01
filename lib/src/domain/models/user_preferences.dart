@@ -16,7 +16,7 @@ class UserPreferences with _$UserPreferences {
     @HiveField(5) DateTime? dndEndTime,
     @HiveField(6) @Default(false) bool dndEnabled,
     @HiveField(7) @Default(1.0) double textScale,
-    @HiveField(8) @Default('system') String themeMode, // 'light', 'dark', 'system'
+    @HiveField(9) @Default('system') String themeMode, // 'light', 'dark', 'system'
   }) = _UserPreferences;
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>

@@ -36,6 +36,8 @@ mixin _$UserPreferences {
   bool get dndEnabled => throw _privateConstructorUsedError;
   @HiveField(7)
   double get textScale => throw _privateConstructorUsedError;
+  @HiveField(9)
+  String get themeMode => throw _privateConstructorUsedError;
 
   /// Serializes this UserPreferences to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -61,7 +63,8 @@ abstract class $UserPreferencesCopyWith<$Res> {
       @HiveField(4) DateTime? dndStartTime,
       @HiveField(5) DateTime? dndEndTime,
       @HiveField(6) bool dndEnabled,
-      @HiveField(7) double textScale});
+      @HiveField(7) double textScale,
+      @HiveField(9) String themeMode});
 }
 
 /// @nodoc
@@ -87,6 +90,7 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
     Object? dndEndTime = freezed,
     Object? dndEnabled = null,
     Object? textScale = null,
+    Object? themeMode = null,
   }) {
     return _then(_value.copyWith(
       language: null == language
@@ -121,6 +125,10 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
           ? _value.textScale
           : textScale // ignore: cast_nullable_to_non_nullable
               as double,
+      themeMode: null == themeMode
+          ? _value.themeMode
+          : themeMode // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -141,7 +149,8 @@ abstract class _$$UserPreferencesImplCopyWith<$Res>
       @HiveField(4) DateTime? dndStartTime,
       @HiveField(5) DateTime? dndEndTime,
       @HiveField(6) bool dndEnabled,
-      @HiveField(7) double textScale});
+      @HiveField(7) double textScale,
+      @HiveField(9) String themeMode});
 }
 
 /// @nodoc
@@ -165,6 +174,7 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
     Object? dndEndTime = freezed,
     Object? dndEnabled = null,
     Object? textScale = null,
+    Object? themeMode = null,
   }) {
     return _then(_$UserPreferencesImpl(
       language: null == language
@@ -199,6 +209,10 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
           ? _value.textScale
           : textScale // ignore: cast_nullable_to_non_nullable
               as double,
+      themeMode: null == themeMode
+          ? _value.themeMode
+          : themeMode // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -214,7 +228,8 @@ class _$UserPreferencesImpl implements _UserPreferences {
       @HiveField(4) this.dndStartTime,
       @HiveField(5) this.dndEndTime,
       @HiveField(6) this.dndEnabled = false,
-      @HiveField(7) this.textScale = 1.0})
+      @HiveField(7) this.textScale = 1.0,
+      @HiveField(9) this.themeMode = 'system'})
       : _favoriteZikrIds = favoriteZikrIds;
 
   factory _$UserPreferencesImpl.fromJson(Map<String, dynamic> json) =>
@@ -256,10 +271,14 @@ class _$UserPreferencesImpl implements _UserPreferences {
   @JsonKey()
   @HiveField(7)
   final double textScale;
+  @override
+  @JsonKey()
+  @HiveField(9)
+  final String themeMode;
 
   @override
   String toString() {
-    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale)';
+    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode)';
   }
 
   @override
@@ -282,7 +301,9 @@ class _$UserPreferencesImpl implements _UserPreferences {
             (identical(other.dndEnabled, dndEnabled) ||
                 other.dndEnabled == dndEnabled) &&
             (identical(other.textScale, textScale) ||
-                other.textScale == textScale));
+                other.textScale == textScale) &&
+            (identical(other.themeMode, themeMode) ||
+                other.themeMode == themeMode));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -296,7 +317,8 @@ class _$UserPreferencesImpl implements _UserPreferences {
       dndStartTime,
       dndEndTime,
       dndEnabled,
-      textScale);
+      textScale,
+      themeMode);
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
@@ -324,7 +346,8 @@ abstract class _UserPreferences implements UserPreferences {
       @HiveField(4) final DateTime? dndStartTime,
       @HiveField(5) final DateTime? dndEndTime,
       @HiveField(6) final bool dndEnabled,
-      @HiveField(7) final double textScale}) = _$UserPreferencesImpl;
+      @HiveField(7) final double textScale,
+      @HiveField(9) final String themeMode}) = _$UserPreferencesImpl;
 
   factory _UserPreferences.fromJson(Map<String, dynamic> json) =
       _$UserPreferencesImpl.fromJson;
@@ -353,6 +376,9 @@ abstract class _UserPreferences implements UserPreferences {
   @override
   @HiveField(7)
   double get textScale;
+  @override
+  @HiveField(9)
+  String get themeMode;
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
