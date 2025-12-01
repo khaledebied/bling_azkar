@@ -5,6 +5,7 @@ import '../../data/services/storage_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import 'zikr_detail_screen.dart';
+import 'reminders_screen.dart';
 import '../widgets/category_card.dart';
 import '../widgets/zikr_list_item.dart';
 
@@ -62,7 +63,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navigate to reminders screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const RemindersScreen(),
+            ),
+          );
         },
         icon: const Icon(Icons.notifications_outlined),
         label: const Text('Reminders'),

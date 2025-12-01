@@ -84,6 +84,8 @@ class NotificationService {
       sound: const RawResourceAndroidNotificationSound('short_zikr_1'),
       enableVibration: true,
       playSound: true,
+      ongoing: reminder.type == ReminderType.interval,
+      autoCancel: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -98,17 +100,35 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.zonedSchedule(
-      reminder.notificationId ?? 0,
-      zikrTitle,
-      zikrText.length > 100 ? '${zikrText.substring(0, 100)}...' : zikrText,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      payload: reminder.zikrId,
-    );
+    if (reminder.type == ReminderType.fixedDaily) {
+      // Schedule daily repeating notification
+      await _notifications.zonedSchedule(
+        reminder.notificationId ?? 0,
+        zikrTitle,
+        zikrText.length > 100 ? '${zikrText.substring(0, 100)}...' : zikrText,
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: reminder.zikrId,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } else {
+      // Schedule one-time notification for interval reminders
+      // The reminder service will reschedule after each notification
+      await _notifications.zonedSchedule(
+        reminder.notificationId ?? 0,
+        zikrTitle,
+        zikrText.length > 100 ? '${zikrText.substring(0, 100)}...' : zikrText,
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: reminder.zikrId,
+      );
+    }
   }
 
   DateTime _calculateNextScheduledTime(Reminder reminder) {
@@ -157,6 +177,9 @@ class NotificationService {
       // This will be implemented in the presentation layer
     }
   }
+
+  /// Get notification tap handler callback
+  Function(NotificationResponse)? get onNotificationTapped => _onNotificationTapped;
 
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
