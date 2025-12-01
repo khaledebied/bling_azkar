@@ -9,7 +9,7 @@ class Zikr with _$Zikr {
     required String id,
     required LocalizedText title,
     required String text,
-    required LocalizedText translation,
+    required LocalizedText? translation,
     required String category,
     required int defaultCount,
     required List<AudioInfo> audio,
@@ -32,8 +32,8 @@ class LocalizedText with _$LocalizedText {
 @freezed
 class AudioInfo with _$AudioInfo {
   const factory AudioInfo({
-    required String sheikhId,
-    required String shortFile,
+    String? sheikhId,
+    String? shortFile,
     required String fullFileUrl,
   }) = _AudioInfo;
 

@@ -70,7 +70,7 @@ flutter:
   uses-material-design: true
   
   assets:
-    - assets/azkar.json
+    - assets/adhkar.json
     - assets/audio/
     - assets/lottie/
   

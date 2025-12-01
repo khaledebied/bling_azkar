@@ -10,8 +10,9 @@ _$ZikrImpl _$$ZikrImplFromJson(Map<String, dynamic> json) => _$ZikrImpl(
       id: json['id'] as String,
       title: LocalizedText.fromJson(json['title'] as Map<String, dynamic>),
       text: json['text'] as String,
-      translation:
-          LocalizedText.fromJson(json['translation'] as Map<String, dynamic>),
+      translation: json['translation'] == null
+          ? null
+          : LocalizedText.fromJson(json['translation'] as Map<String, dynamic>),
       category: json['category'] as String,
       defaultCount: (json['defaultCount'] as num).toInt(),
       audio: (json['audio'] as List<dynamic>)
@@ -44,8 +45,8 @@ Map<String, dynamic> _$$LocalizedTextImplToJson(_$LocalizedTextImpl instance) =>
 
 _$AudioInfoImpl _$$AudioInfoImplFromJson(Map<String, dynamic> json) =>
     _$AudioInfoImpl(
-      sheikhId: json['sheikhId'] as String,
-      shortFile: json['shortFile'] as String,
+      sheikhId: json['sheikhId'] as String?,
+      shortFile: json['shortFile'] as String?,
       fullFileUrl: json['fullFileUrl'] as String,
     );
 

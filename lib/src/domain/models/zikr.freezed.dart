@@ -23,7 +23,7 @@ mixin _$Zikr {
   String get id => throw _privateConstructorUsedError;
   LocalizedText get title => throw _privateConstructorUsedError;
   String get text => throw _privateConstructorUsedError;
-  LocalizedText get translation => throw _privateConstructorUsedError;
+  LocalizedText? get translation => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
   int get defaultCount => throw _privateConstructorUsedError;
   List<AudioInfo> get audio => throw _privateConstructorUsedError;
@@ -46,13 +46,13 @@ abstract class $ZikrCopyWith<$Res> {
       {String id,
       LocalizedText title,
       String text,
-      LocalizedText translation,
+      LocalizedText? translation,
       String category,
       int defaultCount,
       List<AudioInfo> audio});
 
   $LocalizedTextCopyWith<$Res> get title;
-  $LocalizedTextCopyWith<$Res> get translation;
+  $LocalizedTextCopyWith<$Res>? get translation;
 }
 
 /// @nodoc
@@ -73,7 +73,7 @@ class _$ZikrCopyWithImpl<$Res, $Val extends Zikr>
     Object? id = null,
     Object? title = null,
     Object? text = null,
-    Object? translation = null,
+    Object? translation = freezed,
     Object? category = null,
     Object? defaultCount = null,
     Object? audio = null,
@@ -91,10 +91,10 @@ class _$ZikrCopyWithImpl<$Res, $Val extends Zikr>
           ? _value.text
           : text // ignore: cast_nullable_to_non_nullable
               as String,
-      translation: null == translation
+      translation: freezed == translation
           ? _value.translation
           : translation // ignore: cast_nullable_to_non_nullable
-              as LocalizedText,
+              as LocalizedText?,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
@@ -124,8 +124,12 @@ class _$ZikrCopyWithImpl<$Res, $Val extends Zikr>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $LocalizedTextCopyWith<$Res> get translation {
-    return $LocalizedTextCopyWith<$Res>(_value.translation, (value) {
+  $LocalizedTextCopyWith<$Res>? get translation {
+    if (_value.translation == null) {
+      return null;
+    }
+
+    return $LocalizedTextCopyWith<$Res>(_value.translation!, (value) {
       return _then(_value.copyWith(translation: value) as $Val);
     });
   }
@@ -142,7 +146,7 @@ abstract class _$$ZikrImplCopyWith<$Res> implements $ZikrCopyWith<$Res> {
       {String id,
       LocalizedText title,
       String text,
-      LocalizedText translation,
+      LocalizedText? translation,
       String category,
       int defaultCount,
       List<AudioInfo> audio});
@@ -150,7 +154,7 @@ abstract class _$$ZikrImplCopyWith<$Res> implements $ZikrCopyWith<$Res> {
   @override
   $LocalizedTextCopyWith<$Res> get title;
   @override
-  $LocalizedTextCopyWith<$Res> get translation;
+  $LocalizedTextCopyWith<$Res>? get translation;
 }
 
 /// @nodoc
@@ -168,7 +172,7 @@ class __$$ZikrImplCopyWithImpl<$Res>
     Object? id = null,
     Object? title = null,
     Object? text = null,
-    Object? translation = null,
+    Object? translation = freezed,
     Object? category = null,
     Object? defaultCount = null,
     Object? audio = null,
@@ -186,10 +190,10 @@ class __$$ZikrImplCopyWithImpl<$Res>
           ? _value.text
           : text // ignore: cast_nullable_to_non_nullable
               as String,
-      translation: null == translation
+      translation: freezed == translation
           ? _value.translation
           : translation // ignore: cast_nullable_to_non_nullable
-              as LocalizedText,
+              as LocalizedText?,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
@@ -229,7 +233,7 @@ class _$ZikrImpl implements _Zikr {
   @override
   final String text;
   @override
-  final LocalizedText translation;
+  final LocalizedText? translation;
   @override
   final String category;
   @override
@@ -290,7 +294,7 @@ abstract class _Zikr implements Zikr {
       {required final String id,
       required final LocalizedText title,
       required final String text,
-      required final LocalizedText translation,
+      required final LocalizedText? translation,
       required final String category,
       required final int defaultCount,
       required final List<AudioInfo> audio}) = _$ZikrImpl;
@@ -304,7 +308,7 @@ abstract class _Zikr implements Zikr {
   @override
   String get text;
   @override
-  LocalizedText get translation;
+  LocalizedText? get translation;
   @override
   String get category;
   @override
@@ -493,8 +497,8 @@ AudioInfo _$AudioInfoFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$AudioInfo {
-  String get sheikhId => throw _privateConstructorUsedError;
-  String get shortFile => throw _privateConstructorUsedError;
+  String? get sheikhId => throw _privateConstructorUsedError;
+  String? get shortFile => throw _privateConstructorUsedError;
   String get fullFileUrl => throw _privateConstructorUsedError;
 
   /// Serializes this AudioInfo to a JSON map.
@@ -512,7 +516,7 @@ abstract class $AudioInfoCopyWith<$Res> {
   factory $AudioInfoCopyWith(AudioInfo value, $Res Function(AudioInfo) then) =
       _$AudioInfoCopyWithImpl<$Res, AudioInfo>;
   @useResult
-  $Res call({String sheikhId, String shortFile, String fullFileUrl});
+  $Res call({String? sheikhId, String? shortFile, String fullFileUrl});
 }
 
 /// @nodoc
@@ -530,19 +534,19 @@ class _$AudioInfoCopyWithImpl<$Res, $Val extends AudioInfo>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? sheikhId = null,
-    Object? shortFile = null,
+    Object? sheikhId = freezed,
+    Object? shortFile = freezed,
     Object? fullFileUrl = null,
   }) {
     return _then(_value.copyWith(
-      sheikhId: null == sheikhId
+      sheikhId: freezed == sheikhId
           ? _value.sheikhId
           : sheikhId // ignore: cast_nullable_to_non_nullable
-              as String,
-      shortFile: null == shortFile
+              as String?,
+      shortFile: freezed == shortFile
           ? _value.shortFile
           : shortFile // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       fullFileUrl: null == fullFileUrl
           ? _value.fullFileUrl
           : fullFileUrl // ignore: cast_nullable_to_non_nullable
@@ -559,7 +563,7 @@ abstract class _$$AudioInfoImplCopyWith<$Res>
       __$$AudioInfoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String sheikhId, String shortFile, String fullFileUrl});
+  $Res call({String? sheikhId, String? shortFile, String fullFileUrl});
 }
 
 /// @nodoc
@@ -575,19 +579,19 @@ class __$$AudioInfoImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? sheikhId = null,
-    Object? shortFile = null,
+    Object? sheikhId = freezed,
+    Object? shortFile = freezed,
     Object? fullFileUrl = null,
   }) {
     return _then(_$AudioInfoImpl(
-      sheikhId: null == sheikhId
+      sheikhId: freezed == sheikhId
           ? _value.sheikhId
           : sheikhId // ignore: cast_nullable_to_non_nullable
-              as String,
-      shortFile: null == shortFile
+              as String?,
+      shortFile: freezed == shortFile
           ? _value.shortFile
           : shortFile // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       fullFileUrl: null == fullFileUrl
           ? _value.fullFileUrl
           : fullFileUrl // ignore: cast_nullable_to_non_nullable
@@ -600,17 +604,15 @@ class __$$AudioInfoImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AudioInfoImpl implements _AudioInfo {
   const _$AudioInfoImpl(
-      {required this.sheikhId,
-      required this.shortFile,
-      required this.fullFileUrl});
+      {this.sheikhId, this.shortFile, required this.fullFileUrl});
 
   factory _$AudioInfoImpl.fromJson(Map<String, dynamic> json) =>
       _$$AudioInfoImplFromJson(json);
 
   @override
-  final String sheikhId;
+  final String? sheikhId;
   @override
-  final String shortFile;
+  final String? shortFile;
   @override
   final String fullFileUrl;
 
@@ -655,17 +657,17 @@ class _$AudioInfoImpl implements _AudioInfo {
 
 abstract class _AudioInfo implements AudioInfo {
   const factory _AudioInfo(
-      {required final String sheikhId,
-      required final String shortFile,
+      {final String? sheikhId,
+      final String? shortFile,
       required final String fullFileUrl}) = _$AudioInfoImpl;
 
   factory _AudioInfo.fromJson(Map<String, dynamic> json) =
       _$AudioInfoImpl.fromJson;
 
   @override
-  String get sheikhId;
+  String? get sheikhId;
   @override
-  String get shortFile;
+  String? get shortFile;
   @override
   String get fullFileUrl;
 
