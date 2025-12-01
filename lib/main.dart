@@ -29,30 +29,6 @@ void main() async {
   final reminderService = ReminderService();
   await reminderService.rescheduleAllActiveReminders();
 
-  // Handle notification taps
-  final FlutterLocalNotificationsPlugin notifications =
-      FlutterLocalNotificationsPlugin();
-  notifications.initialize(
-    const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-      iOS: DarwinInitializationSettings(),
-    ),
-    onDidReceiveNotificationResponse: (NotificationResponse response) async {
-      if (response.payload != null) {
-        final zikrId = response.payload!;
-        final azkarRepo = AzkarRepository();
-        final zikr = await azkarRepo.getZikrById(zikrId);
-        if (zikr != null && navigatorKey.currentContext != null) {
-          Navigator.of(navigatorKey.currentContext!).push(
-            CustomPageRoute(
-              child: PlayerScreen(zikr: zikr),
-            ),
-          );
-        }
-      }
-    },
-  );
-
   runApp(const ProviderScope(child: BlingAzkarApp()));
 }
 

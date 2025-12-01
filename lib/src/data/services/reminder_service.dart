@@ -103,19 +103,42 @@ class ReminderService {
 
   /// Schedule notification for a reminder
   Future<void> _scheduleNotification(Reminder reminder, Zikr zikr) async {
-    if (!reminder.isActive) return;
+    if (!reminder.isActive) {
+      print('Reminder ${reminder.id} is not active, skipping scheduling');
+      return;
+    }
 
-    await _notifications.scheduleReminder(
-      reminder,
-      reminder.title,
-      zikr.text,
-    );
+    try {
+      // Calculate next scheduled time before scheduling
+      DateTime? nextScheduledTime;
+      if (reminder.type == ReminderType.interval && reminder.intervalMinutes != null) {
+        final now = DateTime.now();
+        if (reminder.lastScheduledTime != null) {
+          nextScheduledTime = reminder.lastScheduledTime!
+              .add(Duration(minutes: reminder.intervalMinutes!));
+          if (nextScheduledTime.isBefore(now)) {
+            nextScheduledTime = now.add(Duration(minutes: reminder.intervalMinutes!));
+          }
+        } else {
+          nextScheduledTime = now.add(Duration(minutes: reminder.intervalMinutes!));
+        }
+      }
 
-    // Update last scheduled time only for interval reminders
-    if (reminder.type == ReminderType.interval) {
-      final now = DateTime.now();
-      final updated = reminder.copyWith(lastScheduledTime: now);
-      await _storage.saveReminder(updated);
+      await _notifications.scheduleReminder(
+        reminder,
+        reminder.title,
+        zikr.text,
+      );
+
+      // Update last scheduled time for interval reminders AFTER successful scheduling
+      if (reminder.type == ReminderType.interval && nextScheduledTime != null) {
+        final updated = reminder.copyWith(lastScheduledTime: nextScheduledTime);
+        await _storage.saveReminder(updated);
+        print('Updated lastScheduledTime for interval reminder: $nextScheduledTime');
+      }
+    } catch (e) {
+      print('Error in _scheduleNotification: $e');
+      rethrow;
     }
   }
 
@@ -132,14 +155,16 @@ class ReminderService {
   }
 
   /// Reschedule a reminder after notification fires (for interval reminders)
-  Future<void> rescheduleAfterNotification(String reminderId) async {
-    final reminder = _storage.getReminder(reminderId);
-    if (reminder == null || !reminder.isActive) return;
-
-    // Only reschedule interval reminders
-    if (reminder.type == ReminderType.interval) {
+  Future<void> rescheduleAfterNotification(String zikrId) async {
+    // Find all active interval reminders for this zikr
+    final reminders = getRemindersForZikr(zikrId)
+        .where((r) => r.isActive && r.type == ReminderType.interval)
+        .toList();
+    
+    for (final reminder in reminders) {
       final zikr = await _azkarRepo.getZikrById(reminder.zikrId);
       if (zikr != null) {
+        print('Rescheduling interval reminder ${reminder.id} after notification');
         await _scheduleNotification(reminder, zikr);
       }
     }

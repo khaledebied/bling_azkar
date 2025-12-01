@@ -4,6 +4,7 @@ import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
 import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
+import '../../data/services/notification_service.dart';
 import '../../domain/models/user_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -172,21 +173,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade200),
       ),
-      child: SwitchListTile(
-        title: Text(l10n.enableNotifications),
-        subtitle: Text(
-          _prefs.notificationsEnabled
-              ? (l10n.isArabic ? 'مفعل' : 'Enabled')
-              : (l10n.isArabic ? 'معطل' : 'Disabled'),
-          style: AppTheme.bodySmall.copyWith(
-            color: AppTheme.textSecondary,
+      child: Column(
+        children: [
+          SwitchListTile(
+            title: Text(l10n.enableNotifications),
+            subtitle: Text(
+              _prefs.notificationsEnabled
+                  ? (l10n.isArabic ? 'مفعل' : 'Enabled')
+                  : (l10n.isArabic ? 'معطل' : 'Disabled'),
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            value: _prefs.notificationsEnabled,
+            onChanged: (value) {
+              _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
+            },
+            activeColor: AppTheme.primaryGreen,
           ),
-        ),
-        value: _prefs.notificationsEnabled,
-        onChanged: (value) {
-          _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
-        },
-        activeColor: AppTheme.primaryGreen,
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.notification_important, color: AppTheme.primaryGreen),
+            title: Text(l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification'),
+            subtitle: Text(l10n.isArabic 
+                ? 'إرسال إشعار تجريبي الآن'
+                : 'Send a test notification now'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () async {
+              final notificationService = NotificationService();
+              final hasPermission = await notificationService.requestPermissions();
+              if (hasPermission) {
+                await notificationService.showTestNotification(
+                  l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification',
+                  l10n.isArabic 
+                      ? 'هذا إشعار تجريبي من تطبيق بلينج أذكار'
+                      : 'This is a test notification from Bling Azkar',
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.isArabic 
+                          ? 'تم إرسال الإشعار التجريبي'
+                          : 'Test notification sent'),
+                      backgroundColor: AppTheme.primaryGreen,
+                    ),
+                  );
+                }
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.pleaseEnableNotifications),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
     );
   }
