@@ -564,9 +564,14 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                         subtitle: l10n.dailyAtFixedTimeDesc,
                         gradient: AppTheme.primaryGradient,
                         onTap: () {
+                          // Store the widget's context before closing the sheet
+                          final widgetContext = this.context;
                           Navigator.pop(context);
-                          Future.delayed(const Duration(milliseconds: 200), () {
-                            _showTimePicker(context);
+                          // Wait for bottom sheet to close, then show time picker
+                          Future.delayed(const Duration(milliseconds: 300), () {
+                            if (mounted) {
+                              _showTimePicker(widgetContext);
+                            }
                           });
                         },
                       ),
@@ -591,10 +596,15 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                         title: l10n.everyXMinutes,
                         subtitle: l10n.everyXMinutesDesc,
                         gradient: AppTheme.goldGradient,
-              onTap: () {
-                Navigator.pop(context);
-                          Future.delayed(const Duration(milliseconds: 200), () {
-                            _showIntervalPicker(context);
+                        onTap: () {
+                          // Store the widget's context before closing the sheet
+                          final widgetContext = this.context;
+                          Navigator.pop(context);
+                          // Wait for bottom sheet to close, then show interval picker
+                          Future.delayed(const Duration(milliseconds: 300), () {
+                            if (mounted) {
+                              _showIntervalPicker(widgetContext);
+                            }
                           });
                         },
                       ),
@@ -811,6 +821,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Future<void> _showTimePicker(BuildContext context) async {
+    if (!mounted) return;
+    
     final l10n = AppLocalizations.ofWithFallback(context);
     final now = DateTime.now();
     final picked = await showTimePicker(
@@ -897,6 +909,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Future<void> _showIntervalPicker(BuildContext context) async {
+    if (!mounted) return;
+    
     final l10n = AppLocalizations.ofWithFallback(context);
     int selectedMinutes = 30;
 
