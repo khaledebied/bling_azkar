@@ -46,13 +46,27 @@ class _PlayerScreenState extends State<PlayerScreen>
   Future<void> _playAudio() async {
     try {
       if (widget.zikr.audio.isNotEmpty) {
-        await _audioService.playAudio(
-          widget.zikr.audio.first.shortFile,
-          isLocal: true,
-        );
+        final audioInfo = widget.zikr.audio.first;
+        // Use shortFile if available, otherwise fallback to fullFileUrl
+        final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
+        if (audioPath.isNotEmpty) {
+          await _audioService.playAudio(
+            audioPath,
+            isLocal: true,
+          );
+        }
       }
     } catch (e) {
       print('Error auto-playing: $e');
+      // Show error to user if needed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error playing audio: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
