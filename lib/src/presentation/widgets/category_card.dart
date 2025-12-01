@@ -136,7 +136,7 @@ class _CategoryCardState extends State<CategoryCard>
     
     // General supplications
     if (lowerName.contains('دعاء') || lowerName.contains('دعاء')) {
-      return Icons.hands_praying;
+      return Icons.mosque;
     }
     
     // Default icons based on keywords

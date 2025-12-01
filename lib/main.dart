@@ -137,7 +137,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
       themeMode: _themeMode,
       locale: _locale,
       localizationsDelegates: const [
-        AppLocalizations.delegate,
+        AppLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -146,20 +146,10 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
         Locale('en', ''),
         Locale('ar', ''),
       ],
-      // Custom page transitions
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: AppPageTransitionsBuilder(),
-          TargetPlatform.iOS: AppPageTransitionsBuilder(),
-          TargetPlatform.macOS: AppPageTransitionsBuilder(),
-          TargetPlatform.windows: AppPageTransitionsBuilder(),
-          TargetPlatform.linux: AppPageTransitionsBuilder(),
-        },
-      ),
       builder: (context, child) {
-        final l10n = AppLocalizations.of(context);
+        final l10n = AppLocalizations.ofWithFallback(context);
         return Directionality(
-          textDirection: l10n?.isArabic == true ? TextDirection.rtl : TextDirection.ltr,
+          textDirection: l10n.isArabic ? TextDirection.rtl : TextDirection.ltr,
           child: child!,
         );
       },

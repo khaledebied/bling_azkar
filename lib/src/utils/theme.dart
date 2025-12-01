@@ -220,7 +220,7 @@ class AppTheme {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: cardLight,
       elevation: 16,
       shape: RoundedRectangleBorder(
@@ -341,7 +341,7 @@ class AppTheme {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: cardDark,
       elevation: 16,
       shape: RoundedRectangleBorder(

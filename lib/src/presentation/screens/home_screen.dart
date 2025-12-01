@@ -166,7 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       if (!_isSearching) ...[
                         Builder(
                           builder: (context) => _buildAnimatedGreeting(
-                            AppLocalizations.of(context),
+                            AppLocalizations.ofWithFallback(context),
                           ),
                         ),
                         const SizedBox(height: 12),

@@ -262,7 +262,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                       ),
                       Text(
-                        '${AppLocalizations.ofWithFallback(context).of} $_targetCount',
+                        '${AppLocalizations.ofWithFallback(context).ofCount} $_targetCount',
                         style: AppTheme.caption.copyWith(
                           color: AppTheme.textSecondary,
                         ),
