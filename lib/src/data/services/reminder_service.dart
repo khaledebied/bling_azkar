@@ -146,10 +146,17 @@ class ReminderService {
   Future<void> rescheduleAllActiveReminders() async {
     final activeReminders = getActiveReminders();
     
+    // Don't request permissions during app startup - just try to schedule
+    // Permissions will be requested when user sets a new reminder
     for (final reminder in activeReminders) {
-      final zikr = await _azkarRepo.getZikrById(reminder.zikrId);
-      if (zikr != null) {
-        await _scheduleNotification(reminder, zikr);
+      try {
+        final zikr = await _azkarRepo.getZikrById(reminder.zikrId);
+        if (zikr != null) {
+          await _scheduleNotification(reminder, zikr);
+        }
+      } catch (e) {
+        print('Warning: Could not reschedule reminder ${reminder.id}: $e');
+        // Continue with other reminders
       }
     }
   }

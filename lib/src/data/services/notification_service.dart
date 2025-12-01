@@ -86,36 +86,55 @@ class NotificationService {
       await initialize();
     }
 
-    final androidImplementation =
-        _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    try {
+      final androidImplementation =
+          _notifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
 
-    final iosImplementation =
-        _notifications.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+      final iosImplementation =
+          _notifications.resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
 
-    bool androidGranted = true;
-    bool iosGranted = true;
+      bool androidGranted = true;
+      bool iosGranted = true;
 
-    if (androidImplementation != null) {
-      final granted = await androidImplementation.requestNotificationsPermission();
-      androidGranted = granted ?? false;
-      print('Android notification permission: $androidGranted');
+      if (androidImplementation != null) {
+        try {
+          final granted = await androidImplementation.requestNotificationsPermission();
+          androidGranted = granted ?? false;
+          print('Android notification permission: $androidGranted');
+        } catch (e) {
+          print('Error requesting Android permissions: $e');
+          // On Android 12 and below, permissions are granted by default
+          // On Android 13+, we need runtime permission
+          androidGranted = true; // Assume granted if we can't request
+        }
+      }
+
+      if (iosImplementation != null) {
+        try {
+          final granted = await iosImplementation.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+          iosGranted = granted ?? false;
+          print('iOS notification permission: $iosGranted');
+        } catch (e) {
+          print('Error requesting iOS permissions: $e');
+          iosGranted = false;
+        }
+      }
+
+      final result = androidGranted && iosGranted;
+      print('Notification permissions granted: $result');
+      return result;
+    } catch (e) {
+      print('Error in requestPermissions: $e');
+      // Return true to allow scheduling even if permission request fails
+      // (permissions might already be granted)
+      return true;
     }
-
-    if (iosImplementation != null) {
-      final granted = await iosImplementation.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      iosGranted = granted ?? false;
-      print('iOS notification permission: $iosGranted');
-    }
-
-    final result = androidGranted && iosGranted;
-    print('Notification permissions granted: $result');
-    return result;
   }
 
   Future<void> scheduleReminder(
@@ -127,8 +146,14 @@ class NotificationService {
       await initialize();
     }
 
-    // Request permissions before scheduling
-    await requestPermissions();
+    // Request permissions before scheduling (but don't fail if not granted)
+    // Permissions will be requested when user sets reminder, not during app startup
+    try {
+      await requestPermissions();
+    } catch (e) {
+      print('Warning: Could not request permissions (may be during app startup): $e');
+      // Continue anyway - permissions might already be granted
+    }
 
     final notificationId = reminder.notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
     await _notifications.cancel(notificationId);
