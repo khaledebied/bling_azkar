@@ -39,16 +39,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          if (!_isSearching) ...[
-            _buildWelcomeBanner(),
-            _buildCategoriesSection(),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            _buildAppBar(),
+            if (!_isSearching) ...[
+              _buildWelcomeBanner(),
+              _buildCategoriesSection(),
+            ],
+            _buildTabBar(),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildAllAzkarTab(),
+            _buildFavoritesTab(),
+            _buildRecentTab(),
           ],
-          _buildTabBar(),
-          _buildContent(),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -259,46 +268,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildTabBar() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _TabBarDelegate(
         child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BoxDecoration(
-              color: AppTheme.primaryGreen,
-              borderRadius: BorderRadius.circular(14),
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(16),
             ),
-            labelColor: Colors.white,
-            unselectedLabelColor: AppTheme.textSecondary,
-            tabs: const [
-              Tab(text: 'All'),
-              Tab(text: 'Favorites'),
-              Tab(text: 'Recent'),
-            ],
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: AppTheme.primaryGreen,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: AppTheme.textSecondary,
+              tabs: const [
+                Tab(text: 'All'),
+                Tab(text: 'Favorites'),
+                Tab(text: 'Recent'),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContent() {
-    return SliverFillRemaining(
-      child: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAllAzkarTab(),
-          _buildFavoritesTab(),
-          _buildRecentTab(),
-        ],
-      ),
-    );
-  }
 
   Widget _buildAllAzkarTab() {
     return FutureBuilder<List<Zikr>>(
