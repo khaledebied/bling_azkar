@@ -36,8 +36,9 @@ class AzkarRepository {
         final int count = zikrJson['count'];
         final String audioPath = zikrJson['audio'];
         
-        // Construct remote URL
-        final String fullAudioUrl = 'https://raw.githubusercontent.com/rn0x/Adhkar-json/main/audio/$audioPath';
+        // Construct local asset path
+        final String audioFilename = audioPath.split('/').last;
+        final String fullAudioUrl = 'assets/audio/$audioFilename';
         
         azkar.add(Zikr(
           id: '${categoryKey}_$id',

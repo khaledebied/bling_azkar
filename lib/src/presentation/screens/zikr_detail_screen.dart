@@ -340,7 +340,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     try {
                       await _audioService.playAudio(
                         audio.fullFileUrl,
-                        isLocal: false,
+                        isLocal: true,
                       );
                     } catch (e) {
                       if (mounted) {
