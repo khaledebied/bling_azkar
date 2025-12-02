@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../data/services/audio_player_service.dart';
+import 'package:just_audio/just_audio.dart';
 
 class ZikrListItem extends StatefulWidget {
   final Zikr zikr;
@@ -21,9 +24,22 @@ class ZikrListItem extends StatefulWidget {
 }
 
 class _ZikrListItemState extends State<ZikrListItem>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  late AnimationController _playController;
+  late AnimationController _pulseController;
+  late Animation<double> _playScaleAnimation;
+  late Animation<double> _pulseAnimation;
+  
+  final _audioService = AudioPlayerService();
+  StreamSubscription<PlayerState>? _playerStateSubscription;
+  bool _isPlaying = false;
+  bool _isCurrentAudio = false;
+  String? _currentAudioPath;
+  
+  // Static variable to track which audio is currently playing
+  static String? _currentlyPlayingPath;
 
   @override
   void initState() {
@@ -35,12 +51,108 @@ class _ZikrListItemState extends State<ZikrListItem>
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+
+    _playController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _playScaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _playController, curve: Curves.easeInOut),
+    );
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // Get current audio path for this zikr
+    if (widget.zikr.audio.isNotEmpty) {
+      final audioInfo = widget.zikr.audio.first;
+      _currentAudioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
+    }
+
+    // Listen to audio player state
+    _playerStateSubscription = _audioService.playerStateStream.listen((state) {
+      if (mounted && _currentAudioPath != null) {
+        final wasPlaying = _isPlaying;
+        final wasCurrent = _isCurrentAudio;
+        _isPlaying = state.playing;
+        
+        // Reset playing path if audio stopped or completed
+        if (state.processingState == ProcessingState.completed || 
+            (!_isPlaying && _currentlyPlayingPath == _currentAudioPath)) {
+          _currentlyPlayingPath = null;
+        }
+        
+        // Check if this is the current audio being played
+        _isCurrentAudio = _isPlaying && _currentlyPlayingPath == _currentAudioPath;
+        
+        if (_isCurrentAudio && !wasCurrent) {
+          _pulseController.repeat(reverse: true);
+        } else if (!_isCurrentAudio && wasCurrent) {
+          _pulseController.stop();
+          _pulseController.reset();
+        }
+        
+        if (wasPlaying != _isPlaying || wasCurrent != _isCurrentAudio) {
+          setState(() {});
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _playController.dispose();
+    _pulseController.dispose();
+    _playerStateSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _handlePlayPause() async {
+    if (widget.zikr.audio.isEmpty || _currentAudioPath == null) return;
+
+    try {
+      // Animate button press
+      _playController.forward().then((_) {
+        _playController.reverse();
+      });
+      
+      if (_isPlaying && _isCurrentAudio) {
+        // Pause current audio
+        await _audioService.pause();
+        _currentlyPlayingPath = null;
+      } else {
+        // Stop any currently playing audio
+        if (_currentlyPlayingPath != null && _currentlyPlayingPath != _currentAudioPath) {
+          await _audioService.stop();
+        }
+        
+        // Play this audio
+        await _audioService.playAudio(_currentAudioPath!, isLocal: true);
+        _currentlyPlayingPath = _currentAudioPath;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error playing audio: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -112,6 +224,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                         const SizedBox(height: 8),
                         Row(
                           children: [
+                            // Repetition badge
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -140,6 +253,10 @@ class _ZikrListItemState extends State<ZikrListItem>
                                 ],
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            // Play button
+                            if (widget.zikr.audio.isNotEmpty)
+                              _buildPlayButton(),
                           ],
                         ),
                       ],
@@ -147,6 +264,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                   ),
                   const SizedBox(width: 12),
                   Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
                         icon: Icon(
@@ -159,6 +277,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                         ),
                         onPressed: widget.onFavoriteToggle,
                       ),
+                      const SizedBox(height: 8),
                       const Icon(
                         Icons.arrow_forward_ios,
                         size: 16,
@@ -169,6 +288,79 @@ class _ZikrListItemState extends State<ZikrListItem>
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayButton() {
+    return GestureDetector(
+      onTap: _handlePlayPause,
+      child: ScaleTransition(
+        scale: _playScaleAnimation,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _isPlaying && _isCurrentAudio
+                  ? [
+                      AppTheme.primaryTeal,
+                      AppTheme.primaryGreen,
+                    ]
+                  : [
+                      AppTheme.primaryGreen,
+                      AppTheme.primaryTeal,
+                    ],
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: (_isPlaying && _isCurrentAudio
+                        ? AppTheme.primaryTeal
+                        : AppTheme.primaryGreen)
+                    .withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulsing ring when playing
+              if (_isPlaying && _isCurrentAudio)
+                ScaleTransition(
+                  scale: _pulseAnimation,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              // Play/Pause icon
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  _isPlaying && _isCurrentAudio
+                      ? Icons.pause
+                      : Icons.play_arrow,
+                  key: ValueKey(_isPlaying && _isCurrentAudio),
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
           ),
         ),
       ),
