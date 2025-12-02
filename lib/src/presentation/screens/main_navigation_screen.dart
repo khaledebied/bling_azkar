@@ -105,9 +105,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         ],
       ),
       child: SafeArea(
+        top: false,
         child: Container(
-          height: 70,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -152,18 +152,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             gradient: isSelected ? AppTheme.primaryGradient : null,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? Colors.white.withOpacity(0.2)
@@ -173,18 +174,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 child: Icon(
                   icon,
                   color: isSelected ? Colors.white : AppTheme.textSecondary,
-                  size: 24,
+                  size: 22,
                 ),
               ),
-              const SizedBox(height: 4),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 300),
-                style: AppTheme.caption.copyWith(
-                  color: isSelected ? Colors.white : AppTheme.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: isSelected ? 12 : 11,
+              const SizedBox(height: 2),
+              Flexible(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 300),
+                  style: AppTheme.caption.copyWith(
+                    color: isSelected ? Colors.white : AppTheme.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: isSelected ? 11 : 10,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                child: Text(label),
               ),
             ],
           ),

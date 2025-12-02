@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter_qiblah/flutter_qiblah.dart';
 import 'package:geolocator/geolocator.dart';
@@ -25,6 +26,9 @@ class _QiblaScreenState extends State<QiblaScreen>
   late AnimationController _compassController;
   late Animation<double> _compassRotation;
   late Animation<double> _qiblaArrowRotation;
+  
+  StreamSubscription<double>? _qiblahSubscription;
+  StreamSubscription<double>? _headingSubscription;
 
   @override
   void initState() {
@@ -50,33 +54,41 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   @override
   void dispose() {
+    _qiblahSubscription?.cancel();
+    _headingSubscription?.cancel();
     _compassController.dispose();
-    FlutterQiblah().dispose();
     super.dispose();
   }
 
   Future<void> _initializeQibla() async {
     try {
-      // Check location permission
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      // Check location status
       _locationStatus = await FlutterQiblah.checkLocationStatus();
       
-      if (_locationStatus == LocationStatus.disabled) {
+      // Check if location services are enabled
+      if (!_locationStatus!.enabled) {
         setState(() {
           _hasError = true;
-          _errorMessage = 'Location services are disabled. Please enable them.';
+          _errorMessage = 'Location services are disabled. Please enable them in settings.';
           _isLoading = false;
         });
         return;
       }
 
-      if (_locationStatus == LocationStatus.denied) {
+      // Check location permission
+      if (_locationStatus!.status == LocationPermission.denied) {
         // Request permission
         final permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied ||
             permission == LocationPermission.deniedForever) {
           setState(() {
             _hasError = true;
-            _errorMessage = 'Location permission denied. Please grant permission.';
+            _errorMessage = 'Location permission denied. Please grant location permission in app settings.';
             _isLoading = false;
           });
           return;
@@ -84,34 +96,58 @@ class _QiblaScreenState extends State<QiblaScreen>
       }
 
       // Initialize Qibla
-      await FlutterQiblah().init();
+      await FlutterQiblah.init();
 
-      // Listen to Qibla direction changes
-      FlutterQiblah.qiblahStream.listen((direction) {
-        if (mounted) {
-          setState(() {
-            _qiblaDirection = direction;
-            _isLoading = false;
-          });
-          _updateCompassRotation();
-        }
-      });
+      // Listen to Qibla direction stream
+      _qiblahSubscription = FlutterQiblah.qiblahStream.listen(
+        (direction) {
+          if (mounted) {
+            setState(() {
+              _qiblaDirection = direction;
+              _isLoading = false;
+            });
+            _updateCompassRotation();
+          }
+        },
+        onError: (error) {
+          if (mounted) {
+            setState(() {
+              _hasError = true;
+              _errorMessage = 'Error getting Qibla direction: ${error.toString()}';
+              _isLoading = false;
+            });
+          }
+        },
+      );
 
-      // Listen to device heading (compass)
-      FlutterQiblah.headingStream.listen((heading) {
-        if (mounted) {
-          setState(() {
-            _deviceHeading = heading;
-          });
-          _updateCompassRotation();
-        }
-      });
+      // Listen to device heading (compass) stream
+      _headingSubscription = FlutterQiblah.headingStream.listen(
+        (heading) {
+          if (mounted) {
+            setState(() {
+              _deviceHeading = heading;
+            });
+            _updateCompassRotation();
+          }
+        },
+        onError: (error) {
+          if (mounted) {
+            setState(() {
+              _hasError = true;
+              _errorMessage = 'Error getting device heading: ${error.toString()}';
+              _isLoading = false;
+            });
+          }
+        },
+      );
     } catch (e) {
-      setState(() {
-        _hasError = true;
-        _errorMessage = 'Error initializing Qibla: ${e.toString()}';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'Error initializing Qibla: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -119,7 +155,7 @@ class _QiblaScreenState extends State<QiblaScreen>
     // Calculate the angle between device heading and Qibla direction
     final angle = _qiblaDirection - _deviceHeading;
     
-    // Animate compass rotation
+    // Animate compass rotation (compass rotates opposite to device heading)
     _compassRotation = Tween<double>(
       begin: _compassRotation.value,
       end: -_deviceHeading,
@@ -488,4 +524,3 @@ class _QiblaScreenState extends State<QiblaScreen>
     );
   }
 }
-
