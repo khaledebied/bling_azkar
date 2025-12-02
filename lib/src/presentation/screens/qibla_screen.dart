@@ -27,8 +27,9 @@ class _QiblaScreenState extends State<QiblaScreen>
   late Animation<double> _compassRotation;
   late Animation<double> _qiblaArrowRotation;
   
-  StreamSubscription<double>? _qiblahSubscription;
-  StreamSubscription<double>? _headingSubscription;
+  StreamSubscription<QiblahDirection>? _qiblahSubscription;
+  StreamSubscription<CompassModel>? _headingSubscription;
+  FlutterQiblah? _flutterQiblah;
 
   @override
   void initState() {
@@ -56,6 +57,7 @@ class _QiblaScreenState extends State<QiblaScreen>
   void dispose() {
     _qiblahSubscription?.cancel();
     _headingSubscription?.cancel();
+    _flutterQiblah?.dispose();
     _compassController.dispose();
     super.dispose();
   }
@@ -95,15 +97,15 @@ class _QiblaScreenState extends State<QiblaScreen>
         }
       }
 
-      // Initialize Qibla
-      await FlutterQiblah.init();
+      // Create FlutterQiblah instance
+      _flutterQiblah = FlutterQiblah();
 
       // Listen to Qibla direction stream
-      _qiblahSubscription = FlutterQiblah.qiblahStream.listen(
-        (direction) {
+      _qiblahSubscription = _flutterQiblah!.qiblahStream.listen(
+        (qiblahDirection) {
           if (mounted) {
             setState(() {
-              _qiblaDirection = direction;
+              _qiblaDirection = qiblahDirection.qiblah;
               _isLoading = false;
             });
             _updateCompassRotation();
@@ -121,11 +123,11 @@ class _QiblaScreenState extends State<QiblaScreen>
       );
 
       // Listen to device heading (compass) stream
-      _headingSubscription = FlutterQiblah.headingStream.listen(
-        (heading) {
+      _headingSubscription = _flutterQiblah!.compassStream.listen(
+        (compass) {
           if (mounted) {
             setState(() {
-              _deviceHeading = heading;
+              _deviceHeading = compass.heading;
             });
             _updateCompassRotation();
           }
