@@ -106,7 +106,6 @@ class PlaylistService {
             repetition: repetition,
             totalRepetitions: count,
           ));
-          globalIndex++;
         }
       }
     }
