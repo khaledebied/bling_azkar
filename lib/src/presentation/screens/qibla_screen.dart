@@ -67,8 +67,21 @@ class _QiblaScreenState extends State<QiblaScreen>
         _hasError = false;
       });
 
-      // Check location status
-      _locationStatus = await FlutterQiblah.checkLocationStatus();
+      // Check location status with error handling
+      try {
+        _locationStatus = await FlutterQiblah.checkLocationStatus();
+      } catch (e) {
+        // Handle MissingPluginException - usually means app needs rebuild
+        if (e.toString().contains('MissingPluginException')) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = 'Plugin not initialized. Please restart the app or rebuild the project.\n\nError: ${e.toString()}';
+            _isLoading = false;
+          });
+          return;
+        }
+        rethrow;
+      }
       
       // Check if location services are enabled
       if (!_locationStatus!.enabled) {
@@ -125,9 +138,20 @@ class _QiblaScreenState extends State<QiblaScreen>
       );
     } catch (e) {
       if (mounted) {
+        String errorMsg = 'Error initializing Qibla';
+        
+        // Provide helpful error messages
+        if (e.toString().contains('MissingPluginException')) {
+          errorMsg = 'Plugin not initialized. Please:\n\n1. Stop the app completely\n2. Run: flutter clean\n3. Run: flutter pub get\n4. Rebuild and restart the app';
+        } else if (e.toString().contains('Permission')) {
+          errorMsg = 'Location permission is required. Please grant location permission in app settings.';
+        } else {
+          errorMsg = 'Error: ${e.toString()}';
+        }
+        
         setState(() {
           _hasError = true;
-          _errorMessage = 'Error initializing Qibla: ${e.toString()}';
+          _errorMessage = errorMsg;
           _isLoading = false;
         });
       }
