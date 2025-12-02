@@ -28,7 +28,6 @@ class _QiblaScreenState extends State<QiblaScreen>
   late Animation<double> _qiblaArrowRotation;
   
   StreamSubscription<QiblahDirection>? _qiblahSubscription;
-  StreamSubscription<CompassModel>? _headingSubscription;
   FlutterQiblah? _flutterQiblah;
 
   @override
@@ -56,7 +55,6 @@ class _QiblaScreenState extends State<QiblaScreen>
   @override
   void dispose() {
     _qiblahSubscription?.cancel();
-    _headingSubscription?.cancel();
     _flutterQiblah?.dispose();
     _compassController.dispose();
     super.dispose();
@@ -84,10 +82,12 @@ class _QiblaScreenState extends State<QiblaScreen>
 
       // Check location permission
       if (_locationStatus!.status == LocationPermission.denied) {
-        // Request permission
-        final permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
+        // Request permission using FlutterQiblah
+        await FlutterQiblah.requestPermissions();
+        // Check status again after requesting
+        _locationStatus = await FlutterQiblah.checkLocationStatus();
+        if (_locationStatus!.status == LocationPermission.denied ||
+            _locationStatus!.status == LocationPermission.deniedForever) {
           setState(() {
             _hasError = true;
             _errorMessage = 'Location permission denied. Please grant location permission in app settings.';
@@ -97,15 +97,17 @@ class _QiblaScreenState extends State<QiblaScreen>
         }
       }
 
-      // Create FlutterQiblah instance
+      // Create FlutterQiblah instance for disposal
       _flutterQiblah = FlutterQiblah();
 
-      // Listen to Qibla direction stream
-      _qiblahSubscription = _flutterQiblah!.qiblahStream.listen(
+      // Listen to Qibla direction stream (static getter)
+      _qiblahSubscription = FlutterQiblah.qiblahStream.listen(
         (qiblahDirection) {
           if (mounted) {
             setState(() {
               _qiblaDirection = qiblahDirection.qiblah;
+              // direction property contains the device heading/compass direction
+              _deviceHeading = qiblahDirection.direction;
               _isLoading = false;
             });
             _updateCompassRotation();
@@ -116,27 +118,6 @@ class _QiblaScreenState extends State<QiblaScreen>
             setState(() {
               _hasError = true;
               _errorMessage = 'Error getting Qibla direction: ${error.toString()}';
-              _isLoading = false;
-            });
-          }
-        },
-      );
-
-      // Listen to device heading (compass) stream
-      _headingSubscription = _flutterQiblah!.compassStream.listen(
-        (compass) {
-          if (mounted) {
-            setState(() {
-              _deviceHeading = compass.heading;
-            });
-            _updateCompassRotation();
-          }
-        },
-        onError: (error) {
-          if (mounted) {
-            setState(() {
-              _hasError = true;
-              _errorMessage = 'Error getting device heading: ${error.toString()}';
               _isLoading = false;
             });
           }
