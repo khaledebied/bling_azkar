@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/azkar_repository.dart';
 import '../../data/services/storage_service.dart';
+import '../../data/services/playlist_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
@@ -11,6 +12,7 @@ import 'reminders_screen.dart';
 import 'settings_screen.dart';
 import '../widgets/category_card.dart';
 import '../widgets/zikr_list_item.dart';
+import '../widgets/floating_playlist_player.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +25,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
   final _azkarRepo = AzkarRepository();
   final _storage = StorageService();
+  final _playlistService = PlaylistService();
   
   late TabController _tabController;
   String _searchQuery = '';
@@ -33,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _playlistService.initialize();
   }
 
   @override
@@ -49,37 +53,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            _buildAppBar(),
-            if (!_isSearching) ...[
-              _buildWelcomeBanner(),
-              _buildCategoriesSection(),
-            ],
-            _buildTabBar(),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
+        body: Stack(
           children: [
-            _buildAllAzkarTab(),
-            _buildFavoritesTab(),
-            _buildRecentTab(),
+            NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  _buildAppBar(),
+                  if (!_isSearching) ...[
+                    _buildWelcomeBanner(),
+                    _buildCategoriesSection(),
+                  ],
+                  _buildTabBar(),
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAllAzkarTab(),
+                  _buildFavoritesTab(),
+                  _buildRecentTab(),
+                ],
+              ),
+            ),
+            // Floating playlist player
+            StreamBuilder<bool>(
+              stream: _playlistService.stateStream.map((state) => 
+                  state == PlaylistState.playing || state == PlaylistState.paused),
+              initialData: false,
+              builder: (context, snapshot) {
+                final isVisible = snapshot.data ?? false;
+                return AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  bottom: isVisible ? 0 : -120,
+                  left: 0,
+                  right: 0,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: isVisible ? 1.0 : 0.0,
+                    child: FloatingPlaylistPlayer(
+                      playlistService: _playlistService,
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
+        floatingActionButton: _selectedCategory != null
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    CustomPageRoute(child: const RemindersScreen()),
+                  );
+                },
+                icon: const Icon(Icons.notifications_outlined),
+                label: Text(l10n.reminders),
+              ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            CustomPageRoute(child: const RemindersScreen()),
-          );
-        },
-        icon: const Icon(Icons.notifications_outlined),
-        label: Text(l10n.reminders),
-      ),
-    ),
     );
   }
 
@@ -553,29 +586,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
         final azkar = snapshot.data!;
         final prefs = _storage.getPreferences();
+        final hasAudio = azkar.any((z) => z.audio.isNotEmpty);
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: azkar.length,
-          itemBuilder: (context, index) {
-            final zikr = azkar[index];
-            final isFavorite = prefs.favoriteZikrIds.contains(zikr.id);
+        return Column(
+          children: [
+            // Play All Button - only show when category is selected and has audio
+            if (_selectedCategory != null && hasAudio)
+              _buildPlayAllButton(azkar),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: azkar.length,
+                itemBuilder: (context, index) {
+                  final zikr = azkar[index];
+                  final isFavorite = prefs.favoriteZikrIds.contains(zikr.id);
 
-            return ZikrListItem(
-              zikr: zikr,
-              isFavorite: isFavorite,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  CustomPageRoute(child: ZikrDetailScreen(zikr: zikr)),
-                );
-              },
-              onFavoriteToggle: () async {
-                await _storage.toggleFavorite(zikr.id);
-                setState(() {});
-              },
-            );
-          },
+                  return ZikrListItem(
+                    zikr: zikr,
+                    isFavorite: isFavorite,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        CustomPageRoute(child: ZikrDetailScreen(zikr: zikr)),
+                      );
+                    },
+                    onFavoriteToggle: () async {
+                      await _storage.toggleFavorite(zikr.id);
+                      setState(() {});
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -651,6 +694,204 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           color: AppTheme.textSecondary,
         ),
       ),
+    );
+  }
+
+  Widget _buildPlayAllButton(List<Zikr> azkar) {
+    final categoryName = _selectedCategory != null
+        ? _azkarRepo.getCategoryDisplayName(_selectedCategory!)
+        : '';
+    final audioCount = azkar.where((z) => z.audio.isNotEmpty).length;
+    // Calculate total count including repetitions
+    final totalPlaylistItems = azkar
+        .where((z) => z.audio.isNotEmpty)
+        .fold<int>(0, (sum, z) => sum + z.defaultCount);
+
+    return StreamBuilder<PlaylistState>(
+      stream: _playlistService.stateStream,
+      initialData: PlaylistState.idle,
+      builder: (context, snapshot) {
+        final state = snapshot.data ?? PlaylistState.idle;
+        final isPlaying = state == PlaylistState.playing;
+        final isPaused = state == PlaylistState.paused;
+
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 20 * (1 - value)),
+                child: child,
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen,
+                  AppTheme.primaryTeal,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGreen.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  if (isPlaying) {
+                    await _playlistService.pause();
+                  } else if (isPaused) {
+                    await _playlistService.resume();
+                  } else {
+                    await _playlistService.loadPlaylist(azkar);
+                    await _playlistService.play();
+                  }
+                  setState(() {});
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      // Animated play/pause icon
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(
+                          begin: isPlaying ? 0.0 : 1.0,
+                          end: isPlaying ? 1.0 : 0.0,
+                        ),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: 0.9 + (0.1 * value),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Pause icon
+                                  Opacity(
+                                    opacity: value,
+                                    child: const Icon(
+                                      Icons.pause,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  // Play icon
+                                  Opacity(
+                                    opacity: 1 - value,
+                                    child: const Icon(
+                                      Icons.play_arrow,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      // Text content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isPlaying || isPaused
+                                  ? (isPlaying ? 'Playing' : 'Paused')
+                                  : 'Play All',
+                              style: AppTheme.titleMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              categoryName.isNotEmpty
+                                  ? '$categoryName • $totalPlaylistItems items'
+                                  : '$totalPlaylistItems items',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Wave animation when playing
+                      if (isPlaying)
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 1000),
+                          curve: Curves.easeInOut,
+                          onEnd: () {
+                            if (mounted && isPlaying) {
+                              setState(() {});
+                            }
+                          },
+                          builder: (context, value, child) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(3, (index) {
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                                  width: 4,
+                                  height: 20 * (0.5 + 0.5 * (0.5 + 0.5 * (value + index * 0.3) % 1.0)),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                );
+                              }),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
