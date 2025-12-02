@@ -29,6 +29,8 @@ class _QiblaScreenState extends State<QiblaScreen>
   
   StreamSubscription<QiblahDirection>? _qiblahSubscription;
   FlutterQiblah? _flutterQiblah;
+  Timer? _timeoutTimer;
+  bool _hasReceivedValue = false;
 
   @override
   void initState() {
@@ -54,6 +56,7 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   @override
   void dispose() {
+    _timeoutTimer?.cancel();
     _qiblahSubscription?.cancel();
     _flutterQiblah?.dispose();
     _compassController.dispose();
@@ -67,9 +70,16 @@ class _QiblaScreenState extends State<QiblaScreen>
         _hasError = false;
       });
 
-      // Check location status with error handling
+      // Check location status with timeout
+      LocationStatus? locationStatus;
       try {
-        _locationStatus = await FlutterQiblah.checkLocationStatus();
+        locationStatus = await FlutterQiblah.checkLocationStatus()
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () {
+                throw TimeoutException('Location check timed out');
+              },
+            );
       } catch (e) {
         // Handle MissingPluginException - usually means app needs rebuild
         if (e.toString().contains('MissingPluginException')) {
@@ -80,8 +90,19 @@ class _QiblaScreenState extends State<QiblaScreen>
           });
           return;
         }
+        // Handle timeout
+        if (e is TimeoutException) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = 'Location check timed out. Please check your location settings and try again.';
+            _isLoading = false;
+          });
+          return;
+        }
         rethrow;
       }
+
+      _locationStatus = locationStatus;
       
       // Check if location services are enabled
       if (!_locationStatus!.enabled) {
@@ -95,15 +116,32 @@ class _QiblaScreenState extends State<QiblaScreen>
 
       // Check location permission
       if (_locationStatus!.status == LocationPermission.denied) {
-        // Request permission using FlutterQiblah
-        await FlutterQiblah.requestPermissions();
-        // Check status again after requesting
-        _locationStatus = await FlutterQiblah.checkLocationStatus();
-        if (_locationStatus!.status == LocationPermission.denied ||
-            _locationStatus!.status == LocationPermission.deniedForever) {
+        // Request permission using FlutterQiblah with timeout
+        try {
+          await FlutterQiblah.requestPermissions()
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () {
+                  throw TimeoutException('Permission request timed out');
+                },
+              );
+          // Check status again after requesting
+          _locationStatus = await FlutterQiblah.checkLocationStatus()
+              .timeout(const Duration(seconds: 5));
+          
+          if (_locationStatus!.status == LocationPermission.denied ||
+              _locationStatus!.status == LocationPermission.deniedForever) {
+            setState(() {
+              _hasError = true;
+              _errorMessage = 'Location permission denied. Please grant location permission in app settings.';
+              _isLoading = false;
+            });
+            return;
+          }
+        } catch (e) {
           setState(() {
             _hasError = true;
-            _errorMessage = 'Location permission denied. Please grant location permission in app settings.';
+            _errorMessage = 'Error requesting permission: ${e.toString()}';
             _isLoading = false;
           });
           return;
@@ -113,10 +151,30 @@ class _QiblaScreenState extends State<QiblaScreen>
       // Create FlutterQiblah instance for disposal
       _flutterQiblah = FlutterQiblah();
 
+      // Reset received value flag
+      _hasReceivedValue = false;
+      
+      // Set a timeout - if no value received in 15 seconds, show error
+      _timeoutTimer?.cancel();
+      _timeoutTimer = Timer(const Duration(seconds: 15), () {
+        if (mounted && !_hasReceivedValue && _isLoading) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = 'Timeout waiting for Qibla data. Please check your location services and try again.';
+            _isLoading = false;
+          });
+          _qiblahSubscription?.cancel();
+        }
+      });
+      
       // Listen to Qibla direction stream (static getter)
       _qiblahSubscription = FlutterQiblah.qiblahStream.listen(
         (qiblahDirection) {
           if (mounted) {
+            if (!_hasReceivedValue) {
+              _hasReceivedValue = true;
+              _timeoutTimer?.cancel();
+            }
             setState(() {
               _qiblaDirection = qiblahDirection.qiblah;
               // direction property contains the device heading/compass direction
@@ -128,6 +186,7 @@ class _QiblaScreenState extends State<QiblaScreen>
         },
         onError: (error) {
           if (mounted) {
+            _timeoutTimer?.cancel();
             setState(() {
               _hasError = true;
               _errorMessage = 'Error getting Qibla direction: ${error.toString()}';
