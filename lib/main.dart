@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:quran_library/quran_library.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
 import 'src/utils/page_transitions.dart';
@@ -24,6 +25,9 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.initialize();
   await AudioPlayerService().initialize();
+  
+  // Initialize Quran Library
+  await QuranLibrary.init();
 
   // Reschedule all active reminders
   final reminderService = ReminderService();
