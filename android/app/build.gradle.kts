@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.blingazkar.bling_azkar"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
