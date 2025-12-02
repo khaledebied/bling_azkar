@@ -10,6 +10,7 @@ import '../../utils/page_transitions.dart';
 import 'zikr_detail_screen.dart';
 import 'reminders_screen.dart';
 import 'settings_screen.dart';
+import 'categories_grid_screen.dart';
 import '../widgets/category_card.dart';
 import '../widgets/zikr_list_item.dart';
 import '../widgets/floating_playlist_player.dart';
@@ -455,6 +456,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         color: AppTheme.textSecondary,
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    // See All button
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          CustomPageRoute(
+                            child: CategoriesGridScreen(
+                              categories: categories,
+                              categoryMap: categoryMap,
+                            ),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'See All',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.primaryGreen,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -463,7 +506,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
+                  itemCount: categories.length > 5 ? 5 : categories.length,
                   itemBuilder: (context, index) {
                     final categoryKey = categories[index];
                     final categoryNameAr = categoryMap[categoryKey] ?? categoryKey;
