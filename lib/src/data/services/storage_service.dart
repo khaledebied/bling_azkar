@@ -101,6 +101,15 @@ class StorageService {
     return Sheikh.fromJson(Map<String, dynamic>.from(json));
   }
 
+  // Tasbih Count
+  Future<void> updateTasbihCount(int count) async {
+    await _preferences.put('tasbih_count', count);
+  }
+
+  int getTasbihCount() {
+    return _preferences.get('tasbih_count', defaultValue: 0) as int;
+  }
+
   // Downloaded Audio
   Future<void> saveDownloadedAudio(DownloadedAudio audio) async {
     await _downloadedAudio.put(audio.id, audio.toJson());
