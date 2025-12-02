@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:math' as math;
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
 import '../../data/services/storage_service.dart';
@@ -18,42 +19,53 @@ class _TasbihScreenState extends State<TasbihScreen>
   int _roundCount = 0;
   final int _roundTarget = 33;
   
-  late AnimationController _pulseController;
-  late AnimationController _bounceController;
+  late AnimationController _rotationController;
+  late AnimationController _scaleController;
   late AnimationController _rippleController;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _bounceAnimation;
+  late AnimationController _bounceController;
+  
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _scaleAnimation;
   late Animation<double> _rippleAnimation;
+  late Animation<double> _bounceAnimation;
+  
+  double _dragOffset = 0.0;
+  double _lastDragOffset = 0.0;
+  bool _isDragging = false;
+  double _rotationAngle = 0.0;
 
   @override
   void initState() {
     super.initState();
     _loadCount();
     
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    // Rotation animation for drag
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
       CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
+        parent: _rotationController,
+        curve: Curves.easeOut,
       ),
     );
 
-    _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+    // Scale animation for tap
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _bounceAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(
-        parent: _bounceController,
+        parent: _scaleController,
         curve: Curves.elasticOut,
       ),
     );
 
+    // Ripple animation
     _rippleController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _rippleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -62,13 +74,26 @@ class _TasbihScreenState extends State<TasbihScreen>
         curve: Curves.easeOut,
       ),
     );
+
+    // Bounce animation for round completion
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _bounceAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(
+        parent: _bounceController,
+        curve: Curves.elasticOut,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
-    _bounceController.dispose();
+    _rotationController.dispose();
+    _scaleController.dispose();
     _rippleController.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
@@ -92,13 +117,88 @@ class _TasbihScreenState extends State<TasbihScreen>
     _saveCount();
 
     // Animate
-    _bounceController.forward(from: 0);
+    _scaleController.forward(from: 0);
     _rippleController.forward(from: 0);
     
-    if (_roundCount == 0) {
+    if (_roundCount == 0 && _count > 0) {
       HapticFeedback.heavyImpact();
-      _pulseController.forward(from: 0);
+      _bounceController.forward(from: 0);
     }
+  }
+
+  void _decrement() {
+    if (_count > 0) {
+      HapticFeedback.lightImpact();
+      setState(() {
+        _count--;
+        _roundCount = _count % _roundTarget;
+      });
+      _saveCount();
+
+      // Animate
+      _scaleController.forward(from: 0);
+      _rippleController.forward(from: 0);
+    }
+  }
+
+  void _handleDragStart(DragStartDetails details) {
+    setState(() {
+      _isDragging = true;
+      _lastDragOffset = 0.0;
+    });
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _dragOffset += details.delta.dy;
+      _lastDragOffset = details.delta.dy;
+      
+      // Calculate rotation based on drag (smooth rotation)
+      _rotationAngle += details.delta.dy * 0.15;
+      
+      // Determine if we should increment/decrement based on drag distance
+      // Use a threshold to prevent too frequent updates
+      double threshold = 25.0; // pixels per increment/decrement
+      
+      if (_dragOffset.abs() > threshold) {
+        if (_dragOffset < 0) {
+          // Dragging up (forward) - increment
+          _increment();
+          _dragOffset = 0.0; // Reset after increment
+        } else {
+          // Dragging down (reverse) - decrement
+          _decrement();
+          _dragOffset = 0.0; // Reset after decrement
+        }
+      }
+    });
+    
+    // Animate rotation smoothly
+    double normalizedAngle = (_rotationAngle % (2 * math.pi)) / (2 * math.pi);
+    _rotationController.value = normalizedAngle;
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    setState(() {
+      _isDragging = false;
+      _dragOffset = 0.0;
+    });
+    
+    // Smooth return rotation with spring effect
+    _rotationController.animateTo(
+      0.0,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutBack,
+    );
+    
+    // Reset angle after animation
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        setState(() {
+          _rotationAngle = 0.0;
+        });
+      }
+    });
   }
 
   void _reset() {
@@ -162,7 +262,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                               ),
                             ),
                             Text(
-                              'Count your dhikr',
+                              'Tap or drag to count',
                               style: AppTheme.bodyMedium.copyWith(
                                 color: Colors.white.withOpacity(0.9),
                               ),
@@ -201,88 +301,224 @@ class _TasbihScreenState extends State<TasbihScreen>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 40),
-                        // Main Counter Circle
+                        const SizedBox(height: 60),
+                        // Interactive Tasbih Bead
                         GestureDetector(
                           onTap: _increment,
+                          onPanStart: _handleDragStart,
+                          onPanUpdate: _handleDragUpdate,
+                          onPanEnd: _handleDragEnd,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              // Ripple effect
+                              // Outer ripple effect
                               AnimatedBuilder(
                                 animation: _rippleAnimation,
                                 builder: (context, child) {
                                   return Container(
-                                    width: 200 + (_rippleAnimation.value * 100),
-                                    height: 200 + (_rippleAnimation.value * 100),
+                                    width: 280 + (_rippleAnimation.value * 80),
+                                    height: 280 + (_rippleAnimation.value * 80),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white.withOpacity(
-                                          0.3 * (1 - _rippleAnimation.value),
+                                          0.2 * (1 - _rippleAnimation.value),
                                         ),
-                                        width: 3,
+                                        width: 2,
                                       ),
                                     ),
                                   );
                                 },
                               ),
-                              // Pulse ring
+                              // Pulse ring for round completion
                               if (_roundCount == 0 && _count > 0)
-                                ScaleTransition(
-                                  scale: _pulseAnimation,
-                                  child: Container(
-                                    width: 220,
-                                    height: 220,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.5),
-                                        width: 4,
+                                AnimatedBuilder(
+                                  animation: _bounceAnimation,
+                                  builder: (context, child) {
+                                    return Container(
+                                      width: 240 * _bounceAnimation.value,
+                                      height: 240 * _bounceAnimation.value,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(
+                                            0.6 * (1 - (_bounceAnimation.value - 1) / 0.3),
+                                          ),
+                                          width: 4,
+                                        ),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
-                              // Main circle
-                              ScaleTransition(
-                                scale: _bounceAnimation,
-                                child: Container(
-                                  width: 200,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.white,
-                                        Colors.white.withOpacity(0.9),
-                                      ],
-                                    ),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 10),
+                              // Main rotating bead
+                              AnimatedBuilder(
+                                animation: Listenable.merge([
+                                  _rotationController,
+                                  _scaleController,
+                                ]),
+                                builder: (context, child) {
+                                  return Transform.rotate(
+                                    angle: _rotationAnimation.value * 2 * math.pi,
+                                    child: Transform.scale(
+                                      scale: _isDragging 
+                                          ? 1.1 
+                                          : _scaleAnimation.value,
+                                      child: Container(
+                                        width: 220,
+                                        height: 220,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white,
+                                              Colors.white.withOpacity(0.95),
+                                            ],
+                                          ),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.3),
+                                              blurRadius: 40,
+                                              offset: const Offset(0, 15),
+                                              spreadRadius: 5,
+                                            ),
+                                            BoxShadow(
+                                              color: AppTheme.primaryGreen.withOpacity(0.3),
+                                              blurRadius: 30,
+                                              offset: const Offset(0, 10),
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            // Decorative inner circle
+                                            Container(
+                                              width: 180,
+                                              height: 180,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: AppTheme.primaryGreen.withOpacity(0.2),
+                                                  width: 2,
+                                                ),
+                                              ),
+                                            ),
+                                            // Counter text
+                                            AnimatedSwitcher(
+                                              duration: const Duration(milliseconds: 200),
+                                              transitionBuilder: (child, animation) {
+                                                return ScaleTransition(
+                                                  scale: animation,
+                                                  child: FadeTransition(
+                                                    opacity: animation,
+                                                    child: child,
+                                                  ),
+                                                );
+                                              },
+                                              child: Text(
+                                                '$_count',
+                                                key: ValueKey(_count),
+                                                style: AppTheme.headlineLarge.copyWith(
+                                                  fontSize: 72,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.primaryGreen,
+                                                  letterSpacing: -2,
+                                                ),
+                                              ),
+                                            ),
+                                            // Drag indicator (shows when dragging)
+                                            if (_isDragging)
+                                              Positioned(
+                                                top: 20,
+                                                child: Icon(
+                                                  _lastDragOffset < 0 
+                                                      ? Icons.arrow_upward_rounded
+                                                      : Icons.arrow_downward_rounded,
+                                                  color: AppTheme.primaryGreen.withOpacity(0.6),
+                                                  size: 24,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '$_count',
-                                      style: AppTheme.headlineLarge.copyWith(
-                                        fontSize: 64,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primaryGreen,
-                                      ),
                                     ),
+                                  );
+                                },
+                              ),
+                              // Decorative beads around the main bead
+                              ...List.generate(8, (index) {
+                                final angle = (index * 2 * math.pi / 8) - math.pi / 2;
+                                final radius = 140.0;
+                                return Positioned(
+                                  left: 110 + radius * math.cos(angle) - 15,
+                                  top: 110 + radius * math.sin(angle) - 15,
+                                  child: AnimatedBuilder(
+                                    animation: _rippleAnimation,
+                                    builder: (context, child) {
+                                      return Opacity(
+                                        opacity: 0.3 + (_rippleAnimation.value * 0.2),
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.1),
+                                                blurRadius: 5,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // Instructions
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.touch_app_rounded,
+                                color: Colors.white.withOpacity(0.8),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Tap to count',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Icon(
+                                Icons.swipe_vertical_rounded,
+                                color: Colors.white.withOpacity(0.8),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Drag up/down',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: Colors.white.withOpacity(0.8),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 30),
                         // Reset Button
                         ElevatedButton.icon(
                           onPressed: _reset,
@@ -313,4 +549,3 @@ class _TasbihScreenState extends State<TasbihScreen>
     );
   }
 }
-
