@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'package:flutter_qiblah/flutter_qiblah.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
 
@@ -13,17 +15,16 @@ class QiblaScreen extends StatefulWidget {
 
 class _QiblaScreenState extends State<QiblaScreen>
     with SingleTickerProviderStateMixin {
-  // Kaaba coordinates (Mecca)
-  static const double kaabaLat = 21.4225;
-  static const double kaabaLng = 39.8262;
-  
-  double _currentLat = 0.0;
-  double _currentLng = 0.0;
   double _qiblaDirection = 0.0;
+  double _deviceHeading = 0.0;
   bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
+  LocationStatus? _locationStatus;
   
   late AnimationController _compassController;
   late Animation<double> _compassRotation;
+  late Animation<double> _qiblaArrowRotation;
 
   @override
   void initState() {
@@ -38,52 +39,108 @@ class _QiblaScreenState extends State<QiblaScreen>
         curve: Curves.easeOutCubic,
       ),
     );
-    _initializeLocation();
+    _qiblaArrowRotation = Tween<double>(begin: 0.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _compassController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    _initializeQibla();
   }
 
   @override
   void dispose() {
     _compassController.dispose();
+    FlutterQiblah().dispose();
     super.dispose();
   }
 
-  Future<void> _initializeLocation() async {
-    // In a real app, you would use geolocator package
-    // For now, using a default location (example: Cairo, Egypt)
-    setState(() {
-      _currentLat = 30.0444;
-      _currentLng = 31.2357;
-      _isLoading = false;
-    });
-    _calculateQiblaDirection();
+  Future<void> _initializeQibla() async {
+    try {
+      // Check location permission
+      _locationStatus = await FlutterQiblah.checkLocationStatus();
+      
+      if (_locationStatus == LocationStatus.disabled) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'Location services are disabled. Please enable them.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      if (_locationStatus == LocationStatus.denied) {
+        // Request permission
+        final permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = 'Location permission denied. Please grant permission.';
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
+      // Initialize Qibla
+      await FlutterQiblah().init();
+
+      // Listen to Qibla direction changes
+      FlutterQiblah.qiblahStream.listen((direction) {
+        if (mounted) {
+          setState(() {
+            _qiblaDirection = direction;
+            _isLoading = false;
+          });
+          _updateCompassRotation();
+        }
+      });
+
+      // Listen to device heading (compass)
+      FlutterQiblah.headingStream.listen((heading) {
+        if (mounted) {
+          setState(() {
+            _deviceHeading = heading;
+          });
+          _updateCompassRotation();
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = 'Error initializing Qibla: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
   }
 
-  void _calculateQiblaDirection() {
-    final lat1 = _currentLat * math.pi / 180;
-    final lat2 = kaabaLat * math.pi / 180;
-    final deltaLng = (kaabaLng - _currentLng) * math.pi / 180;
-
-    final y = math.sin(deltaLng) * math.cos(lat2);
-    final x = math.cos(lat1) * math.sin(lat2) -
-        math.sin(lat1) * math.cos(lat2) * math.cos(deltaLng);
-
-    final bearing = math.atan2(y, x);
-    final direction = (bearing * 180 / math.pi + 360) % 360;
-
-    setState(() {
-      _qiblaDirection = direction;
-    });
-
+  void _updateCompassRotation() {
+    // Calculate the angle between device heading and Qibla direction
+    final angle = _qiblaDirection - _deviceHeading;
+    
     // Animate compass rotation
     _compassRotation = Tween<double>(
       begin: _compassRotation.value,
-      end: direction,
+      end: -_deviceHeading,
     ).animate(
       CurvedAnimation(
         parent: _compassController,
         curve: Curves.easeOutCubic,
       ),
     );
+
+    // Animate Qibla arrow (relative to compass)
+    _qiblaArrowRotation = Tween<double>(
+      begin: _qiblaArrowRotation.value,
+      end: angle,
+    ).animate(
+      CurvedAnimation(
+        parent: _compassController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
     _compassController.forward(from: 0);
   }
 
@@ -154,56 +211,159 @@ class _QiblaScreenState extends State<QiblaScreen>
                 Expanded(
                   child: Center(
                     child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : Column(
+                        ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Compass Circle
-                              AnimatedBuilder(
-                                animation: _compassRotation,
-                                builder: (context, child) {
-                                  return Transform.rotate(
-                                    angle: _compassRotation.value * math.pi / 180,
-                                    child: Container(
-                                      width: 280,
-                                      height: 280,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withOpacity(0.3),
-                                          width: 4,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.2),
-                                            blurRadius: 30,
-                                            spreadRadius: 5,
-                                          ),
-                                        ],
+                              const CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Initializing Qibla...',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          )
+                        : _hasError
+                            ? Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline,
+                                      size: 64,
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Text(
+                                      _errorMessage,
+                                      style: AppTheme.bodyLarge.copyWith(
+                                        color: Colors.white,
                                       ),
-                                      child: Stack(
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    ElevatedButton.icon(
+                                      onPressed: _initializeQibla,
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Retry'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: AppTheme.primaryGreen,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 32,
+                                          vertical: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Compass Circle
+                                  AnimatedBuilder(
+                                    animation: _compassController,
+                                    builder: (context, child) {
+                                      return Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          // Compass background
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              gradient: RadialGradient(
-                                                colors: [
-                                                  Colors.white,
-                                                  Colors.white.withOpacity(0.8),
+                                          // Compass background (rotates with device)
+                                          Transform.rotate(
+                                            angle: _compassRotation.value * math.pi / 180,
+                                            child: Container(
+                                              width: 280,
+                                              height: 280,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white.withOpacity(0.3),
+                                                  width: 4,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(0.2),
+                                                    blurRadius: 30,
+                                                    spreadRadius: 5,
+                                                  ),
                                                 ],
+                                              ),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  gradient: RadialGradient(
+                                                    colors: [
+                                                      Colors.white,
+                                                      Colors.white.withOpacity(0.8),
+                                                    ],
+                                                  ),
+                                                ),
+                                                child: Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    // Direction indicators (N, E, S, W)
+                                                    ...['N', 'E', 'S', 'W'].asMap().entries.map((entry) {
+                                                      final index = entry.key;
+                                                      final label = entry.value;
+                                                      final angle = (index * 90) * math.pi / 180;
+                                                      return Positioned(
+                                                        top: 20,
+                                                        left: 0,
+                                                        right: 0,
+                                                        child: Transform.rotate(
+                                                          angle: angle,
+                                                          child: Column(
+                                                            children: [
+                                                              Text(
+                                                                label,
+                                                                style: AppTheme.bodySmall.copyWith(
+                                                                  color: AppTheme.primaryGreen,
+                                                                  fontWeight: FontWeight.bold,
+                                                                ),
+                                                              ),
+                                                              Container(
+                                                                width: 2,
+                                                                height: 30,
+                                                                color: Colors.grey.shade400,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }),
+                                                    // Additional markers
+                                                    ...List.generate(8, (index) {
+                                                      if (index % 2 == 0) return const SizedBox.shrink();
+                                                      final angle = (index * 45) * math.pi / 180;
+                                                      return Positioned(
+                                                        top: 20,
+                                                        left: 0,
+                                                        right: 0,
+                                                        child: Transform.rotate(
+                                                          angle: angle,
+                                                          child: Container(
+                                                            width: 1,
+                                                            height: 15,
+                                                            color: Colors.grey.shade300,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),
-                                          // Qibla arrow
+                                          // Qibla arrow (rotates relative to compass)
                                           Transform.rotate(
-                                            angle: _qiblaDirection * math.pi / 180,
+                                            angle: _qiblaArrowRotation.value * math.pi / 180,
                                             child: Container(
-                                              width: 4,
-                                              height: 120,
+                                              width: 6,
+                                              height: 140,
                                               decoration: BoxDecoration(
                                                 gradient: LinearGradient(
                                                   begin: Alignment.topCenter,
@@ -213,79 +373,111 @@ class _QiblaScreenState extends State<QiblaScreen>
                                                     AppTheme.primaryTeal,
                                                   ],
                                                 ),
-                                                borderRadius: BorderRadius.circular(2),
+                                                borderRadius: BorderRadius.circular(3),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: AppTheme.primaryGreen.withOpacity(0.5),
+                                                    blurRadius: 10,
+                                                    spreadRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Stack(
+                                                children: [
+                                                  // Arrow head
+                                                  Positioned(
+                                                    top: 0,
+                                                    left: -8,
+                                                    right: -8,
+                                                    child: Container(
+                                                      width: 22,
+                                                      height: 22,
+                                                      decoration: BoxDecoration(
+                                                        color: AppTheme.primaryGreen,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.navigation,
+                                                        color: Colors.white,
+                                                        size: 14,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
                                           // Center dot
                                           Container(
-                                            width: 20,
-                                            height: 20,
+                                            width: 24,
+                                            height: 24,
                                             decoration: BoxDecoration(
                                               color: AppTheme.primaryGreen,
                                               shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: Colors.white,
+                                                width: 3,
+                                              ),
                                             ),
                                           ),
-                                          // Direction indicators
-                                          ...List.generate(8, (index) {
-                                            final angle = (index * 45) * math.pi / 180;
-                                            final isMain = index % 2 == 0;
-                                            return Positioned(
-                                              top: 20,
-                                              left: 0,
-                                              right: 0,
-                                              child: Transform.rotate(
-                                                angle: angle,
-                                                child: Container(
-                                                  width: 2,
-                                                  height: isMain ? 30 : 15,
-                                                  color: Colors.grey.shade400,
-                                                ),
-                                              ),
-                                            );
-                                          }),
                                         ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 40),
-                              // Direction Info
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
-                                    width: 2,
+                                      );
+                                    },
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      '${_qiblaDirection.toStringAsFixed(1)}°',
-                                      style: AppTheme.headlineMedium.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                  const SizedBox(height: 40),
+                                  // Direction Info
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                      vertical: 20,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(30),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                        width: 2,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Direction to Kaaba',
-                                      style: AppTheme.bodyMedium.copyWith(
-                                        color: Colors.white.withOpacity(0.9),
-                                      ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.explore,
+                                              color: Colors.white,
+                                              size: 28,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              '${_qiblaDirection.toStringAsFixed(1)}°',
+                                              style: AppTheme.headlineMedium.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          'Direction to Kaaba',
+                                          style: AppTheme.bodyMedium.copyWith(
+                                            color: Colors.white.withOpacity(0.9),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Device Heading: ${_deviceHeading.toStringAsFixed(1)}°',
+                                          style: AppTheme.bodySmall.copyWith(
+                                            color: Colors.white.withOpacity(0.8),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
                   ),
                 ),
               ],
