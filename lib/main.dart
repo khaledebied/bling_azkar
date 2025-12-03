@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:quran_library/quran_library.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
 import 'src/utils/page_transitions.dart';
@@ -35,6 +36,9 @@ void main() async {
   // Reschedule all active reminders
   final reminderService = ReminderService();
   await reminderService.rescheduleAllActiveReminders();
+  
+  // Initialize SharedPreferences for Tasbih
+  await SharedPreferences.getInstance();
 
   runApp(const ProviderScope(child: BlingAzkarApp()));
 }
