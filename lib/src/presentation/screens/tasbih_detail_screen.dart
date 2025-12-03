@@ -116,8 +116,10 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
       if (newState.isCompleted && !_celebrationShown) {
         _celebrationShown = true;
         _bounceController.forward(from: 0);
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
+        
+        // Show dialog after animation and frame completion
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (mounted && _celebrationShown) {
             _showCelebrationDialog();
           }
         });
@@ -206,21 +208,26 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
   void _showCelebrationDialog() {
     final counter = ref.read(tasbihCounterProvider(widget.tasbihType));
     
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => TasbihCelebrationDialog(
-        tasbihType: widget.tasbihType,
-        count: counter.currentCount,
-        onRestart: () {
-          Navigator.pop(context);
-          _reset();
-        },
-        onDone: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
+    // Use addPostFrameCallback to ensure dialog shows after frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => TasbihCelebrationDialog(
+          tasbihType: widget.tasbihType,
+          count: counter.currentCount,
+          onRestart: () {
+            Navigator.of(dialogContext).pop();
+            _reset();
+          },
+          onDone: () {
+            Navigator.of(dialogContext).pop();
+          },
+        ),
+      );
+    });
   }
 
   @override

@@ -67,17 +67,19 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
     
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.9,
-              maxHeight: MediaQuery.of(context).size.height * 0.8,
-            ),
+    return Material(
+      type: MaterialType.transparency,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.9,
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: context.cardColor,
@@ -268,6 +270,12 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Widget _buildCelebrationAnimation() {
