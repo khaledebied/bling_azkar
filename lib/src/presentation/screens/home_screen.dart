@@ -10,6 +10,8 @@ import '../providers/azkar_providers.dart';
 import '../../data/services/playlist_service.dart';
 import '../widgets/zikr_list_item.dart';
 import 'zikr_detail_screen.dart';
+import 'settings_screen.dart';
+import 'reminders_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -121,7 +123,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navigate to reminders screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const RemindersScreen(),
+            ),
+          );
         },
         icon: const Icon(Icons.notifications_outlined),
         label: const Text('Reminders'),
@@ -189,7 +196,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           child: IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              // Navigate to settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
             },
           ),
         ),
@@ -325,8 +337,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           loading: () => _buildShimmerLoading(),
           error: (error, stack) => const SliverToBoxAdapter(child: SizedBox.shrink()),
           data: (totalPages) {
-            final currentPage = ref.watch(currentPageProvider);
-            
             return SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
