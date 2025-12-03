@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
 
 class CategoryCard extends StatefulWidget {
   final String title;
   final String titleAr;
   final VoidCallback onTap;
+  final String? heroTag;
 
   const CategoryCard({
     super.key,
     required this.title,
     required this.titleAr,
     required this.onTap,
+    this.heroTag,
   });
 
   @override
@@ -217,8 +220,9 @@ class _CategoryCardState extends State<CategoryCard>
     final icon = _getCategoryIcon(widget.titleAr);
     final gradient = _getCategoryGradient(widget.titleAr);
 
-    return GestureDetector(
+    final cardWidget = GestureDetector(
       onTapDown: (_) {
+        HapticFeedback.lightImpact();
         setState(() => _isPressed = true);
         _controller.forward();
       },
@@ -370,5 +374,15 @@ class _CategoryCardState extends State<CategoryCard>
         ),
       ),
     );
+
+    // Wrap in Hero if heroTag is provided
+    if (widget.heroTag != null) {
+      return Hero(
+        tag: widget.heroTag!,
+        child: cardWidget,
+      );
+    }
+    
+    return cardWidget;
   }
 }

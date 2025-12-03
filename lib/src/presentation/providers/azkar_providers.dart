@@ -62,3 +62,22 @@ final toggleFavoriteProvider = Provider<Future<void> Function(String)>((ref) {
     ref.invalidate(userPreferencesProvider);
   };
 });
+
+/// Provider for limited categories (first 5 for home screen)
+final limitedCategoriesProvider = Provider<Map<String, String>>((ref) {
+  final repository = ref.watch(azkarRepositoryProvider);
+  final allCategories = repository.getCategoryDisplayNames();
+  
+  if (allCategories.isEmpty) {
+    return {};
+  }
+  
+  final entries = allCategories.entries.take(5).toList();
+  return Map.fromEntries(entries);
+});
+
+/// Provider for azkar by category
+final azkarByCategoryProvider = FutureProvider.family<List<Zikr>, String>((ref, categoryKey) async {
+  final repository = ref.watch(azkarRepositoryProvider);
+  return repository.getAzkarByCategory(categoryKey);
+});

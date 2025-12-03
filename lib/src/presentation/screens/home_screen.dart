@@ -3,31 +3,81 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import 'zikr_detail_screen.dart';
+import 'categories_grid_screen.dart';
 import '../widgets/category_card.dart';
 import '../widgets/zikr_list_item.dart';
+import '../widgets/view_all_categories_button.dart';
+import '../widgets/floating_playlist_player.dart';
 import '../providers/search_providers.dart';
 import '../providers/azkar_providers.dart';
+import '../../data/services/playlist_service.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _playlistService = PlaylistService();
+
+  @override
+  void initState() {
+    super.initState();
+    _playlistService.initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isSearching = ref.watch(isSearchingProvider);
     
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            _buildAppBar(ref),
-            if (!isSearching) ...[ 
-              _buildWelcomeBanner(),
-              _buildCategoriesSection(ref),
-            ],
-            _buildTabBar(ref),
-          ];
-        },
-        body: _buildTabBarView(ref),
+      body: Stack(
+        children: [
+          NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                _buildAppBar(ref),
+                if (!isSearching) ...[ 
+                  _buildWelcomeBanner(),
+                  _buildCategoriesSection(ref),
+                ],
+                _buildTabBar(ref),
+              ];
+            },
+            body: _buildTabBarView(ref),
+          ),
+          // Floating playlist player
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: StreamBuilder<PlaylistState>(
+              stream: _playlistService.stateStream,
+              initialData: PlaylistState.idle,
+              builder: (context, snapshot) {
+                final state = snapshot.data ?? PlaylistState.idle;
+                final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
+                
+                return AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  bottom: isVisible ? 0 : -100,
+                  left: 0,
+                  right: 0,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: isVisible ? 1.0 : 0.0,
+                    child: FloatingPlaylistPlayer(
+                      playlistService: _playlistService,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -209,7 +259,8 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _buildCategoriesSection(WidgetRef ref) {
     final repository = ref.watch(azkarRepositoryProvider);
-    final categories = repository.getCategoryDisplayNames();
+    final limitedCategories = ref.watch(limitedCategoriesProvider);
+    final allCategories = repository.getCategoryDisplayNames();
     final categoriesAr = repository.getCategoryDisplayNamesAr();
 
     return SliverToBoxAdapter(
@@ -230,27 +281,69 @@ class HomeScreen extends ConsumerWidget {
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
+              itemCount: limitedCategories.length,
               itemBuilder: (context, index) {
-                final categoryKey = categories.keys.elementAt(index);
-                final categoryName = categories[categoryKey]!;
+                final categoryKey = limitedCategories.keys.elementAt(index);
+                final categoryName = limitedCategories[categoryKey]!;
                 final categoryNameAr = categoriesAr[categoryKey]!;
 
                 return CategoryCard(
                   title: categoryName,
                   titleAr: categoryNameAr,
-                  onTap: () {
-                    ref.read(selectedTabIndexProvider.notifier).state = 0;
-                    ref.read(searchQueryProvider.notifier).state = categoryKey;
-                    ref.read(isSearchingProvider.notifier).state = true;
-                  },
+                  heroTag: 'category_$categoryKey',
+                  onTap: () => _playCategory(ref, categoryKey),
                 );
               },
             ),
           ),
+          // View All Categories Button
+          ViewAllCategoriesButton(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CategoriesGridScreen(
+                    categories: allCategories.keys.toList(),
+                    categoryMap: allCategories,
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _playCategory(WidgetRef ref, String categoryKey) async {
+    try {
+      final azkar = await ref.read(azkarByCategoryProvider(categoryKey).future);
+      
+      if (azkar.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No audios available in this category'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      await _playlistService.loadPlaylist(azkar);
+      await _playlistService.play();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading category: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildTabBar(WidgetRef ref) {
