@@ -75,17 +75,19 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
   }
 
   void _onAppStateChanged() {
-    if (_appState.locale != null) {
+    if (!mounted) return;
+    
+    if (_appState.locale != null && _appState.locale != _locale) {
       setState(() {
         _locale = _appState.locale!;
       });
     }
-    if (_appState.themeMode != null) {
+    if (_appState.themeMode != null && _appState.themeMode != _themeMode) {
       setState(() {
         _themeMode = _appState.themeMode!;
       });
     }
-    if (_appState.textScale != null) {
+    if (_appState.textScale != null && _appState.textScale != _textScale) {
       setState(() {
         _textScale = _appState.textScale!;
       });
@@ -130,7 +132,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
     // Check for language, theme, and text scale changes
     final prefs = _storage.getPreferences();
     final currentLocale = Locale(prefs.language);
-    final currentTextScale = prefs.textScale;
+    final currentTextScale = _appState.textScale ?? prefs.textScale;
     ThemeMode currentThemeMode;
     switch (prefs.themeMode) {
       case 'light':
@@ -143,6 +145,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
         currentThemeMode = ThemeMode.system;
     }
 
+    // Sync state with preferences and app state
     if (_locale != currentLocale || 
         _themeMode != currentThemeMode || 
         _textScale != currentTextScale) {

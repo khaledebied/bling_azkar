@@ -59,12 +59,17 @@ final toggleFavoriteProvider = Provider<Future<void> Function(String)>((ref) {
     final storage = ref.read(storageServiceProvider);
     await storage.toggleFavorite(zikrId);
     
-    // Update the preferences provider with fresh data
+    // Update the preferences provider with fresh data immediately
     final newPrefs = storage.getPreferences();
     ref.read(userPreferencesProvider.notifier).state = newPrefs;
     
-    // Also invalidate dependent providers
+    // Force immediate refresh of all dependent providers
+    ref.invalidate(userPreferencesProvider);
     ref.invalidate(favoriteAzkarProvider);
+    ref.invalidate(isFavoriteProvider(zikrId));
+    
+    // Refresh to trigger immediate rebuild
+    ref.refresh(favoriteAzkarProvider);
   };
 });
 

@@ -484,24 +484,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showTextSizeDialog(AppLocalizations l10n) {
+    double tempTextScale = _prefs.textScale;
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.textSize),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: context.cardColor,
+        title: Text(
+          l10n.textSize,
+          style: AppTheme.titleMedium.copyWith(
+            color: context.textPrimary,
+          ),
+        ),
         content: StatefulBuilder(
           builder: (context, setState) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('${(_prefs.textScale * 100).toInt()}%'),
+              Text(
+                '${(tempTextScale * 100).toInt()}%',
+                style: AppTheme.headlineMedium.copyWith(
+                  color: AppTheme.primaryGreen,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
               Slider(
-                value: _prefs.textScale,
+                value: tempTextScale,
                 min: 0.8,
                 max: 1.5,
                 divisions: 7,
-                label: '${(_prefs.textScale * 100).toInt()}%',
+                label: '${(tempTextScale * 100).toInt()}%',
                 onChanged: (value) {
                   setState(() {
-                    _updatePreferences(_prefs.copyWith(textScale: value));
+                    tempTextScale = value;
                   });
                 },
                 activeColor: AppTheme.primaryGreen,
@@ -511,8 +526,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.done),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.isArabic ? 'إلغاء' : 'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Update preferences
+              _updatePreferences(_prefs.copyWith(textScale: tempTextScale));
+              
+              // Notify app state to rebuild immediately
+              final appState = ref.read(appStateProvider);
+              appState.updateTextScale(tempTextScale);
+              
+              // Update local state
+              setState(() {
+                _prefs = _prefs.copyWith(textScale: tempTextScale);
+              });
+              
+              Navigator.pop(dialogContext);
+            },
+            child: Text(
+              l10n.done,
+              style: TextStyle(
+                color: AppTheme.primaryGreen,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),

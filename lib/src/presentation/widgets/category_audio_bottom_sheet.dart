@@ -135,18 +135,12 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
 
   Future<void> _toggleFavorite(String zikrId) async {
     try {
-      await _storage.toggleFavorite(zikrId);
+      // Use the provider to toggle favorite
+      final toggleFavorite = ref.read(toggleFavoriteProvider);
+      await toggleFavorite(zikrId);
       
       // Trigger rebuild locally
       setState(() {});
-      
-      // Invalidate all related providers to refresh everywhere
-      ref.invalidate(favoriteAzkarProvider);
-      ref.invalidate(isFavoriteProvider(zikrId));
-      
-      // Force refresh by reading the provider again
-      await Future.delayed(const Duration(milliseconds: 100));
-      ref.read(favoriteAzkarProvider);
       
       // Visual feedback without SnackBar (just the heart animation is enough)
     } catch (e) {
