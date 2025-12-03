@@ -391,8 +391,6 @@ class HomeScreen extends ConsumerWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: azkar.length,
-          // Performance optimization: provide item extent for better scrolling
-          itemExtent: 100,
           // Performance optimization: increase cache extent for smoother scrolling
           cacheExtent: 500,
           itemBuilder: (context, index) {
@@ -486,7 +484,6 @@ class HomeScreen extends ConsumerWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: favorites.length,
-          itemExtent: 100,
           cacheExtent: 500,
           itemBuilder: (context, index) {
             final zikr = favorites[index];

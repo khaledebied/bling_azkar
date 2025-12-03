@@ -170,6 +170,9 @@ class _ZikrListItemState extends State<ZikrListItem>
           tag: 'zikr_${widget.zikr.id}',
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
+            constraints: const BoxConstraints(
+              minHeight: 90,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -181,111 +184,124 @@ class _ZikrListItemState extends State<ZikrListItem>
                 ),
               ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.zikr.title.ar,
-                          style: AppTheme.arabicMedium.copyWith(
-                            fontSize: 16,
-                            color: AppTheme.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (widget.zikr.translation?.en.isNotEmpty ?? false) ...[
-                          const SizedBox(height: 4),
+            child: IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Text(
-                            widget.zikr.translation!.en,
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.textSecondary,
+                            widget.zikr.title.ar,
+                            style: AppTheme.arabicMedium.copyWith(
+                              fontSize: 15,
+                              color: AppTheme.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.zikr.text,
-                          style: AppTheme.arabicSmall.copyWith(
-                            color: AppTheme.textSecondary,
-                            fontSize: 14,
-                            height: 1.6,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            // Repetition badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
+                          if (widget.zikr.translation?.en.isNotEmpty ?? false) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              widget.zikr.translation!.en,
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
                               ),
-                              decoration: BoxDecoration(
-                                gradient: AppTheme.primaryGradient,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.repeat,
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${widget.zikr.defaultCount}x',
-                                    style: AppTheme.caption.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 8),
-                            // Play button
-                            if (widget.zikr.audio.isNotEmpty)
-                              _buildPlayButton(),
                           ],
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.zikr.text,
+                            style: AppTheme.arabicSmall.copyWith(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              // Repetition badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: AppTheme.primaryGradient,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.repeat,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '${widget.zikr.defaultCount}x',
+                                      style: AppTheme.caption.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Play button
+                              if (widget.zikr.audio.isNotEmpty)
+                                _buildPlayButton(),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            widget.isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: widget.isFavorite
+                                ? Colors.red
+                                : AppTheme.textSecondary,
+                            size: 22,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                          onPressed: widget.onFavoriteToggle,
+                        ),
+                        const SizedBox(height: 4),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppTheme.textSecondary,
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          widget.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: widget.isFavorite
-                              ? Colors.red
-                              : AppTheme.textSecondary,
-                        ),
-                        onPressed: widget.onFavoriteToggle,
-                      ),
-                      const SizedBox(height: 8),
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
