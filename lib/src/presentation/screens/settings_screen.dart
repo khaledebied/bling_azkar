@@ -5,6 +5,7 @@ import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
+import '../../data/services/notification_service.dart';
 import '../../domain/models/user_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Language Section
             _buildSectionHeader(l10n.language, Icons.language),
             _buildLanguageCard(l10n),
+            const SizedBox(height: 24),
+
+            // Zikr Reminders Section
+            _buildSectionHeader(
+              l10n.isArabic ? 'تذكير الأذكار' : 'Zikr Reminders',
+              Icons.notifications_active,
+            ),
+            _buildRemindersCard(l10n),
             const SizedBox(height: 24),
 
             // Appearance Section
@@ -165,6 +174,119 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+
+  Widget _buildRemindersCard(AppLocalizations l10n) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: context.isDarkMode 
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey.shade200,
+        ),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            title: Text(
+              l10n.isArabic ? 'تفعيل التذكير' : 'Enable Reminders',
+              style: AppTheme.bodyMedium.copyWith(
+                color: context.textPrimary,
+              ),
+            ),
+            subtitle: Text(
+              _prefs.notificationsEnabled
+                  ? (l10n.isArabic ? 'مفعل - كل 10 دقائق' : 'Enabled - Every 10 minutes')
+                  : (l10n.isArabic ? 'معطل' : 'Disabled'),
+              style: AppTheme.bodySmall.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+            value: _prefs.notificationsEnabled,
+            onChanged: (value) async {
+              final notificationService = NotificationService();
+              
+              if (value) {
+                // Request permissions first
+                final hasPermission = await notificationService.requestPermissions();
+                if (hasPermission) {
+                  // Start 10-minute reminders
+                  await notificationService.startPeriodicReminders();
+                  _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.isArabic 
+                              ? 'تم تفعيل التذكير كل 10 دقائق ❤️'
+                              : 'Reminders enabled - Every 10 minutes ❤️',
+                        ),
+                        backgroundColor: AppTheme.primaryGreen,
+                      ),
+                    );
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.isArabic 
+                              ? 'يرجى السماح بالإشعارات من إعدادات الجهاز'
+                              : 'Please enable notifications in device settings',
+                        ),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                }
+              } else {
+                // Stop reminders
+                await notificationService.stopPeriodicReminders();
+                _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        l10n.isArabic 
+                            ? 'تم إيقاف التذكير'
+                            : 'Reminders disabled',
+                      ),
+                      backgroundColor: Colors.grey,
+                    ),
+                  );
+                }
+              }
+            },
+            activeColor: AppTheme.primaryGreen,
+          ),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.info_outline,
+              color: AppTheme.primaryTeal,
+            ),
+            title: Text(
+              l10n.isArabic 
+                  ? 'سيتم تذكيرك بالذكر كل 10 دقائق'
+                  : 'You will be reminded every 10 minutes',
+              style: AppTheme.bodySmall.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildAppearanceCard(AppLocalizations l10n) {
     final currentThemeMode = _prefs.themeMode;

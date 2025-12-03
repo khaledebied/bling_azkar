@@ -80,6 +80,13 @@ class AppTheme {
     colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
   );
 
+  // Dark mode gradient
+  static const darkBackgroundGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1A1A1A), Color(0xFF0F1419)],
+  );
+
   // English Text Styles (Poppins)
   static TextStyle headlineLarge = GoogleFonts.poppins(
     fontSize: 32,

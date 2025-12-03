@@ -15,7 +15,6 @@ import 'src/presentation/screens/splash_screen.dart';
 import 'src/data/services/storage_service.dart';
 import 'src/data/services/notification_service.dart';
 import 'src/data/services/audio_player_service.dart';
-import 'src/data/services/reminder_service.dart';
 import 'src/data/repositories/azkar_repository.dart';
 import 'src/presentation/screens/player_screen.dart';
 
@@ -32,13 +31,16 @@ void main() async {
   
   // Initialize Quran Library
   await QuranLibrary.init();
-
-  // Reschedule all active reminders
-  final reminderService = ReminderService();
-  await reminderService.rescheduleAllActiveReminders();
   
   // Initialize SharedPreferences for Tasbih
   await SharedPreferences.getInstance();
+  
+  // Start periodic reminders if enabled
+  final storage = StorageService();
+  final prefs = storage.getPreferences();
+  if (prefs.notificationsEnabled) {
+    await notificationService.startPeriodicReminders();
+  }
 
   runApp(const ProviderScope(child: BlingAzkarApp()));
 }
@@ -55,12 +57,14 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
   final _appState = AppStateNotifier();
   Locale _locale = const Locale('en');
   ThemeMode _themeMode = ThemeMode.system;
+  double _textScale = 1.0;
 
   @override
   void initState() {
     super.initState();
     _loadLanguage();
     _loadThemeMode();
+    _loadTextScale();
     _appState.addListener(_onAppStateChanged);
   }
 
@@ -109,11 +113,19 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
     });
   }
 
+  void _loadTextScale() {
+    final prefs = _storage.getPreferences();
+    setState(() {
+      _textScale = prefs.textScale;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Check for language and theme changes
+    // Check for language, theme, and text scale changes
     final prefs = _storage.getPreferences();
     final currentLocale = Locale(prefs.language);
+    final currentTextScale = prefs.textScale;
     ThemeMode currentThemeMode;
     switch (prefs.themeMode) {
       case 'light':
@@ -126,12 +138,15 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
         currentThemeMode = ThemeMode.system;
     }
 
-    if (_locale != currentLocale || _themeMode != currentThemeMode) {
+    if (_locale != currentLocale || 
+        _themeMode != currentThemeMode || 
+        _textScale != currentTextScale) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
             _locale = currentLocale;
             _themeMode = currentThemeMode;
+            _textScale = currentTextScale;
           });
         }
       });
@@ -157,9 +172,15 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
       ],
       builder: (context, child) {
         final l10n = AppLocalizations.ofWithFallback(context);
-        return Directionality(
-          textDirection: l10n.isArabic ? TextDirection.rtl : TextDirection.ltr,
-          child: child!,
+        
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(_textScale),
+          ),
+          child: Directionality(
+            textDirection: l10n.isArabic ? TextDirection.rtl : TextDirection.ltr,
+            child: child!,
+          ),
         );
       },
       home: const SplashScreen(),
