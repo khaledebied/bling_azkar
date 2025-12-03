@@ -268,13 +268,7 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
           ),
         ),
       ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    ));
   }
 
   Widget _buildCelebrationAnimation() {
