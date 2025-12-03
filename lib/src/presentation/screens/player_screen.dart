@@ -20,6 +20,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  int _currentRepetition = 0;
+  StreamSubscription<PlayerState>? _playerStateSubscription;
+  bool _isCompleted = false;
 
   @override
   void initState() {
@@ -44,19 +47,87 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     _pulseController.repeat(reverse: true);
     
     // Don't auto-play - let user control playback
+    _setupAudioCompletionListener();
+  }
+
+  void _setupAudioCompletionListener() {
+    final audioService = ref.read(audioPlayerServiceProvider);
+    _playerStateSubscription = audioService.playerStateStream.listen((state) {
+      if (mounted && 
+          state.processingState == ProcessingState.completed && 
+          !_isCompleted) {
+        _handleAudioCompletion();
+      }
+    });
+  }
+
+  Future<void> _handleAudioCompletion() async {
+    setState(() {
+      _currentRepetition++;
+    });
+
+    if (_currentRepetition < widget.zikr.defaultCount) {
+      // Replay audio
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        await _playAudio();
+      }
+    } else {
+      // All repetitions completed
+      setState(() {
+        _isCompleted = true;
+      });
+      
+      // Show completion message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Text('Completed ${widget.zikr.defaultCount}x repetitions!'),
+              ],
+            ),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      // Reset to initial state after a short delay
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) {
+        _resetToInitialState();
+      }
+    }
+  }
+
+  void _resetToInitialState() {
+    final audioService = ref.read(audioPlayerServiceProvider);
+    audioService.stop();
+    
+    setState(() {
+      _currentRepetition = 0;
+      _isCompleted = false;
+    });
   }
 
   Future<void> _playAudio() async {
     try {
       final audioService = ref.read(audioPlayerServiceProvider);
       if (widget.zikr.audio.isNotEmpty) {
+        setState(() {
+          _isCompleted = false;
+        });
+        
         await audioService.playAudio(
-          widget.zikr.audio.first.shortFile??"",
+          widget.zikr.audio.first.shortFile ?? "",
           isLocal: true,
         );
       }
     } catch (e) {
-      debugPrint('Error auto-playing: $e');
+      debugPrint('Error playing: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error playing audio: $e')),
@@ -68,6 +139,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   @override
   void dispose() {
     _pulseController.dispose();
+    _playerStateSubscription?.cancel();
     // Don't use ref in dispose - it's already been disposed
     // Audio service will handle cleanup automatically
     super.dispose();
@@ -119,6 +191,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                     children: [
                       const SizedBox(height: 20),
                       _buildTitle(),
+                      const SizedBox(height: 16),
+                      _buildRepetitionIndicator(),
                       const SizedBox(height: 40),
                       _buildArabicText(),
                       const SizedBox(height: 40),
@@ -311,6 +385,41 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   void _animateIncrement() {
     _pulseController.forward(from: 0);
+  }
+
+  Widget _buildRepetitionIndicator() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(_isCompleted ? 0.3 : 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.4),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _isCompleted ? Icons.check_circle : Icons.repeat,
+            color: Colors.white,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _isCompleted 
+                ? 'Completed!' 
+                : 'Repetition ${_currentRepetition + 1} of ${widget.zikr.defaultCount}',
+            style: AppTheme.bodyMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildProgressIndicator() {
