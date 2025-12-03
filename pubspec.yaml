@@ -42,6 +42,7 @@ dependencies:
   # UI & Animations
   lottie: ^3.1.2
   flutter_svg: ^2.0.10+1
+  google_fonts: ^6.2.1
   
   # Utilities
   intl:
@@ -88,10 +89,3 @@ flutter:
     - assets/adhkar.json
     - assets/audio/
     - assets/lottie/
-  
-#  fonts:
-#    - family: Amiri
-#      fonts:
-#        - asset: fonts/Amiri-Regular.ttf
-#        - asset: fonts/Amiri-Bold.ttf
-#          weight: 700

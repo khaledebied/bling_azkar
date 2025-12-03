@@ -331,11 +331,9 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                 ),
                 child: Text(
                   widget.tasbihType.dhikrText,
-                  style: AppTheme.arabicLarge.copyWith(
+                  style: AppTheme.dhikrText.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
                     fontSize: 28,
-                    height: 1.8,
                   ),
                   textAlign: TextAlign.center,
                 ),

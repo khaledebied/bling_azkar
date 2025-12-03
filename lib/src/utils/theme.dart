@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Color Palette - Rich Emerald/Teal + Gold Accent (More Attractive)
@@ -79,485 +80,224 @@ class AppTheme {
     colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
   );
 
-  // Text Styles
-  static const headlineLarge = TextStyle(
+  // English Text Styles (Poppins)
+  static TextStyle headlineLarge = GoogleFonts.poppins(
     fontSize: 32,
     fontWeight: FontWeight.bold,
     height: 1.2,
     letterSpacing: -0.5,
   );
 
-  static const headlineMedium = TextStyle(
+  static TextStyle headlineMedium = GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.bold,
     height: 1.3,
   );
 
-  static const titleLarge = TextStyle(
+  static TextStyle titleLarge = GoogleFonts.poppins(
     fontSize: 22,
     fontWeight: FontWeight.w600,
     height: 1.3,
   );
 
-  static const titleMedium = TextStyle(
+  static TextStyle titleMedium = GoogleFonts.poppins(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
-  static const bodyLarge = TextStyle(
+  static TextStyle bodyLarge = GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.normal,
     height: 1.5,
   );
 
-  static const bodyMedium = TextStyle(
+  static TextStyle bodyMedium = GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.normal,
     height: 1.5,
   );
 
-  static const bodySmall = TextStyle(
+  static TextStyle bodySmall = GoogleFonts.poppins(
     fontSize: 12,
     fontWeight: FontWeight.normal,
     height: 1.4,
   );
 
-  static const caption = TextStyle(
+  static TextStyle caption = GoogleFonts.poppins(
     fontSize: 12,
     fontWeight: FontWeight.normal,
     height: 1.4,
     letterSpacing: 0.2,
   );
 
-  // Arabic Text Styles (Amiri font)
-  static const arabicLarge = TextStyle(
-    fontFamily: 'Amiri',
+  // Arabic Text Styles (Cairo)
+  static TextStyle arabicLarge = GoogleFonts.cairo(
     fontSize: 24,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.bold,
     height: 1.8,
   );
 
-  static const arabicMedium = TextStyle(
-    fontFamily: 'Amiri',
+  static TextStyle arabicMedium = GoogleFonts.cairo(
     fontSize: 18,
+    fontWeight: FontWeight.w600,
+    height: 1.8,
+  );
+
+  static TextStyle arabicSmall = GoogleFonts.cairo(
+    fontSize: 14,
     fontWeight: FontWeight.normal,
     height: 1.8,
   );
 
-  static const arabicSmall = TextStyle(
-    fontFamily: 'Amiri',
-    fontSize: 16,
-    fontWeight: FontWeight.normal,
+  // Quran/Dhikr Text Styles (Amiri - elegant)
+  static TextStyle quranLarge = GoogleFonts.amiri(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    height: 2.0,
+  );
+
+  static TextStyle quranMedium = GoogleFonts.amiri(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
     height: 1.8,
   );
 
-  // Theme Data - Enhanced Light Theme
+  static TextStyle dhikrText = GoogleFonts.amiri(
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    height: 1.9,
+  );
+
+  // Spacing
+  static const double spacingXS = 4.0;
+  static const double spacingS = 8.0;
+  static const double spacingM = 16.0;
+  static const double spacingL = 24.0;
+  static const double spacingXL = 32.0;
+
+  // Border Radius
+  static const double radiusS = 8.0;
+  static const double radiusM = 12.0;
+  static const double radiusL = 16.0;
+  static const double radiusXL = 24.0;
+
+  // Shadows
+  static List<BoxShadow> cardShadow = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ];
+
+  static List<BoxShadow> elevatedShadow = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.12),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  // Animation Durations
+  static const Duration animationFast = Duration(milliseconds: 200);
+  static const Duration animationNormal = Duration(milliseconds: 300);
+  static const Duration animationSlow = Duration(milliseconds: 500);
+
+  // Background color
+  static const backgroundColor = backgroundLight;
+
+  // Light Theme
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
-    brightness: Brightness.light,
     colorScheme: ColorScheme.light(
       primary: primaryGreen,
-      secondary: accentGold,
-      tertiary: primaryTeal,
-      surface: cardLight,
-      background: backgroundLight,
-      error: const Color(0xFFEF4444),
+      secondary: primaryTeal,
+      surface: Colors.white,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onSurface: textPrimary,
-      onBackground: textPrimary,
-      onError: Colors.white,
     ),
-    scaffoldBackgroundColor: backgroundLight,
-    cardTheme: CardThemeData(
-      elevation: 0,
-      shadowColor: Colors.black.withOpacity(0.08),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
-      color: cardLight,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    ),
+    scaffoldBackgroundColor: backgroundColor,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     appBarTheme: AppBarTheme(
+      backgroundColor: Colors.white,
       elevation: 0,
-      scrolledUnderElevation: 0,
-      backgroundColor: Colors.transparent,
-      foregroundColor: textPrimary,
-      centerTitle: true,
-      titleTextStyle: titleLarge.copyWith(
-        color: textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
       iconTheme: const IconThemeData(color: textPrimary),
-    ),
-    snackBarTheme: SnackBarThemeData(
-      behavior: SnackBarBehavior.fixed,
-      backgroundColor: textPrimary,
-      contentTextStyle: bodyMedium.copyWith(color: Colors.white),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
       ),
     ),
-    textTheme: TextTheme(
-      displayLarge: headlineLarge.copyWith(color: textPrimary),
-      displayMedium: headlineMedium.copyWith(color: textPrimary),
-      headlineLarge: headlineLarge.copyWith(color: textPrimary),
-      headlineMedium: headlineMedium.copyWith(color: textPrimary),
-      titleLarge: titleLarge.copyWith(color: textPrimary),
-      titleMedium: titleMedium.copyWith(color: textPrimary),
-      bodyLarge: bodyLarge.copyWith(color: textPrimary),
-      bodyMedium: bodyMedium.copyWith(color: textPrimary),
-      bodySmall: bodySmall.copyWith(color: textSecondary),
-      labelLarge: bodyMedium.copyWith(color: textPrimary),
-      labelMedium: bodySmall.copyWith(color: textSecondary),
+    cardTheme: CardTheme(
+      color: Colors.white,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryGreen,
-      foregroundColor: textLight,
-      elevation: 8,
-      highlightElevation: 12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      foregroundColor: Colors.white,
     ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryGreen,
-        foregroundColor: textLight,
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.4),
-      ),
+    snackBarTheme: const SnackBarThemeData(
+      behavior: SnackBarBehavior.fixed,
     ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: primaryGreen,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: cardLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: primaryGreen, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1),
-      ),
-    ),
-    bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: cardLight,
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-    ),
-    dialogTheme: DialogThemeData(
-      backgroundColor: cardLight,
-      elevation: 16,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
-    ),
-    chipTheme: ChipThemeData(
-      backgroundColor: Colors.grey.shade100,
-      selectedColor: primaryGreen,
-      labelStyle: bodyMedium,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    dividerTheme: DividerThemeData(
-      color: Colors.grey.shade200,
-      thickness: 1,
-      space: 1,
+    textTheme: TextTheme(
+      headlineLarge: headlineLarge,
+      headlineMedium: headlineMedium,
+      titleLarge: titleLarge,
+      titleMedium: titleMedium,
+      bodyLarge: bodyLarge,
+      bodyMedium: bodyMedium,
+      bodySmall: bodySmall,
+      labelSmall: caption,
     ),
   );
 
-  // Theme Data - Enhanced Dark Theme
+  // Dark Theme
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: ColorScheme.dark(
-      primary: primaryTeal,
-      secondary: accentGold,
-      tertiary: lightGreen,
-      surface: cardDark,
-      background: backgroundDark,
-      error: const Color(0xFFF87171),
+      primary: primaryGreen,
+      secondary: primaryTeal,
+      surface: const Color(0xFF1E1E1E),
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onSurface: Colors.white,
-      onBackground: Colors.white,
-      onError: Colors.white,
-      surfaceVariant: const Color(0xFF2A2F36),
     ),
-    scaffoldBackgroundColor: backgroundDark,
-    cardTheme: CardThemeData(
-      elevation: 0,
-      shadowColor: Colors.black.withOpacity(0.5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
-      color: cardDark,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    ),
+    scaffoldBackgroundColor: const Color(0xFF121212),
+    fontFamily: GoogleFonts.poppins().fontFamily,
     appBarTheme: AppBarTheme(
+      backgroundColor: const Color(0xFF1E1E1E),
       elevation: 0,
-      scrolledUnderElevation: 0,
-      backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      centerTitle: true,
-      titleTextStyle: titleLarge.copyWith(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
       iconTheme: const IconThemeData(color: Colors.white),
-    ),
-    snackBarTheme: SnackBarThemeData(
-      behavior: SnackBarBehavior.fixed,
-      backgroundColor: cardDark,
-      contentTextStyle: bodyMedium.copyWith(color: Colors.white),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      titleTextStyle: GoogleFonts.poppins(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
       ),
     ),
-    textTheme: TextTheme(
-      displayLarge: headlineLarge.copyWith(color: Colors.white),
-      displayMedium: headlineMedium.copyWith(color: Colors.white),
-      headlineLarge: headlineLarge.copyWith(color: Colors.white),
-      headlineMedium: headlineMedium.copyWith(color: Colors.white),
-      titleLarge: titleLarge.copyWith(color: Colors.white),
-      titleMedium: titleMedium.copyWith(color: Colors.white),
-      bodyLarge: bodyLarge.copyWith(color: Colors.white),
-      bodyMedium: bodyMedium.copyWith(color: Colors.white),
-      bodySmall: bodySmall.copyWith(color: textSecondaryDark),
-      labelLarge: bodyMedium.copyWith(color: Colors.white),
-      labelMedium: bodySmall.copyWith(color: textSecondaryDark),
+    cardTheme: CardTheme(
+      color: const Color(0xFF1E1E1E),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: primaryTeal,
+      backgroundColor: primaryGreen,
       foregroundColor: Colors.white,
-      elevation: 8,
-      highlightElevation: 12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
     ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryTeal,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 4,
-        shadowColor: primaryTeal.withOpacity(0.4),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: primaryTeal,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: cardDark,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.grey.shade700, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: primaryTeal, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFF87171), width: 1),
-      ),
-    ),
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: cardDark,
-      elevation: 8,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-    ),
-    dialogTheme: DialogThemeData(
-      backgroundColor: cardDark,
-      elevation: 16,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
-    ),
-    chipTheme: ChipThemeData(
-      backgroundColor: const Color(0xFF2A2F36),
-      selectedColor: primaryTeal,
-      labelStyle: bodyMedium.copyWith(color: Colors.white),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    dividerTheme: const DividerThemeData(
-      color: Color(0xFF2A2F36),
-      thickness: 1,
-      space: 1,
+    textTheme: TextTheme(
+      headlineLarge: headlineLarge.copyWith(color: textPrimaryDark),
+      headlineMedium: headlineMedium.copyWith(color: textPrimaryDark),
+      titleLarge: titleLarge.copyWith(color: textPrimaryDark),
+      titleMedium: titleMedium.copyWith(color: textPrimaryDark),
+      bodyLarge: bodyLarge.copyWith(color: textPrimaryDark),
+      bodyMedium: bodyMedium.copyWith(color: textPrimaryDark),
+      bodySmall: bodySmall.copyWith(color: textSecondaryDark),
+      labelSmall: caption.copyWith(color: textSecondaryDark),
     ),
   );
-}
-
-// Custom Page Transitions
-class CustomPageTransitions {
-  // Slide from right with fade
-  static Route<T> slideRightRoute<T extends Object?>(
-    Widget page, {
-    RouteSettings? settings,
-  }) {
-    return PageRouteBuilder<T>(
-      settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(1.0, 0.0);
-        const end = Offset.zero;
-        const curve = Curves.easeOutCubic;
-
-        var tween = Tween(begin: begin, end: end).chain(
-          CurveTween(curve: curve),
-        );
-
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300),
-    );
-  }
-
-  // Slide from bottom with scale
-  static Route<T> slideUpRoute<T extends Object?>(
-    Widget page, {
-    RouteSettings? settings,
-  }) {
-    return PageRouteBuilder<T>(
-      settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0);
-        const end = Offset.zero;
-        const curve = Curves.easeOutCubic;
-
-        var tween = Tween(begin: begin, end: end).chain(
-          CurveTween(curve: curve),
-        );
-
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: curve),
-            ),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 350),
-    );
-  }
-
-  // Fade with scale
-  static Route<T> fadeScaleRoute<T extends Object?>(
-    Widget page, {
-    RouteSettings? settings,
-  }) {
-    return PageRouteBuilder<T>(
-      settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.95, end: 1.0).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              ),
-            ),
-            child: child,
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 250),
-    );
-  }
-
-  // Rotate and scale
-  static Route<T> rotateScaleRoute<T extends Object?>(
-    Widget page, {
-    RouteSettings? settings,
-  }) {
-    return PageRouteBuilder<T>(
-      settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return RotationTransition(
-          turns: Tween<double>(begin: 0.0, end: 1.0).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            ),
-          ),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              ),
-            ),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 400),
-    );
-  }
 }
