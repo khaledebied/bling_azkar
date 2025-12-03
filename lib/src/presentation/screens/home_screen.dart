@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/localizations.dart';
 import '../widgets/category_card.dart';
 import '../widgets/floating_playlist_player.dart';
 import '../widgets/category_audio_bottom_sheet.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _playlistService = PlaylistService();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -171,48 +174,150 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSearchBar(WidgetRef ref) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Consumer(
-        builder: (context, ref, child) {
-          final isSearching = ref.watch(isSearchingProvider);
-          
-          return TextField(
-            onChanged: (value) {
-              ref.read(searchQueryProvider.notifier).state = value;
-              ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
-            },
-            decoration: InputDecoration(
-              hintText: 'Search azkar...',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: isSearching
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        ref.read(searchQueryProvider.notifier).state = '';
-                        ref.read(isSearchingProvider.notifier).state = false;
-                      },
+    final l10n = AppLocalizations.ofWithFallback(context);
+    final isArabic = l10n.isArabic;
+    final isDarkMode = context.isDarkMode;
+    
+    return Consumer(
+      builder: (context, ref, child) {
+        final isSearching = ref.watch(isSearchingProvider);
+        
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: 0.95 + (0.05 * value),
+              child: Opacity(
+                opacity: value,
+                child: child,
+              ),
+            );
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              gradient: isDarkMode
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF2A2A2A),
+                        const Color(0xFF1E1E1E),
+                      ],
                     )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white,
+                        Colors.white.withValues(alpha: 0.95),
+                      ],
+                    ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSearching
+                    ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+                    : (isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.15)),
+                width: isSearching ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isSearching
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                      : (isDarkMode
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.08)),
+                  blurRadius: isSearching ? 20 : 12,
+                  offset: Offset(0, isSearching ? 6 : 4),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+              style: AppTheme.bodyMedium.copyWith(
+                color: isDarkMode ? Colors.white : AppTheme.textPrimary,
+                fontSize: 15,
+              ),
+              onChanged: (value) {
+                ref.read(searchQueryProvider.notifier).state = value;
+                ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
+              },
+              decoration: InputDecoration(
+                hintText: isArabic ? 'ابحث عن الأذكار...' : 'Search azkar...',
+                hintStyle: AppTheme.bodyMedium.copyWith(
+                  color: isDarkMode 
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : Colors.grey.shade400,
+                  fontSize: 15,
+                ),
+                prefixIcon: isArabic ? null : AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    Icons.search_rounded,
+                    color: isSearching 
+                        ? AppTheme.primaryGreen
+                        : (isDarkMode 
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : Colors.grey.shade600),
+                    size: 22,
+                  ),
+                ),
+                suffixIcon: isArabic 
+                    ? AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.search_rounded,
+                          color: isSearching 
+                              ? AppTheme.primaryGreen
+                              : (isDarkMode 
+                                  ? Colors.white.withValues(alpha: 0.6)
+                                  : Colors.grey.shade600),
+                          size: 22,
+                        ),
+                      )
+                    : (isSearching
+                        ? TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 300),
+                            builder: (context, value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: Transform.rotate(
+                                  angle: value * 3.14159 / 2,
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.clear_rounded,
+                                      color: isDarkMode 
+                                          ? Colors.white.withValues(alpha: 0.7)
+                                          : Colors.grey.shade600,
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      ref.read(searchQueryProvider.notifier).state = '';
+                                      ref.read(isSearchingProvider.notifier).state = false;
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : null),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: isArabic ? 16 : 20,
+                  vertical: 16,
+                ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
