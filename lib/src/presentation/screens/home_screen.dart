@@ -66,9 +66,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
         _isLoadingMore = true;
       });
 
-      await Future.delayed(const Duration(milliseconds: 300));
+      // Small delay for smooth loading
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+      // Increment page
       ref.read(currentPageProvider.notifier).state++;
-
+      
+      // Wait for new items to load
+      await Future.delayed(const Duration(milliseconds: 100));
+      
       setState(() {
         _isLoadingMore = false;
       });
@@ -387,25 +393,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                         final categoryKey = entry.key;
                         final categoryName = entry.value;
 
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 200 + (index % 15 * 50)),
-                          curve: Curves.easeOut,
-                          builder: (context, value, child) {
-                            return Transform.scale(
-                              scale: value,
-                              child: Opacity(
-                                opacity: value,
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: CategoryCard(
-                            title: categoryName,
-                            titleAr: categoryName,
-                            heroTag: 'category_$categoryKey',
-                            onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
-                          ),
+                        return CategoryCard(
+                          key: ValueKey(categoryKey),
+                          title: categoryName,
+                          titleAr: categoryName,
+                          heroTag: 'category_$categoryKey',
+                          onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
                         );
                       },
                     ),
