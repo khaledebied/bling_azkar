@@ -122,9 +122,9 @@ final totalPagesProvider = FutureProvider<int>((ref) async {
 });
 
 /// Provider for has next page
-final hasNextPageProvider = Provider<bool>((ref) {
+final hasNextPageProvider = FutureProvider<bool>((ref) async {
   final currentPage = ref.watch(currentPageProvider);
-  final totalPages = ref.watch(totalPagesProvider);
+  final totalPages = await ref.watch(totalPagesProvider.future);
   return currentPage < totalPages - 1;
 });
 

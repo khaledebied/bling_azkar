@@ -417,75 +417,81 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   Widget _buildPaginationControls(WidgetRef ref) {
-    final hasNext = ref.watch(hasNextPageProvider);
+    final hasNextAsync = ref.watch(hasNextPageProvider);
     final hasPrevious = ref.watch(hasPreviousPageProvider);
 
-    if (!hasNext && !hasPrevious) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
+    return hasNextAsync.when(
+      loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      error: (error, stack) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      data: (hasNext) {
+        if (!hasNext && !hasPrevious) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Previous button
-            Expanded(
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: hasPrevious ? 1.0 : 0.3,
-                child: ElevatedButton.icon(
-                  onPressed: hasPrevious
-                      ? () {
-                          _pageChangeController.forward(from: 0);
-                          ref.read(currentPageProvider.notifier).state--;
-                        }
-                      : null,
-                  icon: const Icon(Icons.arrow_back_ios, size: 16),
-                  label: const Text('Previous'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Previous button
+                Expanded(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: hasPrevious ? 1.0 : 0.3,
+                    child: ElevatedButton.icon(
+                      onPressed: hasPrevious
+                          ? () {
+                              _pageChangeController.forward(from: 0);
+                              ref.read(currentPageProvider.notifier).state--;
+                            }
+                          : null,
+                      icon: const Icon(Icons.arrow_back_ios, size: 16),
+                      label: const Text('Previous'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: hasPrevious ? 4 : 0,
+                      ),
                     ),
-                    elevation: hasPrevious ? 4 : 0,
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Next button
-            Expanded(
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: hasNext ? 1.0 : 0.3,
-                child: ElevatedButton.icon(
-                  onPressed: hasNext
-                      ? () {
-                          _pageChangeController.forward(from: 0);
-                          ref.read(currentPageProvider.notifier).state++;
-                        }
-                      : null,
-                  icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                  label: const Text('Next'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryTeal,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 16),
+                // Next button
+                Expanded(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: hasNext ? 1.0 : 0.3,
+                    child: ElevatedButton.icon(
+                      onPressed: hasNext
+                          ? () {
+                              _pageChangeController.forward(from: 0);
+                              ref.read(currentPageProvider.notifier).state++;
+                            }
+                          : null,
+                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                      label: const Text('Next'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryTeal,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: hasNext ? 4 : 0,
+                      ),
                     ),
-                    elevation: hasNext ? 4 : 0,
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
