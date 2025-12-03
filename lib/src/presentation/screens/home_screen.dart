@@ -1,133 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/azkar_repository.dart';
-import '../../data/services/storage_service.dart';
-import '../../data/services/playlist_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
-import '../../utils/localizations.dart';
-import '../../utils/page_transitions.dart';
 import 'zikr_detail_screen.dart';
-import 'reminders_screen.dart';
-import 'settings_screen.dart';
-import 'categories_grid_screen.dart';
 import '../widgets/category_card.dart';
 import '../widgets/zikr_list_item.dart';
-import '../widgets/floating_playlist_player.dart';
+import '../providers/search_providers.dart';
+import '../providers/azkar_providers.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with TickerProviderStateMixin {
-  final _azkarRepo = AzkarRepository();
-  final _storage = StorageService();
-  final _playlistService = PlaylistService();
-  
-  late TabController _tabController;
-  String _searchQuery = '';
-  String? _selectedCategory;
-  bool _isSearching = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _playlistService.initialize();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    final isArabic = l10n.isArabic;
-
-    return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        body: Stack(
-          children: [
-            NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [
-                  _buildAppBar(),
-                  if (!_isSearching) ...[
-                    _buildWelcomeBanner(),
-                    _buildCategoriesSection(),
-                  ],
-                  _buildTabBar(),
-                ];
-              },
-              body: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildAllAzkarTab(),
-                  _buildFavoritesTab(),
-                  _buildRecentTab(),
-                ],
-              ),
-            ),
-            // Floating playlist player
-            StreamBuilder<bool>(
-              stream: _playlistService.stateStream.map((state) => 
-                  state == PlaylistState.playing || state == PlaylistState.paused),
-              initialData: false,
-              builder: (context, snapshot) {
-                final isVisible = snapshot.data ?? false;
-                return AnimatedPositioned(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  bottom: isVisible ? 0 : -120,
-                  left: 0,
-                  right: 0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: isVisible ? 1.0 : 0.0,
-                    child: FloatingPlaylistPlayer(
-                      playlistService: _playlistService,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        floatingActionButton: _selectedCategory != null
-            ? null
-            : FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    CustomPageRoute(child: const RemindersScreen()),
-                  );
-                },
-                icon: const Icon(Icons.notifications_outlined),
-                label: Text(l10n.reminders),
-              ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSearching = ref.watch(isSearchingProvider);
+    
+    return Scaffold(
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            _buildAppBar(ref),
+            if (!isSearching) ...[ 
+              _buildWelcomeBanner(),
+              _buildCategoriesSection(ref),
+            ],
+            _buildTabBar(ref),
+          ];
+        },
+        body: _buildTabBarView(ref),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Navigate to reminders screen
+        },
+        icon: const Icon(Icons.notifications_outlined),
+        label: const Text('Reminders'),
       ),
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(WidgetRef ref) {
+    final isSearching = ref.watch(isSearchingProvider);
+    
     return SliverAppBar(
       floating: true,
       snap: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
-      expandedHeight: _isSearching ? 120 : 200,
+      expandedHeight: isSearching ? 120 : 200,
       collapsedHeight: 70,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
-          final l10n = AppLocalizations.ofWithFallback(context);
           return FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
@@ -145,15 +68,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (!_isSearching) ...[
-                        _buildGreeting(),
+                      if (!isSearching) ...[ 
+                        Text(
+                          'السلام عليكم',
+                          style: AppTheme.arabicMedium.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Peace be upon you',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
                         const SizedBox(height: 12),
                       ],
-                      _buildSearchBar(l10n),
-                      if (_selectedCategory != null && !_isSearching) ...[
-                        const SizedBox(height: 8),
-                        _buildSelectedCategoryChip(l10n),
-                      ],
+                      _buildSearchBar(ref),
                     ],
                   ),
                 ),
@@ -168,10 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              Navigator.push(
-                context,
-                CustomPageRoute(child: const SettingsScreen()),
-              );
+              // Navigate to settings
             },
           ),
         ),
@@ -179,42 +107,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildGreeting() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: Text(
-              'SALAM 👋',
-              style: AppTheme.titleLarge.copyWith(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSearchBar(AppLocalizations l10n) {
+  Widget _buildSearchBar(WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -224,83 +120,132 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         ],
       ),
-      child: TextField(
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value;
-            _isSearching = value.isNotEmpty;
-            _selectedCategory = null; // Clear category when searching
-          });
+      child: Consumer(
+        builder: (context, ref, child) {
+          final isSearching = ref.watch(isSearchingProvider);
+          
+          return TextField(
+            onChanged: (value) {
+              ref.read(searchQueryProvider.notifier).state = value;
+              ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
+            },
+            decoration: InputDecoration(
+              hintText: 'Search azkar...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: isSearching
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        ref.read(searchQueryProvider.notifier).state = '';
+                        ref.read(isSearchingProvider.notifier).state = false;
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+          );
         },
-        decoration: InputDecoration(
-          hintText: l10n.searchAzkar,
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: _isSearching || _selectedCategory != null
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      _searchQuery = '';
-                      _isSearching = false;
-                      _selectedCategory = null;
-                    });
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+      ),
+    );
+  }
+
+  Widget _buildWelcomeBanner() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: AppTheme.goldGradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.accentGold.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily Azkar',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Keep your heart close to Allah',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.auto_awesome,
+                size: 48,
+                color: Colors.white,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSelectedCategoryChip(AppLocalizations l10n) {
-    if (_selectedCategory == null) return const SizedBox.shrink();
-    
-    final categoryName = _azkarRepo.getCategoryDisplayName(_selectedCategory!);
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+  Widget _buildCategoriesSection(WidgetRef ref) {
+    final repository = ref.watch(azkarRepositoryProvider);
+    final categories = repository.getCategoryDisplayNames();
+    final categoriesAr = repository.getCategoryDisplayNamesAr();
+
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.filter_alt,
-            size: 16,
-            color: Colors.white,
-          ),
-          const SizedBox(width: 6),
-          Flexible(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
             child: Text(
-              categoryName,
-              style: AppTheme.bodySmall.copyWith(
-                color: Colors.white,
+              'Categories',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textPrimary,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 4),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedCategory = null;
-              });
-            },
-            child: Icon(
-              Icons.close,
-              size: 16,
-              color: Colors.white,
+          SizedBox(
+            height: 140,
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final categoryKey = categories.keys.elementAt(index);
+                final categoryName = categories[categoryKey]!;
+                final categoryNameAr = categoriesAr[categoryKey]!;
+
+                return CategoryCard(
+                  title: categoryName,
+                  titleAr: categoryNameAr,
+                  onTap: () {
+                    ref.read(selectedTabIndexProvider.notifier).state = 0;
+                    ref.read(searchQueryProvider.notifier).state = categoryKey;
+                    ref.read(isSearchingProvider.notifier).state = true;
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -308,99 +253,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildWelcomeBanner() {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    
-    return SliverToBoxAdapter(
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeOutCubic,
-        builder: (context, value, child) {
-          return Opacity(
-            opacity: value,
-            child: Transform.translate(
-              offset: Offset(0, 30 * (1 - value)),
-              child: child,
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.accentGold,
-                  AppTheme.accentGold.withOpacity(0.8),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.accentGold.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 0,
+  Widget _buildTabBar(WidgetRef ref) {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _TabBarDelegate(
+        child: Consumer(
+          builder: (context, ref, child) {
+            final selectedIndex = ref.watch(selectedTabIndexProvider);
+            
+            return Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.dailyAzkar,
-                        style: AppTheme.titleLarge.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.keepHeartClose,
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: Colors.white.withOpacity(0.95),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 2,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildTabButton(ref, 'All', 0, selectedIndex),
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    size: 40,
-                    color: Colors.white,
-                  ),
+                    Expanded(
+                      child: _buildTabButton(ref, 'Favorites', 1, selectedIndex),
+                    ),
+                    Expanded(
+                      child: _buildTabButton(ref, 'Recent', 2, selectedIndex),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabButton(WidgetRef ref, String label, int index, int selectedIndex) {
+    final isSelected = selectedIndex == index;
+    
+    return GestureDetector(
+      onTap: () {
+        ref.read(selectedTabIndexProvider.notifier).state = index;
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryGreen : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
@@ -408,186 +317,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildCategoriesSection() {
-    final l10n = AppLocalizations.ofWithFallback(context);
+  Widget _buildTabBarView(WidgetRef ref) {
+    final selectedIndex = ref.watch(selectedTabIndexProvider);
     
-    return FutureBuilder<List<String>>(
-      future: _azkarRepo.getAllCategories(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
-        }
-
-        final categories = snapshot.data!;
-        final categoryMap = _azkarRepo.getCategoryDisplayNamesAr();
-
-        return SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.category,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.categories,
-                      style: AppTheme.titleMedium.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${categories.length}',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // See All button
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          CustomPageRoute(
-                            child: CategoriesGridScreen(
-                              categories: categories,
-                              categoryMap: categoryMap,
-                            ),
-                          ),
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'See All',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.primaryGreen,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 12,
-                            color: AppTheme.primaryGreen,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length > 5 ? 5 : categories.length,
-                  itemBuilder: (context, index) {
-                    final categoryKey = categories[index];
-                    final categoryNameAr = categoryMap[categoryKey] ?? categoryKey;
-
-                    return CategoryCard(
-                      title: categoryNameAr,
-                      titleAr: categoryNameAr,
-                      onTap: () {
-                        _tabController.animateTo(0);
-                        setState(() {
-                          _selectedCategory = categoryKey;
-                          _searchQuery = '';
-                          _isSearching = false;
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    return IndexedStack(
+      index: selectedIndex,
+      children: [
+        _buildAllAzkarTab(ref),
+        _buildFavoritesTab(ref),
+        _buildRecentTab(),
+      ],
     );
   }
 
-  Widget _buildTabBar() {
-    return Builder(
-      builder: (context) {
-        final l10n = AppLocalizations.ofWithFallback(context);
-        return SliverPersistentHeader(
-          pinned: true,
-          delegate: _TabBarDelegate(
-            child: Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicator: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  dividerColor: Colors.transparent,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: AppTheme.textSecondary,
-                  tabs: [
-                    Tab(text: l10n.all),
-                    Tab(text: l10n.favorites),
-                    Tab(text: l10n.recent),
-                  ],
-                ),
+  Widget _buildAllAzkarTab(WidgetRef ref) {
+    final isSearching = ref.watch(isSearchingProvider);
+    final azkarAsync = isSearching 
+        ? ref.watch(searchedAzkarProvider)
+        : ref.watch(allAzkarProvider);
+
+    return azkarAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading azkar',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textSecondary,
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-
-  Widget _buildAllAzkarTab() {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    
-    return FutureBuilder<List<Zikr>>(
-      future: _selectedCategory != null
-          ? _azkarRepo.getAzkarByCategory(_selectedCategory!)
-          : (_isSearching && _searchQuery.isNotEmpty
-              ? _azkarRepo.searchAzkar(_searchQuery)
-              : _azkarRepo.loadAzkar()),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: AppTheme.caption.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+      data: (azkar) {
+        if (azkar.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -599,88 +378,89 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  _selectedCategory != null
-                      ? l10n.noAzkarInCategory
-                      : l10n.noAzkarFound,
+                  'No azkar found',
                   style: AppTheme.titleMedium.copyWith(
                     color: AppTheme.textSecondary,
                   ),
                 ),
-                if (_selectedCategory != null) ...[
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _selectedCategory = null;
-                      });
-                    },
-                    icon: const Icon(Icons.clear),
-                    label: Text(l10n.clearFilter),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
               ],
             ),
           );
         }
 
-        final azkar = snapshot.data!;
-        final prefs = _storage.getPreferences();
-        final hasAudio = azkar.any((z) => z.audio.isNotEmpty);
-
-        return Column(
-          children: [
-            // Play All Button - only show when category is selected and has audio
-            if (_selectedCategory != null && hasAudio)
-              _buildPlayAllButton(azkar),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: azkar.length,
-                itemBuilder: (context, index) {
-                  final zikr = azkar[index];
-                  final isFavorite = prefs.favoriteZikrIds.contains(zikr.id);
-
-                  return ZikrListItem(
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: azkar.length,
+          // Performance optimization: provide item extent for better scrolling
+          itemExtent: 100,
+          // Performance optimization: increase cache extent for smoother scrolling
+          cacheExtent: 500,
+          itemBuilder: (context, index) {
+            final zikr = azkar[index];
+            
+            return Consumer(
+              builder: (context, ref, child) {
+                final isFavorite = ref.watch(isFavoriteProvider(zikr.id));
+                
+                return RepaintBoundary(
+                  child: ZikrListItem(
                     zikr: zikr,
                     isFavorite: isFavorite,
                     onTap: () {
                       Navigator.push(
                         context,
-                        CustomPageRoute(child: ZikrDetailScreen(zikr: zikr)),
+                        MaterialPageRoute(
+                          builder: (context) => ZikrDetailScreen(zikr: zikr),
+                        ),
                       );
                     },
                     onFavoriteToggle: () async {
-                      await _storage.toggleFavorite(zikr.id);
-                      setState(() {});
+                      try {
+                        final toggleFavorite = ref.read(toggleFavoriteProvider);
+                        await toggleFavorite(zikr.id);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e')),
+                          );
+                        }
+                      }
                     },
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                );
+              },
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildFavoritesTab() {
-    final prefs = _storage.getPreferences();
-    
-    return FutureBuilder<List<Zikr>>(
-      future: _azkarRepo.loadAzkar(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  Widget _buildFavoritesTab(WidgetRef ref) {
+    final favoritesAsync = ref.watch(favoriteAzkarProvider);
 
-        final favorites = snapshot.data!
-            .where((z) => prefs.favoriteZikrIds.contains(z.id))
-            .toList();
-
+    return favoritesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading favorites',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+      data: (favorites) {
         if (favorites.isEmpty) {
           return Center(
             child: Column(
@@ -706,20 +486,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: favorites.length,
+          itemExtent: 100,
+          cacheExtent: 500,
           itemBuilder: (context, index) {
-            return ZikrListItem(
-              zikr: favorites[index],
-              isFavorite: true,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  CustomPageRoute(child: ZikrDetailScreen(zikr: favorites[index])),
-                );
-              },
-              onFavoriteToggle: () async {
-                await _storage.toggleFavorite(favorites[index].id);
-                setState(() {});
-              },
+            final zikr = favorites[index];
+            
+            return RepaintBoundary(
+              child: ZikrListItem(
+                zikr: zikr,
+                isFavorite: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ZikrDetailScreen(zikr: zikr),
+                    ),
+                  );
+                },
+                onFavoriteToggle: () async {
+                  try {
+                    final toggleFavorite = ref.read(toggleFavoriteProvider);
+                    await toggleFavorite(zikr.id);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
+              ),
             );
           },
         );
@@ -728,213 +524,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildRecentTab() {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    
     return Center(
       child: Text(
-        l10n.isArabic ? 'ستظهر الأذكار الأخيرة هنا' : 'Recent azkar will appear here',
+        'Recent azkar will appear here',
         style: AppTheme.bodyMedium.copyWith(
           color: AppTheme.textSecondary,
         ),
       ),
-    );
-  }
-
-  Widget _buildPlayAllButton(List<Zikr> azkar) {
-    final categoryName = _selectedCategory != null
-        ? _azkarRepo.getCategoryDisplayName(_selectedCategory!)
-        : '';
-    final audioCount = azkar.where((z) => z.audio.isNotEmpty).length;
-    // Calculate total count including repetitions
-    final totalPlaylistItems = azkar
-        .where((z) => z.audio.isNotEmpty)
-        .fold<int>(0, (sum, z) => sum + z.defaultCount);
-
-    return StreamBuilder<PlaylistState>(
-      stream: _playlistService.stateStream,
-      initialData: PlaylistState.idle,
-      builder: (context, snapshot) {
-        final state = snapshot.data ?? PlaylistState.idle;
-        final isPlaying = state == PlaylistState.playing;
-        final isPaused = state == PlaylistState.paused;
-
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryGreen,
-                  AppTheme.primaryTeal,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGreen.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () async {
-                  if (isPlaying) {
-                    await _playlistService.pause();
-                  } else if (isPaused) {
-                    await _playlistService.resume();
-                  } else {
-                    await _playlistService.loadPlaylist(azkar);
-                    await _playlistService.play();
-                  }
-                  setState(() {});
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      // Animated play/pause icon
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(
-                          begin: isPlaying ? 0.0 : 1.0,
-                          end: isPlaying ? 1.0 : 0.0,
-                        ),
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        builder: (context, value, child) {
-                          return Transform.scale(
-                            scale: 0.9 + (0.1 * value),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Pause icon
-                                  Opacity(
-                                    opacity: value,
-                                    child: const Icon(
-                                      Icons.pause,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  // Play icon
-                                  Opacity(
-                                    opacity: 1 - value,
-                                    child: const Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      // Text content
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isPlaying || isPaused
-                                  ? (isPlaying ? 'Playing' : 'Paused')
-                                  : 'Play All',
-                              style: AppTheme.titleMedium.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              categoryName.isNotEmpty
-                                  ? '$categoryName • $totalPlaylistItems items'
-                                  : '$totalPlaylistItems items',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: Colors.white.withOpacity(0.9),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Wave animation when playing
-                      if (isPlaying)
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(milliseconds: 1000),
-                          curve: Curves.easeInOut,
-                          onEnd: () {
-                            if (mounted && isPlaying) {
-                              setState(() {});
-                            }
-                          },
-                          builder: (context, value, child) {
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: List.generate(3, (index) {
-                                return Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                                  width: 4,
-                                  height: 20 * (0.5 + 0.5 * (0.5 + 0.5 * (value + index * 0.3) % 1.0)),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                );
-                              }),
-                            );
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

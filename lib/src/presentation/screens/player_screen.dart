@@ -1,33 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
-import '../../utils/localizations.dart';
 import '../../data/services/audio_player_service.dart';
+import '../providers/player_providers.dart';
 import 'dart:math' as math;
 
-class PlayerScreen extends StatefulWidget {
+class PlayerScreen extends ConsumerStatefulWidget {
   final Zikr zikr;
 
   const PlayerScreen({super.key, required this.zikr});
 
   @override
-  State<PlayerScreen> createState() => _PlayerScreenState();
+  ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends State<PlayerScreen>
+class _PlayerScreenState extends ConsumerState<PlayerScreen>
     with SingleTickerProviderStateMixin {
-  final _audioService = AudioPlayerService();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-
-  int _currentCount = 0;
-  late int _targetCount;
 
   @override
   void initState() {
     super.initState();
-    _targetCount = widget.zikr.defaultCount;
+    
+    // Initialize target count in provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(targetCountProvider(widget.zikr.id).notifier).state = 
+          widget.zikr.defaultCount;
+    });
+    
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -46,26 +49,18 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Future<void> _playAudio() async {
     try {
+      final audioService = ref.read(audioPlayerServiceProvider);
       if (widget.zikr.audio.isNotEmpty) {
-        final audioInfo = widget.zikr.audio.first;
-        // Use shortFile if available, otherwise fallback to fullFileUrl
-        final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
-        if (audioPath.isNotEmpty) {
-          await _audioService.playAudio(
-            audioPath,
-            isLocal: true,
-          );
-        }
+        await audioService.playAudio(
+          widget.zikr.audio.first.shortFile,
+          isLocal: true,
+        );
       }
     } catch (e) {
-      print('Error auto-playing: $e');
-      // Show error to user if needed
+      debugPrint('Error auto-playing: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error playing audio: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error playing audio: $e')),
         );
       }
     }
@@ -74,19 +69,15 @@ class _PlayerScreenState extends State<PlayerScreen>
   @override
   void dispose() {
     _pulseController.dispose();
-    _audioService.stop();
+    final audioService = ref.read(audioPlayerServiceProvider);
+    audioService.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    final isArabic = l10n.isArabic;
-
-    return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -144,7 +135,6 @@ class _PlayerScreenState extends State<PlayerScreen>
           ),
         ),
       ),
-      ),
     );
   }
 
@@ -195,12 +185,13 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildCounter() {
-    final l10n = AppLocalizations.ofWithFallback(context);
+    final currentCount = ref.watch(currentCountProvider(widget.zikr.id));
+    final targetCount = ref.watch(targetCountProvider(widget.zikr.id));
     
     return Column(
       children: [
         Text(
-          l10n.repetitionCount,
+          'Repetition Count',
           style: AppTheme.bodyMedium.copyWith(
             color: Colors.white.withOpacity(0.8),
           ),
@@ -212,62 +203,64 @@ class _PlayerScreenState extends State<PlayerScreen>
             _buildCounterButton(
               icon: Icons.remove,
               onPressed: () {
-                if (_currentCount > 0) {
-                  setState(() => _currentCount--);
+                if (currentCount > 0) {
+                  ref.read(currentCountProvider(widget.zikr.id).notifier).state--;
                 }
               },
             ),
             const SizedBox(width: 24),
             GestureDetector(
               onTap: () {
-                if (_currentCount < _targetCount) {
-                  setState(() => _currentCount++);
+                if (currentCount < targetCount) {
+                  ref.read(currentCountProvider(widget.zikr.id).notifier).state++;
                   _animateIncrement();
                 }
               },
-              child: Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child: Text(
-                          '$_currentCount',
-                          key: ValueKey(_currentCount),
-                          style: AppTheme.headlineLarge.copyWith(
-                            fontSize: 48,
-                            color: AppTheme.primaryGreen,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${AppLocalizations.ofWithFallback(context).ofCount} $_targetCount',
-                        style: AppTheme.caption.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+              child: RepaintBoundary(
+                child: Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
                     ],
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (child, animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            );
+                          },
+                          child: Text(
+                            '$currentCount',
+                            key: ValueKey(currentCount),
+                            style: AppTheme.headlineLarge.copyWith(
+                              fontSize: 48,
+                              color: AppTheme.primaryGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'of $targetCount',
+                          style: AppTheme.caption.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -276,7 +269,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             _buildCounterButton(
               icon: Icons.add,
               onPressed: () {
-                setState(() => _currentCount++);
+                ref.read(currentCountProvider(widget.zikr.id).notifier).state++;
                 _animateIncrement();
               },
             ),
@@ -285,12 +278,10 @@ class _PlayerScreenState extends State<PlayerScreen>
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () {
-            setState(() {
-              _currentCount = 0;
-            });
+            ref.read(currentCountProvider(widget.zikr.id).notifier).state = 0;
           },
           icon: const Icon(Icons.refresh),
-          label: Text(AppLocalizations.ofWithFallback(context).reset),
+          label: const Text('Reset'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withOpacity(0.2),
             foregroundColor: Colors.white,
@@ -324,47 +315,51 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildProgressIndicator() {
-    final progress = _targetCount > 0 ? _currentCount / _targetCount : 0.0;
+    final progress = ref.watch(progressProvider(widget.zikr.id));
 
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 200,
-              height: 200,
-              child: CircularProgressIndicator(
-                value: progress,
-                strokeWidth: 12,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+    return RepaintBoundary(
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 200,
+                height: 200,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 12,
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                ),
               ),
-            ),
-            Column(
-              children: [
-                Text(
-                  '${(progress * 100).toInt()}%',
-                  style: AppTheme.headlineMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+              Column(
+                children: [
+                  Text(
+                    '${(progress * 100).toInt()}%',
+                    style: AppTheme.headlineMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Text(
-                  AppLocalizations.ofWithFallback(context).completed,
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: Colors.white.withOpacity(0.8),
+                  Text(
+                    'Completed',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAudioControls() {
+    final audioService = ref.watch(audioPlayerServiceProvider);
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -385,10 +380,10 @@ class _PlayerScreenState extends State<PlayerScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           StreamBuilder<Duration?>(
-            stream: _audioService.durationStream,
+            stream: audioService.durationStream,
             builder: (context, durationSnapshot) {
               return StreamBuilder<Duration>(
-                stream: _audioService.positionStream,
+                stream: audioService.positionStream,
                 builder: (context, positionSnapshot) {
                   final duration = durationSnapshot.data ?? Duration.zero;
                   final position = positionSnapshot.data ?? Duration.zero;
@@ -418,7 +413,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                             final newPosition = Duration(
                               milliseconds: (value * duration.inMilliseconds).toInt(),
                             );
-                            _audioService.seek(newPosition);
+                            audioService.seek(newPosition);
                           },
                         ),
                       ),
@@ -457,21 +452,21 @@ class _PlayerScreenState extends State<PlayerScreen>
                 iconSize: 32,
                 color: AppTheme.textSecondary,
                 onPressed: () {
-                  final newPosition = _audioService.position - const Duration(seconds: 10);
-                  _audioService.seek(newPosition);
+                  final newPosition = audioService.position - const Duration(seconds: 10);
+                  audioService.seek(newPosition);
                 },
               ),
               StreamBuilder<PlayerState>(
-                stream: _audioService.playerStateStream,
+                stream: audioService.playerStateStream,
                 builder: (context, snapshot) {
                   final isPlaying = snapshot.data?.playing ?? false;
                   return AnimatedPlayButton(
                     isPlaying: isPlaying,
                     onPressed: () {
                       if (isPlaying) {
-                        _audioService.pause();
+                        audioService.pause();
                       } else {
-                        _audioService.resume();
+                        audioService.resume();
                       }
                     },
                   );
@@ -482,8 +477,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                 iconSize: 32,
                 color: AppTheme.textSecondary,
                 onPressed: () {
-                  final newPosition = _audioService.position + const Duration(seconds: 10);
-                  _audioService.seek(newPosition);
+                  final newPosition = audioService.position + const Duration(seconds: 10);
+                  audioService.seek(newPosition);
                 },
               ),
             ],
@@ -547,38 +542,40 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
         widget.onPressed();
       },
       onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryGreen.withOpacity(0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) {
-              return RotationTransition(
-                turns: Tween<double>(begin: 0.8, end: 1.0).animate(animation),
-                child: FadeTransition(
-                  opacity: animation,
-                  child: child,
+      child: RepaintBoundary(
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGreen.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
-              );
-            },
-            child: Icon(
-              widget.isPlaying ? Icons.pause : Icons.play_arrow,
-              key: ValueKey(widget.isPlaying),
-              color: Colors.white,
-              size: 36,
+              ],
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return RotationTransition(
+                  turns: Tween<double>(begin: 0.8, end: 1.0).animate(animation),
+                  child: FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  ),
+                );
+              },
+              child: Icon(
+                widget.isPlaying ? Icons.pause : Icons.play_arrow,
+                key: ValueKey(widget.isPlaying),
+                color: Colors.white,
+                size: 36,
+              ),
             ),
           ),
         ),
