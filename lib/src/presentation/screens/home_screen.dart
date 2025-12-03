@@ -20,65 +20,20 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _playlistService = PlaylistService();
-  late AnimationController _pageChangeController;
   final ScrollController _scrollController = ScrollController();
-  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
     _playlistService.initialize();
-    _pageChangeController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _pageChangeController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      _loadMoreCategories();
-    }
-  }
-
-  Future<void> _loadMoreCategories() async {
-    if (_isLoadingMore) return;
-
-    final hasNextAsync = ref.read(hasNextPageProvider);
-    
-    // Extract boolean value from AsyncValue
-    final hasNext = hasNextAsync.maybeWhen(
-      data: (value) => value,
-      orElse: () => false,
-    );
-
-    if (hasNext) {
-      setState(() {
-        _isLoadingMore = true;
-      });
-
-      // Small delay for smooth loading
-      await Future.delayed(const Duration(milliseconds: 200));
-      
-      // Increment page
-      ref.read(currentPageProvider.notifier).state++;
-      
-      // Wait for new items to load
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      setState(() {
-        _isLoadingMore = false;
-      });
-    }
   }
 
   @override
@@ -95,7 +50,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               if (!isSearching) ...[
                 _buildWelcomeBanner(),
                 _buildCategoriesGridSection(ref),
-                if (_isLoadingMore) _buildLoadingMoreIndicator(),
               ] else ...[
                 _buildSearchResults(ref),
               ],
@@ -316,10 +270,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   Widget _buildCategoriesGridSection(WidgetRef ref) {
-    final paginatedCategoriesAsync = ref.watch(paginatedCategoriesProvider);
-    final totalPagesAsync = ref.watch(totalPagesProvider);
+    final allCategoriesAsync = ref.watch(allCategoriesProvider);
 
-    return paginatedCategoriesAsync.when(
+    return allCategoriesAsync.when(
       loading: () => _buildShimmerLoading(),
       error: (error, stack) => SliverToBoxAdapter(
         child: Center(
@@ -338,75 +291,71 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           ),
         ),
       ),
-      data: (paginatedCategories) {
-        return totalPagesAsync.when(
-          loading: () => _buildShimmerLoading(),
-          error: (error, stack) => const SliverToBoxAdapter(child: SizedBox.shrink()),
-          data: (totalPages) {
-            return SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Categories',
-                          style: AppTheme.titleMedium.copyWith(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${paginatedCategories.length} items',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 1.1,
+      data: (allCategories) {
+        final categoriesList = allCategories.entries.toList();
+        
+        return SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Categories',
+                      style: AppTheme.titleMedium.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      itemCount: paginatedCategories.length,
-                      itemBuilder: (context, index) {
-                        final entry = paginatedCategories[index];
-                        final categoryKey = entry.key;
-                        final categoryName = entry.value;
-
-                        return CategoryCard(
-                          key: ValueKey(categoryKey),
-                          title: categoryName,
-                          titleAr: categoryName,
-                          heroTag: 'category_$categoryKey',
-                          onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
-                        );
-                      },
                     ),
-                  ),
-                ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${categoriesList.length} items',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemCount: categoriesList.length,
+                  itemBuilder: (context, index) {
+                    final entry = categoriesList[index];
+                    final categoryKey = entry.key;
+                    final categoryName = entry.value;
+
+                    return CategoryCard(
+                      key: ValueKey(categoryKey),
+                      title: categoryName,
+                      titleAr: categoryName,
+                      heroTag: 'category_$categoryKey',
+                      onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -443,33 +392,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildLoadingMoreIndicator() {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            SizedBox(
-              width: 30,
-              height: 30,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Loading more...',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildSearchResults(WidgetRef ref) {
     final azkarAsync = ref.watch(searchedAzkarProvider);
