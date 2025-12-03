@@ -268,6 +268,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   Widget _buildCategoriesGridSection(WidgetRef ref) {
     final paginatedCategories = ref.watch(paginatedCategoriesProvider);
     final allCategories = ref.watch(allCategoriesProvider);
+    final currentPage = ref.watch(currentPageProvider);
     final totalPages = ref.watch(totalPagesProvider);
 
     if (allCategories.isEmpty) {
@@ -297,24 +298,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Consumer(
-                  builder: (context, ref, child) {
-                    final currentPage = ref.watch(currentPageProvider);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Page ${currentPage + 1} of $totalPages',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    );
-                  },
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Page ${currentPage + 1} of $totalPages',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
