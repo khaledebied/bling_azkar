@@ -18,6 +18,35 @@ class AppTheme {
   static const textPrimary = Color(0xFF1A1A1A);
   static const textSecondary = Color(0xFF6B7280);
   static const textLight = Color(0xFFFFFFFF);
+  
+  // Dark mode text colors
+  static const textPrimaryDark = Color(0xFFFFFFFF);
+  static const textSecondaryDark = Color(0xFFB3B3B3);
+  
+  // Theme-aware text colors
+  static Color getTextPrimary(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark 
+        ? textPrimaryDark 
+        : textPrimary;
+  }
+  
+  static Color getTextSecondary(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark 
+        ? textSecondaryDark 
+        : textSecondary;
+  }
+  
+  static Color getCardColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark 
+        ? cardDark 
+        : cardLight;
+  }
+  
+  static Color getBackgroundColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark 
+        ? backgroundDark 
+        : backgroundLight;
+  }
 
   // Gradients
   static const primaryGradient = LinearGradient(
@@ -170,6 +199,19 @@ class AppTheme {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
     ),
+    textTheme: TextTheme(
+      displayLarge: headlineLarge.copyWith(color: textPrimary),
+      displayMedium: headlineMedium.copyWith(color: textPrimary),
+      headlineLarge: headlineLarge.copyWith(color: textPrimary),
+      headlineMedium: headlineMedium.copyWith(color: textPrimary),
+      titleLarge: titleLarge.copyWith(color: textPrimary),
+      titleMedium: titleMedium.copyWith(color: textPrimary),
+      bodyLarge: bodyLarge.copyWith(color: textPrimary),
+      bodyMedium: bodyMedium.copyWith(color: textPrimary),
+      bodySmall: bodySmall.copyWith(color: textSecondary),
+      labelLarge: bodyMedium.copyWith(color: textPrimary),
+      labelMedium: bodySmall.copyWith(color: textSecondary),
+    ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryGreen,
       foregroundColor: textLight,
@@ -290,6 +332,27 @@ class AppTheme {
         fontWeight: FontWeight.bold,
       ),
       iconTheme: const IconThemeData(color: Colors.white),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.fixed,
+      backgroundColor: cardDark,
+      contentTextStyle: bodyMedium.copyWith(color: Colors.white),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+    ),
+    textTheme: TextTheme(
+      displayLarge: headlineLarge.copyWith(color: Colors.white),
+      displayMedium: headlineMedium.copyWith(color: Colors.white),
+      headlineLarge: headlineLarge.copyWith(color: Colors.white),
+      headlineMedium: headlineMedium.copyWith(color: Colors.white),
+      titleLarge: titleLarge.copyWith(color: Colors.white),
+      titleMedium: titleMedium.copyWith(color: Colors.white),
+      bodyLarge: bodyLarge.copyWith(color: Colors.white),
+      bodyMedium: bodyMedium.copyWith(color: Colors.white),
+      bodySmall: bodySmall.copyWith(color: textSecondaryDark),
+      labelLarge: bodyMedium.copyWith(color: Colors.white),
+      labelMedium: bodySmall.copyWith(color: textSecondaryDark),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryTeal,
