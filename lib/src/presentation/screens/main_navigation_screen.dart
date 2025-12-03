@@ -3,7 +3,7 @@ import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
 import 'home_screen.dart';
 import 'tasbih_screen.dart';
-import 'qibla_screen.dart';
+import 'favorites_screen.dart';
 import 'quran_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -27,7 +27,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     _screens = [
       const HomeScreen(),
       const TasbihScreen(),
-      const QiblaScreen(),
+      const FavoritesScreen(),
       const QuranScreen(),
     ];
 
@@ -123,13 +123,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 index: 0,
               ),
               _buildNavItem(
-                icon: Icons.favorite_rounded,
+                icon: Icons.touch_app_rounded,
                 label: 'Tasbih',
                 index: 1,
               ),
               _buildNavItem(
-                icon: Icons.explore_rounded,
-                label: 'Qibla',
+                icon: Icons.favorite_rounded,
+                label: 'Favorites',
                 index: 2,
               ),
               _buildNavItem(

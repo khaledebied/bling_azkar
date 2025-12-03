@@ -43,8 +43,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
     _pulseController.repeat(reverse: true);
     
-    // Auto-play audio
-    _playAudio();
+    // Don't auto-play - let user control playback
   }
 
   Future<void> _playAudio() async {
