@@ -5,8 +5,6 @@ import '../../data/services/audio_player_service.dart';
 import '../../data/services/playlist_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
-import '../../utils/localizations.dart';
-import 'package:just_audio/just_audio.dart';
 import 'floating_playlist_player.dart';
 
 class CategoryAudioBottomSheet extends StatefulWidget {
@@ -36,9 +34,11 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
   bool _isPlayingAll = false;
   PlaylistState _playlistState = PlaylistState.idle;
   PlaylistItem? _currentItem;
+  int _selectedTabIndex = 0;
   
   late AnimationController _sheetController;
   late AnimationController _playAllController;
+  late TabController _tabController;
   late Animation<double> _playAllScaleAnimation;
   StreamSubscription<PlaylistState>? _playlistStateSubscription;
   StreamSubscription<PlaylistItem?>? _playlistItemSubscription;
@@ -58,6 +58,15 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     _playAllScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
       CurvedAnimation(parent: _playAllController, curve: Curves.easeInOut),
     );
+
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (mounted && !_tabController.indexIsChanging) {
+        setState(() {
+          _selectedTabIndex = _tabController.index;
+        });
+      }
+    });
 
     _loadCategoryAzkar();
     _playlistService.initialize();
@@ -84,6 +93,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
   void dispose() {
     _sheetController.dispose();
     _playAllController.dispose();
+    _tabController.dispose();
     _playlistStateSubscription?.cancel();
     _playlistItemSubscription?.cancel();
     _azkarNotifier.dispose();
@@ -102,7 +112,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
   }
 
   Future<void> _playAll() async {
-    final azkar = _azkarNotifier.value;
+    final azkar = _getFilteredAzkar();
     if (azkar.isEmpty) return;
 
     _playAllController.forward().then((_) {
@@ -139,6 +149,21 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     }
   }
 
+  List<Zikr> _getFilteredAzkar() {
+    switch (_selectedTabIndex) {
+      case 0: // All
+        return _azkarNotifier.value;
+      case 1: // Favorites
+        // TODO: Implement favorites filtering based on stored preferences
+        return _azkarNotifier.value; // For now, show all
+      case 2: // Recent
+        // TODO: Implement recent playback tracking
+        return _azkarNotifier.value; // For now, show all
+      default:
+        return _azkarNotifier.value;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<List<Zikr>>(
@@ -147,8 +172,9 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
         return ValueListenableBuilder<bool>(
           valueListenable: _isLoadingNotifier,
           builder: (context, isLoading, _) {
-            final audioCount = azkar.where((z) => z.audio.isNotEmpty).length;
-            final totalPlaylistItems = azkar
+            final filteredAzkar = _getFilteredAzkar();
+            final audioCount = filteredAzkar.where((z) => z.audio.isNotEmpty).length;
+            final totalPlaylistItems = filteredAzkar
                 .where((z) => z.audio.isNotEmpty)
                 .fold<int>(0, (sum, z) => sum + z.defaultCount);
 
@@ -188,7 +214,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
                         ),
                         // Header
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           child: Row(
                             children: [
                               Container(
@@ -229,74 +255,56 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
                             ],
                           ),
                         ),
+                        // Tabs
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: TabBar(
+                            controller: _tabController,
+                            indicator: BoxDecoration(
+                              gradient: AppTheme.primaryGradient,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            labelColor: Colors.white,
+                            unselectedLabelColor: AppTheme.textSecondary,
+                            labelStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            unselectedLabelStyle: const TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: 14,
+                            ),
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            dividerColor: Colors.transparent,
+                            tabs: const [
+                              Tab(text: 'All'),
+                              Tab(text: 'Favorites'),
+                              Tab(text: 'Recent'),
+                            ],
+                          ),
+                        ),
                         // Play All button
-                        if (!isLoading && azkar.isNotEmpty)
+                        if (!isLoading && filteredAzkar.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                             child: _buildPlayAllButton(totalPlaylistItems),
                           ),
                         // Divider
-                        const Divider(height: 32, thickness: 1),
+                        const Divider(height: 24, thickness: 1),
                         // Audio list
                         Flexible(
-                          child: isLoading
-                              ? const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(32.0),
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                              : azkar.isEmpty
-                                  ? Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(32.0),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.audiotrack_outlined,
-                                              size: 64,
-                                              color: Colors.grey.shade400,
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              'No audios available',
-                                              style: AppTheme.titleMedium.copyWith(
-                                                color: AppTheme.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                                      shrinkWrap: true,
-                                      itemCount: azkar.length,
-                                      itemBuilder: (context, index) {
-                                        final zikr = azkar[index];
-                                        final isCurrentPlaying = _currentItem?.zikr.id == zikr.id &&
-                                            _playlistState == PlaylistState.playing;
-
-                                        return RepaintBoundary(
-                                          child: TweenAnimationBuilder<double>(
-                                            tween: Tween(begin: 0.0, end: 1.0),
-                                            duration: Duration(milliseconds: 200 + (index * 30)),
-                                            curve: Curves.easeOut,
-                                            builder: (context, value, child) {
-                                              return Opacity(
-                                                opacity: value,
-                                                child: Transform.translate(
-                                                  offset: Offset(0, 20 * (1 - value)),
-                                                  child: child,
-                                                ),
-                                              );
-                                            },
-                                            child: _buildAudioListItem(zikr, isCurrentPlaying),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildAzkarList(filteredAzkar, isLoading),
+                              _buildAzkarList(filteredAzkar, isLoading), // Favorites tab
+                              _buildAzkarList(filteredAzkar, isLoading), // Recent tab
+                            ],
+                          ),
                         ),
                         SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
                       ],
@@ -329,6 +337,71 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildAzkarList(List<Zikr> azkar, bool isLoading) {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (azkar.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.audiotrack_outlined,
+                size: 64,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No audios available',
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      shrinkWrap: true,
+      itemCount: azkar.length,
+      itemBuilder: (context, index) {
+        final zikr = azkar[index];
+        final isCurrentPlaying = _currentItem?.zikr.id == zikr.id &&
+            _playlistState == PlaylistState.playing;
+
+        return RepaintBoundary(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 200 + (index * 30)),
+            curve: Curves.easeOut,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: _buildAudioListItem(zikr, isCurrentPlaying),
+          ),
         );
       },
     );
@@ -421,9 +494,6 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
 
   Widget _buildAudioListItem(Zikr zikr, bool isCurrentPlaying) {
     if (zikr.audio.isEmpty) return const SizedBox.shrink();
-
-    final audioInfo = zikr.audio.first;
-    final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -519,4 +589,3 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     );
   }
 }
-

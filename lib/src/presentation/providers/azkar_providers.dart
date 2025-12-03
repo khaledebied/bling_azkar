@@ -81,3 +81,54 @@ final azkarByCategoryProvider = FutureProvider.family<List<Zikr>, String>((ref, 
   final repository = ref.watch(azkarRepositoryProvider);
   return repository.getAzkarByCategory(categoryKey);
 });
+
+/// Provider for all categories
+final allCategoriesProvider = Provider<Map<String, String>>((ref) {
+  final repository = ref.watch(azkarRepositoryProvider);
+  return repository.getCategoryDisplayNames();
+});
+
+/// Provider for current page index (pagination)
+final currentPageProvider = StateProvider<int>((ref) => 0);
+
+/// Provider for page size
+final pageSizeProvider = Provider<int>((ref) => 15);
+
+/// Provider for paginated categories
+final paginatedCategoriesProvider = Provider<List<MapEntry<String, String>>>((ref) {
+  final allCategories = ref.watch(allCategoriesProvider);
+  final currentPage = ref.watch(currentPageProvider);
+  final pageSize = ref.watch(pageSizeProvider);
+  
+  final entries = allCategories.entries.toList();
+  final startIndex = currentPage * pageSize;
+  final endIndex = (startIndex + pageSize).clamp(0, entries.length);
+  
+  if (startIndex >= entries.length) {
+    return [];
+  }
+  
+  return entries.sublist(startIndex, endIndex);
+});
+
+/// Provider for total pages
+final totalPagesProvider = Provider<int>((ref) {
+  final allCategories = ref.watch(allCategoriesProvider);
+  final pageSize = ref.watch(pageSizeProvider);
+  
+  if (allCategories.isEmpty) return 0;
+  return (allCategories.length / pageSize).ceil();
+});
+
+/// Provider for has next page
+final hasNextPageProvider = Provider<bool>((ref) {
+  final currentPage = ref.watch(currentPageProvider);
+  final totalPages = ref.watch(totalPagesProvider);
+  return currentPage < totalPages - 1;
+});
+
+/// Provider for has previous page
+final hasPreviousPageProvider = Provider<bool>((ref) {
+  final currentPage = ref.watch(currentPageProvider);
+  return currentPage > 0;
+});
