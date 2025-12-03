@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/tasbih_type.dart';
+import '../../domain/models/tasbih_session.dart';
 import '../../data/repositories/tasbih_repository.dart';
 import '../state/tasbih_counter_state.dart';
 
@@ -33,7 +34,7 @@ final selectedTasbihTypeProvider = StateProvider<TasbihType?>((ref) {
 /// Provider for counter state (family provider for each tasbih type)
 final tasbihCounterProvider = StateNotifierProvider.family<
     TasbihCounterNotifier,
-    tasbih_session,
+    TasbihSession,
     TasbihType>((ref, tasbihType) {
   final repository = ref.watch(tasbihRepositoryProvider);
   final hapticEnabled = ref.watch(hapticEnabledProvider);
