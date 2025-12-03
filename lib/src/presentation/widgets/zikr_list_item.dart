@@ -154,6 +154,8 @@ class _ZikrListItemState extends State<ZikrListItem>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) {
@@ -171,12 +173,20 @@ class _ZikrListItemState extends State<ZikrListItem>
               minHeight: 90,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(20),
+              border: isDarkMode
+                  ? Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
+                    )
+                  : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 10,
+                  color: isDarkMode
+                      ? Colors.black.withValues(alpha: 0.3)
+                      : Colors.black.withValues(alpha: 0.06),
+                  blurRadius: isDarkMode ? 15 : 10,
                   offset: const Offset(0, 3),
                 ),
               ],
@@ -277,8 +287,8 @@ class _ZikrListItemState extends State<ZikrListItem>
                                 ? Icons.favorite
                                 : Icons.favorite_border,
                             color: widget.isFavorite
-                                ? Colors.red
-                                : AppTheme.textSecondary,
+                                ? (isDarkMode ? Colors.red.shade400 : Colors.red)
+                                : context.textSecondary,
                             size: 20,
                           ),
                           padding: EdgeInsets.zero,
@@ -291,7 +301,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                          Icon(
                           Icons.arrow_forward_ios,
                           size: 12,
-                          color: context.textSecondary,
+                          color: context.textSecondary.withValues(alpha: 0.5),
                         ),
                       ],
                     ),
@@ -306,6 +316,8 @@ class _ZikrListItemState extends State<ZikrListItem>
   }
 
   Widget _buildPlayButton() {
+    final isDarkMode = context.isDarkMode;
+    
     return GestureDetector(
       onTap: _handlePlayPause,
       child: ScaleTransition(
@@ -333,8 +345,8 @@ class _ZikrListItemState extends State<ZikrListItem>
                 color: (_isPlaying && _isCurrentAudio
                         ? AppTheme.primaryTeal
                         : AppTheme.primaryGreen)
-                    .withOpacity(0.4),
-                blurRadius: 12,
+                    .withValues(alpha: isDarkMode ? 0.5 : 0.4),
+                blurRadius: isDarkMode ? 15 : 12,
                 offset: const Offset(0, 4),
                 spreadRadius: 0,
               ),
@@ -353,7 +365,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.4),
                         width: 2,
                       ),
                     ),

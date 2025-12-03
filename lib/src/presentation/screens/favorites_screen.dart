@@ -132,7 +132,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(
@@ -158,7 +158,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                                 Text(
                                   'Your saved azkar',
                                   style: AppTheme.bodyMedium.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                               ],
@@ -189,8 +189,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryGreen.withOpacity(0.1),
-                      AppTheme.primaryTeal.withOpacity(0.1),
+                      AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      AppTheme.primaryTeal.withValues(alpha: 0.15),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -241,13 +241,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppTheme.primaryGreen.withOpacity(0.1),
-                        AppTheme.primaryTeal.withOpacity(0.1),
+                        AppTheme.primaryGreen.withValues(alpha: 0.15),
+                        AppTheme.primaryTeal.withValues(alpha: 0.15),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.4),
                       width: 1,
                     ),
                   ),
@@ -355,7 +355,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -385,7 +385,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -418,8 +418,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: context.isDarkMode
+                      ? Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
+                        )
+                      : null,
                 ),
               ),
             ),
