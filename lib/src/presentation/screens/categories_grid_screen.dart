@@ -72,7 +72,7 @@ class _CategoriesGridScreenState extends State<CategoriesGridScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child:  Icon(
                         Icons.arrow_back,
                         color: context.textPrimary,
                       ),

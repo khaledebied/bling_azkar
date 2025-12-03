@@ -64,7 +64,7 @@ class TasbihTypes {
     descriptionEn: 'Count to 100 style',
     descriptionAr: 'عد إلى 100',
     defaultTarget: 100,
-    icon: Icons.filter_100,
+    icon: Icons.filter_1,
     color: Color(0xFF3B82F6),
   );
 
@@ -86,8 +86,8 @@ class TasbihTypes {
     descriptionEn: 'Short daily dhikr',
     descriptionAr: 'ذكر يومي قصير',
     defaultTarget: 7,
-    icon: Icons.looks_7,
-    color: Color(0xFF8B5CF6),
+    icon: Icons.looks_3,
+    color: const Color(0xFF8B5CF6),
   );
 
   static const tasbihWrist = TasbihType(

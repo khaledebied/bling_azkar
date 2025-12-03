@@ -288,7 +288,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                           ),
                           onPressed: widget.onFavoriteToggle,
                         ),
-                        const Icon(
+                         Icon(
                           Icons.arrow_forward_ios,
                           size: 12,
                           color: context.textSecondary,
