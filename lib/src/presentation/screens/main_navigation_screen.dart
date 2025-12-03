@@ -4,7 +4,7 @@ import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import 'home_screen.dart';
-import 'tasbih_screen.dart';
+import 'tasbih_list_screen.dart';
 import 'favorites_screen.dart';
 import 'quran_screen.dart';
 
@@ -27,11 +27,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     super.initState();
     
     _screens = [
-      const HomeScreen(),
-      const TasbihScreen(),
-      const FavoritesScreen(),
-      const QuranScreen(),
-    ];
+    const HomeScreen(),
+    const TasbihListScreen(),
+    const FavoritesScreen(),
+    const QuranScreen(),
+  ];
 
     // Create animation controllers for each tab
     _animationControllers = List.generate(
