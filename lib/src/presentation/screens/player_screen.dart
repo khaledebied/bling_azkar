@@ -121,8 +121,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
           _isCompleted = false;
         });
         
+        final audioInfo = widget.zikr.audio.first;
+        final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
+        
+        if (audioPath.isEmpty) {
+          throw Exception('No audio path available');
+        }
+        
         await audioService.playAudio(
-          widget.zikr.audio.first.shortFile ?? "",
+          audioPath,
           isLocal: true,
         );
       }
@@ -130,7 +137,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
       debugPrint('Error playing: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error playing audio: $e')),
+          SnackBar(
+            content: Text('Error playing audio: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
