@@ -77,17 +77,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens.asMap().entries.map((entry) {
-            return FadeTransition(
-              opacity: _fadeAnimations[entry.key],
-              child: entry.value,
-            );
-          }).toList(),
+      child: ScaffoldMessenger(
+        child: Builder(
+          builder: (context) => Scaffold(
+            body: IndexedStack(
+              index: _currentIndex,
+              children: _screens.asMap().entries.map((entry) {
+                return FadeTransition(
+                  opacity: _fadeAnimations[entry.key],
+                  child: entry.value,
+                );
+              }).toList(),
+            ),
+            bottomNavigationBar: _buildBottomNavigationBar(),
+            // Ensure SnackBar has proper margins
+            resizeToAvoidBottomInset: false,
+          ),
         ),
-        bottomNavigationBar: _buildBottomNavigationBar(),
       ),
     );
   }

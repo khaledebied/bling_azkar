@@ -359,7 +359,6 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                           SnackBar(
                             content: Text('Error playing audio: $e'),
                             backgroundColor: Colors.red,
-                            behavior: SnackBarBehavior.floating,
                           ),
                         );
                       }

@@ -52,7 +52,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     if (_isLoadingMore) return;
 
     final hasNextAsync = ref.read(hasNextPageProvider);
-    final hasNext = await hasNextAsync.future.catchError((_) => false);
+    
+    // Extract boolean value from AsyncValue
+    final hasNext = hasNextAsync.maybeWhen(
+      data: (value) => value,
+      orElse: () => false,
+    );
 
     if (hasNext) {
       setState(() {

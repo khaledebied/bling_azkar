@@ -142,7 +142,6 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
           SnackBar(
             content: Text('Error playing audio: ${e.toString()}'),
             backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }

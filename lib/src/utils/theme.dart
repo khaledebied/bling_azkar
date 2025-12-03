@@ -162,6 +162,14 @@ class AppTheme {
       ),
       iconTheme: const IconThemeData(color: textPrimary),
     ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.fixed,
+      backgroundColor: textPrimary,
+      contentTextStyle: bodyMedium.copyWith(color: Colors.white),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+    ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryGreen,
       foregroundColor: textLight,

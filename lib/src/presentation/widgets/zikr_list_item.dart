@@ -145,10 +145,6 @@ class _ZikrListItemState extends State<ZikrListItem>
           SnackBar(
             content: Text('Error playing audio: ${e.toString()}'),
             backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
           ),
         );
       }
