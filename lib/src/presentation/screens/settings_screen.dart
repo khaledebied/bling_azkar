@@ -464,20 +464,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _showFeedbackDialog(l10n);
             },
           ),
-          Divider(
-            height: 1,
-            color: context.isDarkMode 
-                ? Colors.grey.shade700
-                : Colors.grey.shade100,
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: Text(l10n.licenses),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-            onTap: () {
-              showLicensePage(context: context);
-            },
-          ),
         ],
       ),
     );
