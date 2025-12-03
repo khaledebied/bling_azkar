@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/azkar_repository.dart';
 import '../../data/services/audio_player_service.dart';
 import '../../data/services/playlist_service.dart';
+import '../../data/services/storage_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import 'floating_playlist_player.dart';
+import '../screens/player_screen.dart';
+import '../providers/azkar_providers.dart';
 
-class CategoryAudioBottomSheet extends StatefulWidget {
+class CategoryAudioBottomSheet extends ConsumerStatefulWidget {
   final String categoryKey;
   final String categoryName;
 
@@ -18,15 +22,16 @@ class CategoryAudioBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<CategoryAudioBottomSheet> createState() =>
+  ConsumerState<CategoryAudioBottomSheet> createState() =>
       _CategoryAudioBottomSheetState();
 }
 
-class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
+class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSheet>
     with TickerProviderStateMixin {
   final _azkarRepo = AzkarRepository();
   final _audioService = AudioPlayerService();
   final _playlistService = PlaylistService();
+  final _storage = StorageService();
   
   final _azkarNotifier = ValueNotifier<List<Zikr>>([]);
   final _isLoadingNotifier = ValueNotifier<bool>(true);
@@ -34,11 +39,9 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
   bool _isPlayingAll = false;
   PlaylistState _playlistState = PlaylistState.idle;
   PlaylistItem? _currentItem;
-  int _selectedTabIndex = 0;
   
   late AnimationController _sheetController;
   late AnimationController _playAllController;
-  late TabController _tabController;
   late Animation<double> _playAllScaleAnimation;
   StreamSubscription<PlaylistState>? _playlistStateSubscription;
   StreamSubscription<PlaylistItem?>? _playlistItemSubscription;
@@ -58,15 +61,6 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     _playAllScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
       CurvedAnimation(parent: _playAllController, curve: Curves.easeInOut),
     );
-
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (mounted && !_tabController.indexIsChanging) {
-        setState(() {
-          _selectedTabIndex = _tabController.index;
-        });
-      }
-    });
 
     _loadCategoryAzkar();
     _playlistService.initialize();
@@ -93,7 +87,6 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
   void dispose() {
     _sheetController.dispose();
     _playAllController.dispose();
-    _tabController.dispose();
     _playlistStateSubscription?.cancel();
     _playlistItemSubscription?.cancel();
     _azkarNotifier.dispose();
@@ -112,7 +105,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
   }
 
   Future<void> _playAll() async {
-    final azkar = _getFilteredAzkar();
+    final azkar = _azkarNotifier.value;
     if (azkar.isEmpty) return;
 
     _playAllController.forward().then((_) {
@@ -129,18 +122,27 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     }
   }
 
-  Future<void> _playSingle(Zikr zikr) async {
-    if (zikr.audio.isEmpty) return;
+  Future<void> _openPlayerScreen(Zikr zikr) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlayerScreen(zikr: zikr),
+      ),
+    );
+  }
 
+  Future<void> _toggleFavorite(String zikrId) async {
     try {
-      final audioInfo = zikr.audio.first;
-      final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
-      await _audioService.playAudio(audioPath, isLocal: true);
+      await _storage.toggleFavorite(zikrId);
+      // Trigger rebuild
+      setState(() {});
+      // Also invalidate the provider
+      ref.invalidate(favoriteAzkarProvider);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error playing audio: ${e.toString()}'),
+            content: Text('Error updating favorite: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -148,19 +150,9 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     }
   }
 
-  List<Zikr> _getFilteredAzkar() {
-    switch (_selectedTabIndex) {
-      case 0: // All
-        return _azkarNotifier.value;
-      case 1: // Favorites
-        // TODO: Implement favorites filtering based on stored preferences
-        return _azkarNotifier.value; // For now, show all
-      case 2: // Recent
-        // TODO: Implement recent playback tracking
-        return _azkarNotifier.value; // For now, show all
-      default:
-        return _azkarNotifier.value;
-    }
+  bool _isFavorite(String zikrId) {
+    final prefs = _storage.getPreferences();
+    return prefs.favoriteZikrIds.contains(zikrId);
   }
 
   @override
@@ -171,9 +163,8 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
         return ValueListenableBuilder<bool>(
           valueListenable: _isLoadingNotifier,
           builder: (context, isLoading, _) {
-            final filteredAzkar = _getFilteredAzkar();
-            final audioCount = filteredAzkar.where((z) => z.audio.isNotEmpty).length;
-            final totalPlaylistItems = filteredAzkar
+            final audioCount = azkar.where((z) => z.audio.isNotEmpty).length;
+            final totalPlaylistItems = azkar
                 .where((z) => z.audio.isNotEmpty)
                 .fold<int>(0, (sum, z) => sum + z.defaultCount);
 
@@ -254,40 +245,8 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
                             ],
                           ),
                         ),
-                        // Tabs
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: TabBar(
-                            controller: _tabController,
-                            indicator: BoxDecoration(
-                              gradient: AppTheme.primaryGradient,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            labelColor: Colors.white,
-                            unselectedLabelColor: AppTheme.textSecondary,
-                            labelStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            unselectedLabelStyle: const TextStyle(
-                              fontWeight: FontWeight.normal,
-                              fontSize: 14,
-                            ),
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            dividerColor: Colors.transparent,
-                            tabs: const [
-                              Tab(text: 'All'),
-                              Tab(text: 'Favorites'),
-                              Tab(text: 'Recent'),
-                            ],
-                          ),
-                        ),
                         // Play All button
-                        if (!isLoading && filteredAzkar.isNotEmpty)
+                        if (!isLoading && azkar.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                             child: _buildPlayAllButton(totalPlaylistItems),
@@ -296,14 +255,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
                         const Divider(height: 24, thickness: 1),
                         // Audio list
                         Flexible(
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _buildAzkarList(filteredAzkar, isLoading),
-                              _buildAzkarList(filteredAzkar, isLoading), // Favorites tab
-                              _buildAzkarList(filteredAzkar, isLoading), // Recent tab
-                            ],
-                          ),
+                          child: _buildAzkarList(azkar, isLoading),
                         ),
                         SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
                       ],
@@ -384,6 +336,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
         final zikr = azkar[index];
         final isCurrentPlaying = _currentItem?.zikr.id == zikr.id &&
             _playlistState == PlaylistState.playing;
+        final isFavorite = _isFavorite(zikr.id);
 
         return RepaintBoundary(
           child: TweenAnimationBuilder<double>(
@@ -399,7 +352,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
                 ),
               );
             },
-            child: _buildAudioListItem(zikr, isCurrentPlaying),
+            child: _buildAudioListItem(zikr, isCurrentPlaying, isFavorite),
           ),
         );
       },
@@ -491,7 +444,7 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
     );
   }
 
-  Widget _buildAudioListItem(Zikr zikr, bool isCurrentPlaying) {
+  Widget _buildAudioListItem(Zikr zikr, bool isCurrentPlaying, bool isFavorite) {
     if (zikr.audio.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -508,81 +461,111 @@ class _CategoryAudioBottomSheetState extends State<CategoryAudioBottomSheet>
           width: isCurrentPlaying ? 2 : 1,
         ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            gradient: isCurrentPlaying
-                ? AppTheme.primaryGradient
-                : LinearGradient(
-                    colors: [Colors.grey.shade300, Colors.grey.shade400],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _openPlayerScreen(zikr),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Leading icon
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: isCurrentPlaying
+                        ? AppTheme.primaryGradient
+                        : LinearGradient(
+                            colors: [Colors.grey.shade300, Colors.grey.shade400],
+                          ),
+                    shape: BoxShape.circle,
                   ),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            isCurrentPlaying ? Icons.volume_up : Icons.audiotrack,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
-        title: Text(
-          zikr.title.ar,
-          style: AppTheme.arabicMedium.copyWith(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isCurrentPlaying
-                ? AppTheme.primaryGreen
-                : AppTheme.textPrimary,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: isCurrentPlaying
-                    ? AppTheme.primaryGreen.withOpacity(0.2)
-                    : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${zikr.defaultCount}x',
-                style: AppTheme.caption.copyWith(
-                  color: isCurrentPlaying
-                      ? AppTheme.primaryGreen
-                      : AppTheme.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  child: Icon(
+                    isCurrentPlaying ? Icons.volume_up : Icons.audiotrack,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                // Title and subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        zikr.title.ar,
+                        style: AppTheme.arabicMedium.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: isCurrentPlaying
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        zikr.text,
+                        style: AppTheme.arabicSmall.copyWith(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                          height: 1.5,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isCurrentPlaying
+                                  ? AppTheme.primaryGreen.withOpacity(0.2)
+                                  : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${zikr.defaultCount}x',
+                              style: AppTheme.caption.copyWith(
+                                color: isCurrentPlaying
+                                    ? AppTheme.primaryGreen
+                                    : AppTheme.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          if (isCurrentPlaying && _currentItem != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '(${_currentItem!.repetition}/${_currentItem!.totalRepetitions})',
+                              style: AppTheme.caption.copyWith(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Favorite button
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : AppTheme.textSecondary,
+                    size: 24,
+                  ),
+                  onPressed: () => _toggleFavorite(zikr.id),
+                ),
+              ],
             ),
-            if (isCurrentPlaying && _currentItem != null) ...[
-              const SizedBox(width: 8),
-              Text(
-                '(${_currentItem!.repetition}/${_currentItem!.totalRepetitions})',
-                style: AppTheme.caption.copyWith(
-                  color: AppTheme.primaryGreen,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ],
-        ),
-        trailing: IconButton(
-          icon: Icon(
-            isCurrentPlaying ? Icons.pause_circle : Icons.play_circle_outline,
-            color: isCurrentPlaying
-                ? AppTheme.primaryGreen
-                : AppTheme.textSecondary,
-            size: 32,
           ),
-          onPressed: () => _playSingle(zikr),
         ),
       ),
     );
