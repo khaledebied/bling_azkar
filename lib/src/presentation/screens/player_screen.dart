@@ -124,6 +124,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
         final audioInfo = widget.zikr.audio.first;
         final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
         
+        debugPrint('=== Playing Audio ===');
+        debugPrint('Zikr ID: ${widget.zikr.id}');
+        debugPrint('Zikr Title: ${widget.zikr.title.ar}');
+        debugPrint('Audio Path: $audioPath');
+        debugPrint('Short File: ${audioInfo.shortFile}');
+        debugPrint('Full File URL: ${audioInfo.fullFileUrl}');
+        
         if (audioPath.isEmpty) {
           throw Exception('No audio path available');
         }
@@ -150,8 +157,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   void dispose() {
     _pulseController.dispose();
     _playerStateSubscription?.cancel();
-    // Don't use ref in dispose - it's already been disposed
-    // Audio service will handle cleanup automatically
+    
+    // Stop audio when leaving the screen
+    // We need to do this before the widget is disposed
+    final audioService = AudioPlayerService();
+    audioService.stop();
+    
     super.dispose();
   }
 
