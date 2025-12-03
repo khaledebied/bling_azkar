@@ -1,0 +1,588 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:math' as math;
+import '../../utils/theme.dart';
+import '../../domain/models/tasbih_type.dart';
+import '../providers/tasbih_providers.dart';
+import '../widgets/tasbih_celebration_dialog.dart';
+
+/// Detail screen for a specific Tasbih type with counter
+class TasbihDetailScreen extends ConsumerStatefulWidget {
+  final TasbihType tasbihType;
+
+  const TasbihDetailScreen({
+    super.key,
+    required this.tasbihType,
+  });
+
+  @override
+  ConsumerState<TasbihDetailScreen> createState() => _TasbihDetailScreenState();
+}
+
+class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _rotationController;
+  late AnimationController _scaleController;
+  late AnimationController _rippleController;
+  late AnimationController _bounceController;
+  
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rippleAnimation;
+  late Animation<double> _bounceAnimation;
+  
+  double _dragOffset = 0.0;
+  double _lastDragOffset = 0.0;
+  bool _isDragging = false;
+  double _rotationAngle = 0.0;
+  bool _celebrationShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Rotation animation for drag
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _rotationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Scale animation for tap
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _scaleController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    // Ripple animation
+    _rippleController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _rippleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _rippleController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Bounce animation for completion
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _bounceAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(
+        parent: _bounceController,
+        curve: Curves.elasticOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    _scaleController.dispose();
+    _rippleController.dispose();
+    _bounceController.dispose();
+    super.dispose();
+  }
+
+  void _increment() {
+    final counter = ref.read(tasbihCounterProvider(widget.tasbihType).notifier);
+    final currentState = ref.read(tasbihCounterProvider(widget.tasbihType));
+    
+    if (currentState.canIncrement) {
+      counter.increment();
+      _scaleController.forward(from: 0);
+      _rippleController.forward(from: 0);
+      
+      // Check if just completed
+      final newState = ref.read(tasbihCounterProvider(widget.tasbihType));
+      if (newState.isCompleted && !_celebrationShown) {
+        _celebrationShown = true;
+        _bounceController.forward(from: 0);
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _showCelebrationDialog();
+          }
+        });
+      }
+    } else {
+      // Already completed, show toast
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Completed — Tap Restart to begin again'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _decrement() {
+    final counter = ref.read(tasbihCounterProvider(widget.tasbihType).notifier);
+    counter.decrement();
+    _scaleController.forward(from: 0);
+    _rippleController.forward(from: 0);
+    _celebrationShown = false; // Reset flag if user decrements
+  }
+
+  void _reset() {
+    final counter = ref.read(tasbihCounterProvider(widget.tasbihType).notifier);
+    counter.reset();
+    _scaleController.forward(from: 0);
+    _celebrationShown = false;
+  }
+
+  void _handleDragStart(DragStartDetails details) {
+    setState(() {
+      _isDragging = true;
+      _lastDragOffset = 0.0;
+    });
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _dragOffset += details.delta.dy;
+      _lastDragOffset = details.delta.dy;
+      
+      // Calculate rotation
+      _rotationAngle += details.delta.dy * 0.15;
+      
+      // Threshold for increment/decrement
+      double threshold = 25.0;
+      
+      if (_dragOffset.abs() > threshold) {
+        if (_dragOffset < 0) {
+          _increment();
+          _dragOffset = 0.0;
+        } else {
+          _decrement();
+          _dragOffset = 0.0;
+        }
+      }
+    });
+    
+    double normalizedAngle = (_rotationAngle % (2 * math.pi)) / (2 * math.pi);
+    _rotationController.value = normalizedAngle;
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    setState(() {
+      _isDragging = false;
+      _dragOffset = 0.0;
+    });
+    
+    _rotationController.animateTo(
+      0.0,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutBack,
+    );
+    
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        setState(() {
+          _rotationAngle = 0.0;
+        });
+      }
+    });
+  }
+
+  void _showCelebrationDialog() {
+    final counter = ref.read(tasbihCounterProvider(widget.tasbihType));
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => TasbihCelebrationDialog(
+        tasbihType: widget.tasbihType,
+        count: counter.currentCount,
+        onRestart: () {
+          Navigator.pop(context);
+          _reset();
+        },
+        onDone: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final counter = ref.watch(tasbihCounterProvider(widget.tasbihType));
+    final animationsEnabled = ref.watch(animationsEnabledProvider);
+    
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              widget.tasbihType.color,
+              widget.tasbihType.color.withOpacity(0.7),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      iconSize: 28,
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            widget.tasbihType.nameEn,
+                            style: AppTheme.titleMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            widget.tasbihType.nameAr,
+                            style: AppTheme.arabicSmall.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _reset,
+                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      iconSize: 28,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Progress badges
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildBadge(
+                      'Target: ${counter.targetCount}',
+                      Icons.flag,
+                    ),
+                    const SizedBox(width: 12),
+                    _buildBadge(
+                      '${(counter.progress * 100).toInt()}%',
+                      Icons.pie_chart,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Main Counter
+              Expanded(
+                child: Center(
+                  child: GestureDetector(
+                    onTap: _increment,
+                    onPanStart: _handleDragStart,
+                    onPanUpdate: _handleDragUpdate,
+                    onPanEnd: _handleDragEnd,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Ripple effect
+                        if (animationsEnabled)
+                          AnimatedBuilder(
+                            animation: _rippleAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                width: 280 + (_rippleAnimation.value * 80),
+                                height: 280 + (_rippleAnimation.value * 80),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(
+                                      0.2 * (1 - _rippleAnimation.value),
+                                    ),
+                                    width: 2,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        
+                        // Completion pulse
+                        if (counter.isCompleted && animationsEnabled)
+                          AnimatedBuilder(
+                            animation: _bounceAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                width: 240 * _bounceAnimation.value,
+                                height: 240 * _bounceAnimation.value,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(
+                                      0.6 * (1 - (_bounceAnimation.value - 1) / 0.3),
+                                    ),
+                                    width: 4,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        
+                        // Main bead
+                        AnimatedBuilder(
+                          animation: Listenable.merge([
+                            _rotationController,
+                            _scaleController,
+                          ]),
+                          builder: (context, child) {
+                            return Transform.rotate(
+                              angle: animationsEnabled
+                                  ? _rotationAnimation.value * 2 * math.pi
+                                  : 0,
+                              child: Transform.scale(
+                                scale: animationsEnabled
+                                    ? (_isDragging ? 1.1 : _scaleAnimation.value)
+                                    : 1.0,
+                                child: Container(
+                                  width: 220,
+                                  height: 220,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.white,
+                                        Color(0xFFF5F5F5),
+                                      ],
+                                    ),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 40,
+                                        offset: const Offset(0, 15),
+                                      ),
+                                      BoxShadow(
+                                        color: widget.tasbihType.color.withOpacity(0.3),
+                                        blurRadius: 30,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Inner circle
+                                      Container(
+                                        width: 180,
+                                        height: 180,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: widget.tasbihType.color.withOpacity(0.2),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Counter number
+                                      AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 200),
+                                        transitionBuilder: (child, animation) {
+                                          return ScaleTransition(
+                                            scale: animation,
+                                            child: FadeTransition(
+                                              opacity: animation,
+                                              child: child,
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          '${counter.currentCount}',
+                                          key: ValueKey(counter.currentCount),
+                                          style: AppTheme.headlineLarge.copyWith(
+                                            fontSize: 72,
+                                            fontWeight: FontWeight.bold,
+                                            color: widget.tasbihType.color,
+                                            letterSpacing: -2,
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Drag indicator
+                                      if (_isDragging)
+                                        Positioned(
+                                          top: 20,
+                                          child: Icon(
+                                            _lastDragOffset < 0
+                                                ? Icons.arrow_upward_rounded
+                                                : Icons.arrow_downward_rounded,
+                                            color: widget.tasbihType.color.withOpacity(0.6),
+                                            size: 24,
+                                          ),
+                                        ),
+                                      
+                                      // Completion badge
+                                      if (counter.isCompleted)
+                                        Positioned(
+                                          bottom: 20,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: widget.tasbihType.color,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.check_circle,
+                                                  color: Colors.white,
+                                                  size: 14,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Completed',
+                                                  style: AppTheme.caption.copyWith(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        
+                        // Decorative beads
+                        if (animationsEnabled)
+                          ...List.generate(8, (index) {
+                            final angle = (index * 2 * math.pi / 8) - math.pi / 2;
+                            final radius = 140.0;
+                            return Positioned(
+                              left: 110 + radius * math.cos(angle) - 15,
+                              top: 110 + radius * math.sin(angle) - 15,
+                              child: AnimatedBuilder(
+                                animation: _rippleAnimation,
+                                builder: (context, child) {
+                                  return Opacity(
+                                    opacity: 0.3 + (_rippleAnimation.value * 0.2),
+                                    child: Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Instructions
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildInstruction(Icons.touch_app_rounded, 'Tap to count'),
+                    const SizedBox(width: 24),
+                    _buildInstruction(Icons.swipe_vertical_rounded, 'Drag up/down'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: AppTheme.bodyMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstruction(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white.withOpacity(0.8), size: 20),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: AppTheme.bodySmall.copyWith(
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
