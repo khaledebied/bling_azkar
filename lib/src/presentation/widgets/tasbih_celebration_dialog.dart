@@ -84,7 +84,7 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: widget.tasbihType.color.withOpacity(0.3),
+                  color: widget.tasbihType.color.withValues(alpha: 0.3),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                 ),
@@ -105,13 +105,13 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                   // Mabruk title
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.tasbihType.color.withOpacity(0.1),
-                          widget.tasbihType.color.withOpacity(0.05),
-                        ],
-                      ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        widget.tasbihType.color.withValues(alpha: 0.1),
+                        widget.tasbihType.color.withValues(alpha: 0.05),
+                      ],
+                    ),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Column(
@@ -145,10 +145,10 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                   // Dhikr text
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: widget.tasbihType.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                  decoration: BoxDecoration(
+                    color: widget.tasbihType.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                     child: Column(
                       children: [
                         Text(
@@ -178,14 +178,14 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                   // Benefit
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.green.withOpacity(0.2),
-                        width: 1,
-                      ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.2),
+                      width: 1,
                     ),
+                  ),
                     child: Row(
                       children: [
                         Icon(
@@ -235,9 +235,9 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            side: BorderSide(
-                              color: context.textSecondary.withOpacity(0.3),
-                            ),
+                          side: BorderSide(
+                            color: context.textSecondary.withValues(alpha: 0.3),
+                          ),
                           ),
                         ),
                       ),
@@ -305,9 +305,9 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: widget.tasbihType.color.withOpacity(
-                      0.3 * (1 - animValue),
-                    ),
+                  color: widget.tasbihType.color.withValues(
+                    alpha: 0.3 * (1 - animValue),
+                  ),
                     width: 3,
                   ),
                 ),
@@ -323,17 +323,17 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    widget.tasbihType.color,
-                    widget.tasbihType.color.withOpacity(0.7),
-                  ],
+                colors: [
+                  widget.tasbihType.color,
+                  widget.tasbihType.color.withValues(alpha: 0.7),
+                ],
                 ),
                 boxShadow: [
-                  BoxShadow(
-                    color: widget.tasbihType.color.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
+                BoxShadow(
+                  color: widget.tasbihType.color.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
                 ],
               ),
               child: Transform.rotate(
