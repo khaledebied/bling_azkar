@@ -7,6 +7,7 @@ import '../../utils/localizations.dart';
 import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import '../widgets/tasbih_celebration_dialog.dart';
+import '../widgets/progress_ring_painter.dart';
 
 /// Detail screen for a specific Tasbih type with counter
 class TasbihDetailScreen extends ConsumerStatefulWidget {
@@ -309,6 +310,30 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                 ),
               ),
               
+              // Dhikr text display
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  widget.tasbihType.dhikrText,
+                  style: AppTheme.arabicLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    height: 1.8,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              
               // Main Counter
               Expanded(
                 child: Center(
@@ -362,7 +387,19 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                             },
                           ),
                         
-                        // Main bead
+                        // Progress ring
+                        if (animationsEnabled)
+                          CustomPaint(
+                            size: const Size(250, 250),
+                            painter: ProgressRingPainter(
+                              progress: counter.progress,
+                              color: widget.tasbihType.color,
+                              backgroundColor: Colors.white.withOpacity(0.3),
+                              strokeWidth: 12,
+                            ),
+                          ),
+                        
+                        // Main bead with enhanced design
                         AnimatedBuilder(
                           animation: Listenable.merge([
                             _rotationController,
@@ -381,64 +418,150 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                   width: 220,
                                   height: 220,
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
                                         Colors.white,
-                                        Color(0xFFF5F5F5),
+                                        Colors.white.withOpacity(0.95),
+                                        const Color(0xFFF8F8F8),
                                       ],
+                                      stops: const [0.0, 0.5, 1.0],
                                     ),
                                     shape: BoxShape.circle,
                                     boxShadow: [
+                                      // Outer shadow
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
+                                        color: Colors.black.withOpacity(0.2),
                                         blurRadius: 40,
-                                        offset: const Offset(0, 15),
+                                        offset: const Offset(0, 20),
+                                        spreadRadius: -5,
                                       ),
+                                      // Colored glow
                                       BoxShadow(
-                                        color: widget.tasbihType.color.withOpacity(0.3),
+                                        color: widget.tasbihType.color.withOpacity(0.4),
                                         blurRadius: 30,
                                         offset: const Offset(0, 10),
+                                        spreadRadius: -8,
+                                      ),
+                                      // Inner highlight
+                                      BoxShadow(
+                                        color: Colors.white.withOpacity(0.8),
+                                        blurRadius: 10,
+                                        offset: const Offset(-5, -5),
+                                        spreadRadius: -10,
                                       ),
                                     ],
                                   ),
                                   child: Stack(
                                     alignment: Alignment.center,
                                     children: [
-                                      // Inner circle
+                                      // Outer decorative ring
                                       Container(
-                                        width: 180,
-                                        height: 180,
+                                        width: 200,
+                                        height: 200,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: widget.tasbihType.color.withOpacity(0.2),
+                                            color: widget.tasbihType.color.withOpacity(0.15),
+                                            width: 3,
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Inner decorative ring
+                                      Container(
+                                        width: 170,
+                                        height: 170,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: widget.tasbihType.color.withOpacity(0.1),
                                             width: 2,
                                           ),
                                         ),
                                       ),
                                       
-                                      // Counter number
+                                      // Gradient overlay circle
+                                      Container(
+                                        width: 160,
+                                        height: 160,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: RadialGradient(
+                                            colors: [
+                                              widget.tasbihType.color.withOpacity(0.05),
+                                              Colors.transparent,
+                                            ],
+                                            stops: const [0.5, 1.0],
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Counter number with shadow
                                       AnimatedSwitcher(
-                                        duration: const Duration(milliseconds: 200),
+                                        duration: const Duration(milliseconds: 300),
+                                        switchInCurve: Curves.easeOutCubic,
+                                        switchOutCurve: Curves.easeInCubic,
                                         transitionBuilder: (child, animation) {
                                           return ScaleTransition(
-                                            scale: animation,
+                                            scale: Tween<double>(begin: 0.8, end: 1.0).animate(animation),
                                             child: FadeTransition(
                                               opacity: animation,
                                               child: child,
                                             ),
                                           );
                                         },
-                                        child: Text(
-                                          '${counter.currentCount}',
+                                        child: ShaderMask(
                                           key: ValueKey(counter.currentCount),
-                                          style: AppTheme.headlineLarge.copyWith(
-                                            fontSize: 72,
-                                            fontWeight: FontWeight.bold,
-                                            color: widget.tasbihType.color,
-                                            letterSpacing: -2,
+                                          shaderCallback: (bounds) {
+                                            return LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                widget.tasbihType.color,
+                                                widget.tasbihType.color.withOpacity(0.7),
+                                              ],
+                                            ).createShader(bounds);
+                                          },
+                                          child: Text(
+                                            '${counter.currentCount}',
+                                            style: AppTheme.headlineLarge.copyWith(
+                                              fontSize: 80,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              letterSpacing: -3,
+                                              shadows: [
+                                                Shadow(
+                                                  color: widget.tasbihType.color.withOpacity(0.3),
+                                                  offset: const Offset(0, 4),
+                                                  blurRadius: 12,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Count label
+                                      Positioned(
+                                        bottom: 45,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: widget.tasbihType.color.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            '/ ${counter.targetCount}',
+                                            style: AppTheme.bodySmall.copyWith(
+                                              color: widget.tasbihType.color,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -446,28 +569,47 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                       // Drag indicator
                                       if (_isDragging)
                                         Positioned(
-                                          top: 20,
-                                          child: Icon(
-                                            _lastDragOffset < 0
-                                                ? Icons.arrow_upward_rounded
-                                                : Icons.arrow_downward_rounded,
-                                            color: widget.tasbihType.color.withOpacity(0.6),
-                                            size: 24,
+                                          top: 25,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: widget.tasbihType.color.withOpacity(0.2),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              _lastDragOffset < 0
+                                                  ? Icons.arrow_upward_rounded
+                                                  : Icons.arrow_downward_rounded,
+                                              color: widget.tasbihType.color,
+                                              size: 20,
+                                            ),
                                           ),
                                         ),
                                       
                                       // Completion badge
                                       if (counter.isCompleted)
                                         Positioned(
-                                          bottom: 20,
+                                          bottom: 15,
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 4,
+                                              horizontal: 16,
+                                              vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: widget.tasbihType.color,
-                                              borderRadius: BorderRadius.circular(12),
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  widget.tasbihType.color,
+                                                  widget.tasbihType.color.withOpacity(0.8),
+                                                ],
+                                              ),
+                                              borderRadius: BorderRadius.circular(20),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: widget.tasbihType.color.withOpacity(0.4),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -475,14 +617,15 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                                 const Icon(
                                                   Icons.check_circle,
                                                   color: Colors.white,
-                                                  size: 14,
+                                                  size: 16,
                                                 ),
-                                                const SizedBox(width: 4),
+                                                const SizedBox(width: 6),
                                                 Text(
-                                                  'Completed',
+                                                  isArabic ? 'مكتمل' : 'Completed',
                                                   style: AppTheme.caption.copyWith(
                                                     color: Colors.white,
                                                     fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
                                                   ),
                                                 ),
                                               ],
@@ -497,32 +640,52 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                           },
                         ),
                         
-                        // Decorative beads
+                        // Decorative beads with enhanced design
                         if (animationsEnabled)
-                          ...List.generate(8, (index) {
-                            final angle = (index * 2 * math.pi / 8) - math.pi / 2;
-                            final radius = 140.0;
+                          ...List.generate(12, (index) {
+                            final angle = (index * 2 * math.pi / 12) - math.pi / 2;
+                            final radius = 145.0;
+                            final beadSize = index % 3 == 0 ? 20.0 : 14.0; // Vary sizes
+                            
                             return Positioned(
-                              left: 110 + radius * math.cos(angle) - 15,
-                              top: 110 + radius * math.sin(angle) - 15,
+                              left: 110 + radius * math.cos(angle) - (beadSize / 2),
+                              top: 110 + radius * math.sin(angle) - (beadSize / 2),
                               child: AnimatedBuilder(
                                 animation: _rippleAnimation,
                                 builder: (context, child) {
-                                  return Opacity(
-                                    opacity: 0.3 + (_rippleAnimation.value * 0.2),
-                                    child: Container(
-                                      width: 30,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
-                                            blurRadius: 5,
-                                            offset: const Offset(0, 2),
+                                  final opacity = 0.4 + (_rippleAnimation.value * 0.3);
+                                  final scale = 1.0 + (_rippleAnimation.value * 0.1);
+                                  
+                                  return Transform.scale(
+                                    scale: scale,
+                                    child: Opacity(
+                                      opacity: opacity,
+                                      child: Container(
+                                        width: beadSize,
+                                        height: beadSize,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white,
+                                              Colors.white.withOpacity(0.8),
+                                            ],
                                           ),
-                                        ],
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: widget.tasbihType.color.withOpacity(0.2),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                            BoxShadow(
+                                              color: Colors.white.withOpacity(0.5),
+                                              blurRadius: 4,
+                                              offset: const Offset(-1, -1),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );
