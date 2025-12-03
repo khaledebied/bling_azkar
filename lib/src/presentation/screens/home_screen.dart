@@ -21,6 +21,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
   final _playlistService = PlaylistService();
   late AnimationController _pageChangeController;
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
@@ -30,12 +32,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _pageChangeController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      _loadMoreCategories();
+    }
+  }
+
+  Future<void> _loadMoreCategories() async {
+    if (_isLoadingMore) return;
+
+    final hasNextAsync = ref.read(hasNextPageProvider);
+    final hasNext = await hasNextAsync.future.catchError((_) => false);
+
+    if (hasNext) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      ref.read(currentPageProvider.notifier).state++;
+
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
   }
 
   @override
@@ -46,12 +76,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       body: Stack(
         children: [
           CustomScrollView(
+            controller: _scrollController,
             slivers: [
               _buildAppBar(ref),
               if (!isSearching) ...[
                 _buildWelcomeBanner(),
                 _buildCategoriesGridSection(ref),
-                _buildPaginationControls(ref),
+                if (_isLoadingMore) _buildLoadingMoreIndicator(),
               ] else ...[
                 _buildSearchResults(ref),
               ],
@@ -314,7 +345,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            'Page ${currentPage + 1} of $totalPages',
+                            '${paginatedCategories.length} items',
                             style: AppTheme.bodySmall.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -325,55 +356,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: TweenAnimationBuilder<double>(
-                      key: ValueKey(currentPage),
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value,
-                          child: Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: child,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 1.1,
+                      ),
+                      itemCount: paginatedCategories.length,
+                      itemBuilder: (context, index) {
+                        final entry = paginatedCategories[index];
+                        final categoryKey = entry.key;
+                        final categoryName = entry.value;
+
+                        return TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: Duration(milliseconds: 200 + (index % 15 * 50)),
+                          curve: Curves.easeOut,
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: Opacity(
+                                opacity: value,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: CategoryCard(
+                            title: categoryName,
+                            titleAr: categoryName,
+                            heroTag: 'category_$categoryKey',
+                            onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
                           ),
                         );
                       },
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.85,
-                        ),
-                        itemCount: paginatedCategories.length,
-                        itemBuilder: (context, index) {
-                          final entry = paginatedCategories[index];
-                          final categoryKey = entry.key;
-                          final categoryName = entry.value;
-
-                          return TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: Duration(milliseconds: 200 + (index * 50)),
-                            curve: Curves.easeOut,
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: child,
-                              );
-                            },
-                            child: CategoryCard(
-                              title: categoryName,
-                              titleAr: categoryName,
-                              heroTag: 'category_$categoryKey',
-                              onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
-                            ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                 ],
@@ -388,7 +407,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   Widget _buildShimmerLoading() {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Shimmer.fromColors(
           baseColor: Colors.grey.shade300,
           highlightColor: Colors.grey.shade100,
@@ -397,9 +416,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.85,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.1,
             ),
             itemCount: 6,
             itemBuilder: (context, index) {
@@ -416,82 +435,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildPaginationControls(WidgetRef ref) {
-    final hasNextAsync = ref.watch(hasNextPageProvider);
-    final hasPrevious = ref.watch(hasPreviousPageProvider);
-
-    return hasNextAsync.when(
-      loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-      error: (error, stack) => const SliverToBoxAdapter(child: SizedBox.shrink()),
-      data: (hasNext) {
-        if (!hasNext && !hasPrevious) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
-        }
-
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Previous button
-                Expanded(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: hasPrevious ? 1.0 : 0.3,
-                    child: ElevatedButton.icon(
-                      onPressed: hasPrevious
-                          ? () {
-                              _pageChangeController.forward(from: 0);
-                              ref.read(currentPageProvider.notifier).state--;
-                            }
-                          : null,
-                      icon: const Icon(Icons.arrow_back_ios, size: 16),
-                      label: const Text('Previous'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGreen,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: hasPrevious ? 4 : 0,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Next button
-                Expanded(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: hasNext ? 1.0 : 0.3,
-                    child: ElevatedButton.icon(
-                      onPressed: hasNext
-                          ? () {
-                              _pageChangeController.forward(from: 0);
-                              ref.read(currentPageProvider.notifier).state++;
-                            }
-                          : null,
-                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                      label: const Text('Next'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryTeal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: hasNext ? 4 : 0,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+  Widget _buildLoadingMoreIndicator() {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            SizedBox(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+              ),
             ),
-          ),
-        );
-      },
+            const SizedBox(height: 12),
+            Text(
+              'Loading more...',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

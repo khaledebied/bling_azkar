@@ -95,21 +95,16 @@ final currentPageProvider = StateProvider<int>((ref) => 0);
 /// Provider for page size
 final pageSizeProvider = Provider<int>((ref) => 15);
 
-/// Provider for paginated categories
+/// Provider for paginated categories (shows all items up to current page)
 final paginatedCategoriesProvider = FutureProvider<List<MapEntry<String, String>>>((ref) async {
   final allCategories = await ref.watch(allCategoriesProvider.future);
   final currentPage = ref.watch(currentPageProvider);
   final pageSize = ref.watch(pageSizeProvider);
   
   final entries = allCategories.entries.toList();
-  final startIndex = currentPage * pageSize;
-  final endIndex = (startIndex + pageSize).clamp(0, entries.length);
+  final endIndex = ((currentPage + 1) * pageSize).clamp(0, entries.length);
   
-  if (startIndex >= entries.length) {
-    return [];
-  }
-  
-  return entries.sublist(startIndex, endIndex);
+  return entries.sublist(0, endIndex);
 });
 
 /// Provider for total pages
