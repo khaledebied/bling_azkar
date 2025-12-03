@@ -42,8 +42,8 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
     // Initialize with default type or last selected
     final lastSelectedId = ref.read(tasbihRepositoryProvider).getLastSelectedType();
     _selectedType = lastSelectedId != null 
-        ? TasbihTypes.getById(lastSelectedId) ?? TasbihTypes.tasbih33
-        : TasbihTypes.tasbih33;
+        ? TasbihTypes.getById(lastSelectedId) ?? TasbihTypes.subhanallah
+        : TasbihTypes.subhanallah;
     
     // Rotation animation for drag
     _rotationController = AnimationController(

@@ -28,7 +28,8 @@ final selectedTasbihTypeProvider = StateProvider<TasbihType?>((ref) {
     return TasbihTypes.getById(lastSelectedId);
   }
   
-  return null;
+  // Default to Subhanallah
+  return TasbihTypes.subhanallah;
 });
 
 /// Provider for counter state (family provider for each tasbih type)

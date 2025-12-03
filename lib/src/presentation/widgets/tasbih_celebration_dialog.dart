@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/localizations.dart';
 import '../../domain/models/tasbih_type.dart';
 
 /// Celebration dialog shown when Tasbih session completes
@@ -63,6 +64,9 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.ofWithFallback(context);
+    final isArabic = l10n.isArabic;
+    
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
@@ -70,6 +74,10 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
         child: Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: context.cardColor,
@@ -82,160 +90,179 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Lottie animation or fallback
-                SizedBox(
-                  height: 150,
-                  child: _buildCelebrationAnimation(),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Mabruk title
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            widget.tasbihType.color,
-                            widget.tasbihType.color.withOpacity(0.7),
-                          ],
-                        ),
-                        shape: BoxShape.circle,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Lottie animation or fallback
+                  SizedBox(
+                    height: 120,
+                    child: _buildCelebrationAnimation(),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Mabruk title
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.tasbihType.color.withOpacity(0.1),
+                          widget.tasbihType.color.withOpacity(0.05),
+                        ],
                       ),
-                      child: const Icon(
-                        Icons.celebration,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
                       children: [
+                        Icon(
+                          Icons.celebration,
+                          color: widget.tasbihType.color,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
                         Text(
-                          'Mabruk!',
+                          isArabic ? 'مبروك!' : 'Mabruk!',
                           style: AppTheme.headlineMedium.copyWith(
                             color: context.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
-                          'مبروك',
-                          style: AppTheme.arabicMedium.copyWith(
-                            color: widget.tasbihType.color,
-                            fontSize: 18,
+                          isArabic ? 'جلسة مكتملة' : 'Session Complete',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Count display
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        widget.tasbihType.color.withOpacity(0.1),
-                        widget.tasbihType.color.withOpacity(0.05),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Dhikr text
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: widget.tasbihType.color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          widget.tasbihType.dhikrText,
+                          style: AppTheme.arabicLarge.copyWith(
+                            color: widget.tasbihType.color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${widget.count}×',
+                          style: AppTheme.headlineLarge.copyWith(
+                            color: widget.tasbihType.color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 42,
+                          ),
+                        ),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '${widget.count}',
-                        style: AppTheme.headlineLarge.copyWith(
-                          color: widget.tasbihType.color,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 56,
-                        ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Benefit
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.green.withOpacity(0.2),
+                        width: 1,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Session Complete',
-                        style: AppTheme.titleMedium.copyWith(
-                          color: context.textPrimary,
-                          fontWeight: FontWeight.w600,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 20,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.tasbihType.nameEn,
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: context.textSecondary,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            isArabic ? widget.tasbihType.benefitAr : widget.tasbihType.benefitEn,
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: context.textPrimary,
+                            ),
+                            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Message
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'May Allah accept your dhikr',
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Message
+                  Text(
+                    isArabic 
+                        ? 'تقبل الله منا ومنك'
+                        : 'May Allah accept your dhikr',
                     style: AppTheme.bodyLarge.copyWith(
                       color: context.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: widget.onDone,
-                        icon: const Icon(Icons.check),
-                        label: const Text('Done'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          side: BorderSide(
-                            color: context.textSecondary.withOpacity(0.3),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: widget.onDone,
+                          icon: const Icon(Icons.check),
+                          label: Text(isArabic ? 'تم' : 'Done'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            side: BorderSide(
+                              color: context.textSecondary.withOpacity(0.3),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: widget.onRestart,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Restart'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.tasbihType.color,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: widget.onRestart,
+                          icon: const Icon(Icons.refresh),
+                          label: Text(isArabic ? 'إعادة' : 'Restart'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.tasbihType.color,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
                           ),
-                          elevation: 0,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

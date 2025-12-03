@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import '../../utils/theme.dart';
+import '../../utils/localizations.dart';
 import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import '../widgets/tasbih_celebration_dialog.dart';
@@ -225,6 +226,8 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
   Widget build(BuildContext context) {
     final counter = ref.watch(tasbihCounterProvider(widget.tasbihType));
     final animationsEnabled = ref.watch(animationsEnabledProvider);
+    final l10n = AppLocalizations.ofWithFallback(context);
+    final isArabic = l10n.isArabic;
     
     return Scaffold(
       body: Container(
@@ -248,25 +251,32 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: Icon(
+                        isArabic ? Icons.arrow_forward : Icons.arrow_back,
+                        color: Colors.white,
+                      ),
                       iconSize: 28,
                     ),
                     Expanded(
                       child: Column(
                         children: [
                           Text(
-                            widget.tasbihType.nameEn,
-                            style: AppTheme.titleMedium.copyWith(
+                            widget.tasbihType.dhikrText,
+                            style: AppTheme.arabicLarge.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 24,
                             ),
+                            textAlign: TextAlign.center,
                           ),
+                          const SizedBox(height: 4),
                           Text(
-                            widget.tasbihType.nameAr,
-                            style: AppTheme.arabicSmall.copyWith(
+                            isArabic ? widget.tasbihType.meaningAr : widget.tasbihType.meaningEn,
+                            style: AppTheme.bodySmall.copyWith(
                               color: Colors.white.withOpacity(0.9),
-                              fontSize: 13,
+                              fontSize: 12,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
