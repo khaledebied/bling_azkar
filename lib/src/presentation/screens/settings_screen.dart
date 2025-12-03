@@ -142,7 +142,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             activeColor: AppTheme.primaryGreen,
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           RadioListTile<String>(
             title: Row(
               children: [
@@ -192,7 +197,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             activeColor: AppTheme.primaryGreen,
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.notification_important, color: AppTheme.primaryGreen),
             title: Text(l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification'),
@@ -232,7 +242,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
             },
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.schedule, color: AppTheme.primaryTeal),
             title: Text(l10n.isArabic ? 'اختبار بعد 10 ثواني' : 'Test in 10 seconds'),
@@ -308,7 +323,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             activeColor: AppTheme.primaryGreen,
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           RadioListTile<String>(
             title: Row(
               children: [
@@ -326,7 +346,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             activeColor: AppTheme.primaryGreen,
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           RadioListTile<String>(
             title: Row(
               children: [
@@ -344,7 +369,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             activeColor: AppTheme.primaryGreen,
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.text_fields),
             title: Text(l10n.textSize),
@@ -377,7 +407,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _showClearCacheDialog(l10n);
             },
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             title: Text(l10n.clearAllData),
@@ -407,7 +442,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: const Text('1.0.0'),
             trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.help_outline),
             title: Text(l10n.help),
@@ -416,7 +456,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _showHelpDialog(l10n);
             },
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.feedback_outlined),
             title: Text(l10n.feedback),
@@ -425,7 +470,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _showFeedbackDialog(l10n);
             },
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: Text(l10n.licenses),

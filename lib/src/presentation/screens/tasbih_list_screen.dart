@@ -36,16 +36,16 @@ class TasbihListScreen extends ConsumerWidget {
     
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.primaryGreen.withOpacity(0.1),
-              AppTheme.primaryTeal.withOpacity(0.1),
-            ],
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.primaryGreen.withValues(alpha: 0.1),
+                AppTheme.primaryTeal.withValues(alpha: 0.1),
+              ],
+            ),
           ),
-        ),
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +65,7 @@ class TasbihListScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryGreen.withOpacity(0.3),
+                                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -231,57 +231,27 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.type.color.withOpacity(0.15),
+                    color: widget.type.color.withValues(alpha: 0.15),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
                 ],
               ),
-              child: Stack(
-                children: [
-                  // Background decoration
-                  Positioned(
-                    top: -20,
-                    right: widget.isArabic ? null : -20,
-                    left: widget.isArabic ? -20 : null,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: widget.type.color.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                  
-                  // Content
-                  Padding(
+              child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       children: [
-                        // Icon
+                        // Icon - Simple and clean
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                widget.type.color,
-                                widget.type.color.withOpacity(0.7),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: widget.type.color.withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            color: widget.type.color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: Icon(
                             widget.type.icon,
-                            color: Colors.white,
-                            size: 32,
+                            color: widget.type.color,
+                            size: 28,
                           ),
                         ),
                         
@@ -328,7 +298,7 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: widget.type.color.withOpacity(0.1),
+                                      color: widget.type.color.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -348,8 +318,8 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                                       ),
                                       decoration: BoxDecoration(
                                         color: session.isCompleted
-                                            ? Colors.green.withOpacity(0.1)
-                                            : Colors.orange.withOpacity(0.1),
+                                            ? Colors.green.withValues(alpha: 0.1)
+                                            : Colors.orange.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
@@ -396,8 +366,6 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                       ],
                     ),
                   ),
-                ],
-              ),
             ),
           ),
         ),
