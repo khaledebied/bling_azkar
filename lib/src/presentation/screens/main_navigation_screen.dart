@@ -100,12 +100,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   }
 
   Widget _buildBottomNavigationBar() {
+    final isDarkMode = context.isDarkMode;
+    
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
+        border: isDarkMode
+            ? Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+              )
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -174,13 +184,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.white.withOpacity(0.2)
+                      ? Colors.white.withValues(alpha: 0.2)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   icon,
-                  color: isSelected ? Colors.white : AppTheme.textSecondary,
+                  color: isSelected ? Colors.white : context.textSecondary,
                   size: 22,
                 ),
               ),
@@ -189,7 +199,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 child: AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 300),
                   style: AppTheme.caption.copyWith(
-                    color: isSelected ? Colors.white : AppTheme.textSecondary,
+                    color: isSelected ? Colors.white : context.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     fontSize: isSelected ? 11 : 10,
                   ),

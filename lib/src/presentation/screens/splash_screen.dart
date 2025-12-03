@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import 'main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -78,10 +79,14 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
+          gradient: isDarkMode
+              ? AppTheme.darkBackgroundGradient
+              : AppTheme.primaryGradient,
         ),
         child: Center(
           child: Column(
@@ -95,11 +100,11 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -134,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         'Daily Adhkar & Dua',
                         style: AppTheme.bodyLarge.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           letterSpacing: 0.5,
                         ),
                       ),

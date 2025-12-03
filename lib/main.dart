@@ -85,6 +85,11 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
         _themeMode = _appState.themeMode!;
       });
     }
+    if (_appState.textScale != null) {
+      setState(() {
+        _textScale = _appState.textScale!;
+      });
+    }
   }
 
   void _loadLanguage() {
