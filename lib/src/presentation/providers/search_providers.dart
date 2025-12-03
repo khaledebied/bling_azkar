@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
 /// Provider for search active state
-final isSearchingProvider = StateProvider<bool>((ref) => false');
+final isSearchingProvider = StateProvider<bool>((ref) => false);
 
 /// Provider for selected tab index
 final selectedTabIndexProvider = StateProvider<int>((ref) => 0);

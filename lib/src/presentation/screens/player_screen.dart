@@ -52,7 +52,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
       final audioService = ref.read(audioPlayerServiceProvider);
       if (widget.zikr.audio.isNotEmpty) {
         await audioService.playAudio(
-          widget.zikr.audio.first.shortFile,
+          widget.zikr.audio.first.shortFile??"",
           isLocal: true,
         );
       }
