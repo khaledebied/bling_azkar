@@ -155,9 +155,8 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                       children: [
                         Text(
                           widget.tasbihType.dhikrText,
-                          style: AppTheme.arabicLarge.copyWith(
+                          style: AppTheme.dhikrText.copyWith(
                             color: widget.tasbihType.color,
-                            fontWeight: FontWeight.bold,
                             fontSize: 28,
                           ),
                           textAlign: TextAlign.center,

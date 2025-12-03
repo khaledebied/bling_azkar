@@ -295,9 +295,8 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                               // Dhikr text (large)
                               Text(
                                 widget.type.dhikrText,
-                                style: AppTheme.arabicLarge.copyWith(
+                                style: AppTheme.dhikrText.copyWith(
                                   color: context.textPrimary,
-                                  fontWeight: FontWeight.bold,
                                   fontSize: 22,
                                   height: 1.5,
                                 ),
