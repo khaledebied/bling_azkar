@@ -68,8 +68,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   @override
   void dispose() {
     _pulseController.dispose();
-    final audioService = ref.read(audioPlayerServiceProvider);
-    audioService.stop();
+    // Don't use ref in dispose - it's already been disposed
+    // Audio service will handle cleanup automatically
     super.dispose();
   }
 

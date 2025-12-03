@@ -116,14 +116,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
           return FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.red.shade400,
-                    Colors.pink.shade300,
-                  ],
-                ),
+                gradient: AppTheme.primaryGradient,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -197,13 +190,18 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryGreen.withOpacity(0.1),
+                      AppTheme.primaryTeal.withOpacity(0.1),
+                    ],
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.favorite_border,
                   size: 80,
-                  color: Colors.red.shade300,
+                  color: AppTheme.primaryGreen,
                 ),
               ),
               const SizedBox(height: 24),
@@ -245,22 +243,25 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.red.shade50, Colors.pink.shade50],
+                      colors: [
+                        AppTheme.primaryGreen.withOpacity(0.1),
+                        AppTheme.primaryTeal.withOpacity(0.1),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.red.shade200,
+                      color: AppTheme.primaryGreen.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.favorite, color: Colors.red.shade400, size: 20),
+                      Icon(Icons.favorite, color: AppTheme.primaryGreen, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         '${favorites.length} favorite${favorites.length > 1 ? 's' : ''}',
                         style: AppTheme.bodyMedium.copyWith(
-                          color: Colors.red.shade700,
+                          color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -268,7 +269,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                       Text(
                         '${favorites.fold<int>(0, (sum, z) => sum + z.defaultCount)} total items',
                         style: AppTheme.bodySmall.copyWith(
-                          color: Colors.red.shade600,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                     ],
@@ -331,13 +332,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: _isPlayingAll
-              ? [Colors.pink.shade400, Colors.red.shade400]
-              : [Colors.red.shade400, Colors.pink.shade400],
+              ? [AppTheme.primaryTeal, AppTheme.primaryGreen]
+              : [AppTheme.primaryGreen, AppTheme.primaryTeal],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.shade300.withOpacity(0.4),
+            color: (_isPlayingAll ? AppTheme.primaryTeal : AppTheme.primaryGreen)
+                .withOpacity(0.4),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -439,7 +441,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
             Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red.shade400,
+              color: AppTheme.primaryGreen,
             ),
             const SizedBox(height: 16),
             Text(
