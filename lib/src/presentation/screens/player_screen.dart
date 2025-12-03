@@ -459,13 +459,24 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                 stream: audioService.playerStateStream,
                 builder: (context, snapshot) {
                   final isPlaying = snapshot.data?.playing ?? false;
+                  final processingState = snapshot.data?.processingState;
+                  
                   return AnimatedPlayButton(
                     isPlaying: isPlaying,
-                    onPressed: () {
+                    onPressed: () async {
                       if (isPlaying) {
                         audioService.pause();
                       } else {
-                        audioService.resume();
+                        // Check if audio is loaded
+                        if (processingState == ProcessingState.idle || 
+                            processingState == null ||
+                            audioService.duration == Duration.zero) {
+                          // Audio not loaded yet, play it
+                          await _playAudio();
+                        } else {
+                          // Audio already loaded, just resume
+                          audioService.resume();
+                        }
                       }
                     },
                   );
