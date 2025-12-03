@@ -134,10 +134,38 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
   Future<void> _toggleFavorite(String zikrId) async {
     try {
       await _storage.toggleFavorite(zikrId);
-      // Trigger rebuild
+      
+      // Trigger rebuild locally
       setState(() {});
-      // Also invalidate the provider
+      
+      // Invalidate all related providers to refresh everywhere
       ref.invalidate(favoriteAzkarProvider);
+      ref.invalidate(isFavoriteProvider(zikrId));
+      
+      // Force refresh by reading the provider again
+      await Future.delayed(const Duration(milliseconds: 100));
+      ref.read(favoriteAzkarProvider);
+      
+      // Show feedback
+      final isFav = _isFavorite(zikrId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  isFav ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 12),
+                Text(isFav ? 'Added to favorites' : 'Removed from favorites'),
+              ],
+            ),
+            backgroundColor: isFav ? AppTheme.primaryGreen : AppTheme.textSecondary,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

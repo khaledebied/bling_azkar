@@ -18,14 +18,10 @@ class FavoritesScreen extends ConsumerStatefulWidget {
   ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
-class _FavoritesScreenState extends ConsumerState<FavoritesScreen> 
-    with AutomaticKeepAliveClientMixin {
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   final _playlistService = PlaylistService();
   bool _isPlayingAll = false;
   PlaylistState _playlistState = PlaylistState.idle;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -57,8 +53,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final l10n = AppLocalizations.ofWithFallback(context);
+    // Always watch the provider to ensure updates
     final favoritesAsync = ref.watch(favoriteAzkarProvider);
 
     return Scaffold(

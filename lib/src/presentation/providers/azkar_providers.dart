@@ -15,8 +15,8 @@ final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();
 });
 
-/// Provider for user preferences
-final userPreferencesProvider = Provider<UserPreferences>((ref) {
+/// Provider for user preferences (with auto-refresh)
+final userPreferencesProvider = StateProvider<UserPreferences>((ref) {
   final storage = ref.watch(storageServiceProvider);
   return storage.getPreferences();
 });
@@ -58,8 +58,13 @@ final toggleFavoriteProvider = Provider<Future<void> Function(String)>((ref) {
   return (String zikrId) async {
     final storage = ref.read(storageServiceProvider);
     await storage.toggleFavorite(zikrId);
-    // Invalidate preferences to trigger rebuild
-    ref.invalidate(userPreferencesProvider);
+    
+    // Update the preferences provider with fresh data
+    final newPrefs = storage.getPreferences();
+    ref.read(userPreferencesProvider.notifier).state = newPrefs;
+    
+    // Also invalidate dependent providers
+    ref.invalidate(favoriteAzkarProvider);
   };
 });
 
