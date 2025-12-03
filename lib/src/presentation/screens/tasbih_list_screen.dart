@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/localizations.dart';
 import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import 'tasbih_detail_screen.dart';
@@ -30,6 +31,8 @@ class TasbihListScreen extends ConsumerWidget {
   }
   
   Widget _buildContent(BuildContext context, WidgetRef ref, List<TasbihType> tasbihTypes) {
+    final l10n = AppLocalizations.ofWithFallback(context);
+    final isArabic = l10n.isArabic;
     
     return Scaffold(
       body: Container(
@@ -69,7 +72,7 @@ class TasbihListScreen extends ConsumerWidget {
                             ],
                           ),
                           child: const Icon(
-                            Icons.touch_app_rounded,
+                            Icons.auto_awesome_rounded,
                             color: Colors.white,
                             size: 32,
                           ),
@@ -80,17 +83,16 @@ class TasbihListScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Electronic Tasbih',
+                                isArabic ? 'التسبيح الإلكتروني' : 'Electronic Tasbih',
                                 style: AppTheme.headlineMedium.copyWith(
                                   color: context.textPrimary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                'سبحة إلكترونية',
-                                style: AppTheme.arabicMedium.copyWith(
+                                isArabic ? 'اختر نوع الذكر' : 'Choose your dhikr',
+                                style: AppTheme.bodyMedium.copyWith(
                                   color: context.textSecondary,
-                                  fontSize: 16,
                                 ),
                               ),
                             ],
@@ -98,33 +100,21 @@ class TasbihListScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Choose your tasbih type',
-                      style: AppTheme.bodyLarge.copyWith(
-                        color: context.textSecondary,
-                      ),
-                    ),
                   ],
                 ),
               ),
               
-              // Grid of Tasbih types
+              // List of Dhikr types
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,
-                  ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: tasbihTypes.length,
                   itemBuilder: (context, index) {
                     final type = tasbihTypes[index];
                     return TasbihTypeCard(
                       type: type,
                       index: index,
+                      isArabic: isArabic,
                     );
                   },
                 ),
@@ -137,15 +127,17 @@ class TasbihListScreen extends ConsumerWidget {
   }
 }
 
-/// Card widget for each Tasbih type
+/// Card widget for each Dhikr type
 class TasbihTypeCard extends ConsumerStatefulWidget {
   final TasbihType type;
   final int index;
+  final bool isArabic;
 
   const TasbihTypeCard({
     super.key,
     required this.type,
     required this.index,
+    required this.isArabic,
   });
 
   @override
@@ -233,31 +225,28 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
           child: Hero(
             tag: 'tasbih_${widget.type.id}',
             child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: context.cardColor,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.type.color.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: widget.type.color.withOpacity(0.15),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
               child: Stack(
                 children: [
-                  // Background gradient decoration
+                  // Background decoration
                   Positioned(
                     top: -20,
-                    right: -20,
+                    right: widget.isArabic ? null : -20,
+                    left: widget.isArabic ? -20 : null,
                     child: Container(
-                      width: 100,
-                      height: 100,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.type.color.withOpacity(0.1),
@@ -267,138 +256,143 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                   
                   // Content
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
                       children: [
                         // Icon
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: widget.type.color.withOpacity(0.15),
+                            gradient: LinearGradient(
+                              colors: [
+                                widget.type.color,
+                                widget.type.color.withOpacity(0.7),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: widget.type.color.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Icon(
                             widget.type.icon,
-                            color: widget.type.color,
+                            color: Colors.white,
                             size: 32,
                           ),
                         ),
                         
-                        const SizedBox(height: 16),
+                        const SizedBox(width: 16),
                         
-                        // Name
-                        Text(
-                          widget.type.nameEn,
-                          style: AppTheme.bodyLarge.copyWith(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        
-                        const SizedBox(height: 4),
-                        
-                        // Arabic name
-                        Text(
-                          widget.type.nameAr,
-                          style: AppTheme.arabicSmall.copyWith(
-                            color: context.textSecondary,
-                            fontSize: 13,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        
-                        const Spacer(),
-                        
-                        // Progress indicator
-                        if (session.currentCount > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.type.color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  session.isCompleted
-                                      ? Icons.check_circle
-                                      : Icons.timelapse,
-                                  color: widget.type.color,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  session.isCompleted
-                                      ? 'Completed'
-                                      : '${session.currentCount}/${session.targetCount}',
-                                  style: AppTheme.caption.copyWith(
-                                    color: widget.type.color,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.type.color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Target: ${widget.type.defaultTarget}',
-                              style: AppTheme.caption.copyWith(
-                                color: widget.type.color,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        
-                        const SizedBox(height: 8),
-                        
-                        // Start button
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                widget.type.color,
-                                widget.type.color.withOpacity(0.8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                        // Text content
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Dhikr text (large)
                               Text(
-                                session.isCompleted ? 'View' : 'Start',
-                                style: AppTheme.bodyMedium.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                                widget.type.dhikrText,
+                                style: AppTheme.arabicLarge.copyWith(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
+                                  height: 1.5,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Colors.white,
-                                size: 16,
+                              
+                              const SizedBox(height: 6),
+                              
+                              // Meaning
+                              Text(
+                                widget.isArabic ? widget.type.meaningAr : widget.type.meaningEn,
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: context.textSecondary,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              
+                              const SizedBox(height: 8),
+                              
+                              // Target and progress row
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: widget.type.color.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '${widget.type.defaultTarget}×',
+                                      style: AppTheme.caption.copyWith(
+                                        color: widget.type.color,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  if (session.currentCount > 0)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: session.isCompleted
+                                            ? Colors.green.withOpacity(0.1)
+                                            : Colors.orange.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            session.isCompleted
+                                                ? Icons.check_circle
+                                                : Icons.timelapse,
+                                            color: session.isCompleted
+                                                ? Colors.green
+                                                : Colors.orange,
+                                            size: 12,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            session.isCompleted
+                                                ? (widget.isArabic ? 'مكتمل' : 'Done')
+                                                : '${session.currentCount}/${session.targetCount}',
+                                            style: AppTheme.caption.copyWith(
+                                              color: session.isCompleted
+                                                  ? Colors.green
+                                                  : Colors.orange,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
                               ),
                             ],
                           ),
+                        ),
+                        
+                        // Arrow
+                        Icon(
+                          widget.isArabic
+                              ? Icons.arrow_back_ios_rounded
+                              : Icons.arrow_forward_ios_rounded,
+                          color: widget.type.color,
+                          size: 20,
                         ),
                       ],
                     ),
