@@ -13,7 +13,6 @@ import '../../data/services/playlist_service.dart';
 import '../widgets/zikr_list_item.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
-import 'reminders_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -52,7 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             slivers: [
               _buildAppBar(ref),
               if (!isSearching) ...[
-                _buildWelcomeBanner(),
+              _buildWelcomeBanner(),
                 _buildCategoriesGridSection(ref),
               ] else ...[
                 _buildSearchResults(ref),
@@ -84,18 +83,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const RemindersScreen(),
-            ),
-          );
-        },
-        icon: const Icon(Icons.notifications_outlined),
-        label: const Text('Reminders'),
       ),
     );
   }
@@ -182,15 +169,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context, ref, child) {
         final isSearching = ref.watch(isSearchingProvider);
         
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
             return Transform.scale(
               scale: 0.95 + (0.05 * value),
               child: Opacity(
-                opacity: value,
+          opacity: value,
                 child: child,
               ),
             );
@@ -323,28 +310,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildWelcomeBanner() {
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+            decoration: BoxDecoration(
             gradient: AppTheme.goldGradient,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
+              boxShadow: [
+                BoxShadow(
                 color: AppTheme.accentGold.withOpacity(0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
           child: const Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
                       'Daily Azkar',
                       style: TextStyle(
                         fontSize: 24,
@@ -357,20 +344,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       'Keep your heart close to Allah',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white,
+                          color: Colors.white,
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                            ),
+                          ],
+                        ),
+                      ),
               Icon(
                 Icons.auto_awesome,
                 size: 48,
                 color: Colors.white,
-              ),
-            ],
-          ),
-        ),
+                      ),
+                    ],
+                  ),
+                ),
       ),
     );
   }
@@ -399,7 +386,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       data: (allCategories) {
         final categoriesList = allCategories.entries.toList();
-        
+
         return SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,7 +412,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Text(
                         '${categoriesList.length} items',
                         style: AppTheme.bodySmall.copyWith(
-                          color: Colors.white,
+                        color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -563,22 +550,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
                       Icons.search_off,
-                      size: 64,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
+                  size: 64,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
                       'No azkar found',
-                      style: AppTheme.titleMedium.copyWith(
+                  style: AppTheme.titleMedium.copyWith(
                         color: context.textSecondary,
-                      ),
-                    ),
-                  ],
+                  ),
+                ),
+              ],
                 ),
               ),
             ),
@@ -600,15 +587,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: ZikrListItem(
                         zikr: zikr,
                         isFavorite: isFavorite,
-                        onTap: () {
-                          Navigator.push(
-                            context,
+              onTap: () {
+                Navigator.push(
+                  context,
                             MaterialPageRoute(
                               builder: (context) => ZikrDetailScreen(zikr: zikr),
                             ),
-                          );
-                        },
-                        onFavoriteToggle: () async {
+                );
+              },
+              onFavoriteToggle: () async {
                           try {
                             final toggleFavorite = ref.read(toggleFavoriteProvider);
                             await toggleFavorite(zikr.id);
@@ -623,9 +610,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   );
-                },
-              );
-            },
+              },
+            );
+          },
             childCount: azkar.length,
           ),
         );

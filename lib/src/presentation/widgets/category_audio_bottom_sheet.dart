@@ -162,6 +162,8 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    
     return ValueListenableBuilder<List<Zikr>>(
       valueListenable: _azkarNotifier,
       builder: (context, azkar, _) {
@@ -185,9 +187,9 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                     constraints: BoxConstraints(
                       maxHeight: MediaQuery.of(context).size.height * 0.9,
                     ),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: context.cardColor,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(28),
                         topRight: Radius.circular(28),
                       ),
@@ -202,7 +204,9 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                             width: 40,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                              color: isDarkMode 
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade300,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -233,6 +237,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                                       widget.categoryName,
                                       style: AppTheme.titleLarge.copyWith(
                                         fontWeight: FontWeight.bold,
+                                        color: context.textPrimary,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -399,7 +404,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -429,7 +434,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -451,18 +456,24 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
 
   Widget _buildAudioListItem(Zikr zikr, bool isCurrentPlaying, bool isFavorite) {
     if (zikr.audio.isEmpty) return const SizedBox.shrink();
+    
+    final isDarkMode = context.isDarkMode;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isCurrentPlaying
-            ? AppTheme.primaryGreen.withOpacity(0.1)
-            : Colors.grey.shade50,
+            ? AppTheme.primaryGreen.withValues(alpha: isDarkMode ? 0.2 : 0.1)
+            : (isDarkMode 
+                ? const Color(0xFF2A2A2A)
+                : Colors.grey.shade50),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCurrentPlaying
-              ? AppTheme.primaryGreen.withOpacity(0.3)
-              : Colors.grey.shade200,
+              ? AppTheme.primaryGreen.withValues(alpha: isDarkMode ? 0.5 : 0.3)
+              : (isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.grey.shade200),
           width: isCurrentPlaying ? 2 : 1,
         ),
       ),
@@ -506,7 +517,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                           fontWeight: FontWeight.w600,
                           color: isCurrentPlaying
                               ? AppTheme.primaryGreen
-                              : AppTheme.textPrimary,
+                              : context.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -529,8 +540,10 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: isCurrentPlaying
-                                  ? AppTheme.primaryGreen.withOpacity(0.2)
-                                  : Colors.grey.shade200,
+                                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                                  : (isDarkMode
+                                      ? Colors.grey.shade700
+                                      : Colors.grey.shade200),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -563,7 +576,9 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                 IconButton(
                   icon: Icon(
                     isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : AppTheme.textSecondary,
+                    color: isFavorite 
+                        ? (isDarkMode ? Colors.red.shade400 : Colors.red)
+                        : context.textSecondary,
                     size: 24,
                   ),
                   onPressed: () => _toggleFavorite(zikr.id),

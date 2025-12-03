@@ -171,6 +171,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -180,10 +182,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.9),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.arrow_back, color: AppTheme.primaryGreen),
+            child: Icon(
+              Icons.arrow_back,
+              color: isDarkMode ? Colors.white : AppTheme.primaryGreen,
+            ),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -192,10 +199,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: isDarkMode
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.9),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.more_vert, color: AppTheme.primaryGreen),
+              child: Icon(
+                Icons.more_vert,
+                color: isDarkMode ? Colors.white : AppTheme.primaryGreen,
+              ),
             ),
             onPressed: () {},
           ),
@@ -203,7 +215,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
+          gradient: isDarkMode
+              ? AppTheme.darkBackgroundGradient
+              : AppTheme.primaryGradient,
         ),
         child: SafeArea(
           child: Column(
@@ -250,7 +264,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
         Text(
           widget.zikr.title.en,
           style: AppTheme.titleMedium.copyWith(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
           ),
           textAlign: TextAlign.center,
         ),
@@ -262,10 +276,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -290,7 +304,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
         Text(
           'Repetition Count',
           style: AppTheme.bodyMedium.copyWith(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 16),
@@ -319,10 +333,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: context.isDarkMode
+                        ? const Color(0xFF2A2A2A)
+                        : Colors.white,
+                    border: context.isDarkMode
+                        ? Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 2,
+                          )
+                        : null,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -353,7 +375,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         Text(
                           'of $targetCount',
                           style: AppTheme.caption.copyWith(
-                            color: context.textSecondary,
+                            color: context.isDarkMode
+                                ? Colors.white.withValues(alpha: 0.6)
+                                : context.textSecondary,
                           ),
                         ),
                       ],
@@ -380,7 +404,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
           icon: const Icon(Icons.refresh),
           label: const Text('Reset'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
@@ -396,7 +420,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
       ),
       child: IconButton(
         icon: Icon(icon),
@@ -416,10 +440,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(_isCompleted ? 0.3 : 0.2),
+        color: Colors.white.withValues(alpha: _isCompleted ? 0.3 : 0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
           width: 2,
         ),
       ),
@@ -461,7 +485,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 12,
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
                 ),
               ),
@@ -477,7 +501,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   Text(
                     'Completed',
                     style: AppTheme.bodyMedium.copyWith(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -491,18 +515,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   Widget _buildAudioControls() {
     final audioService = ref.watch(audioPlayerServiceProvider);
+    final isDarkMode = context.isDarkMode;
     
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(32),
           topRight: Radius.circular(32),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.5 : 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -535,9 +560,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                           ),
                           trackHeight: 4,
                           activeTrackColor: AppTheme.primaryGreen,
-                          inactiveTrackColor: Colors.grey.shade300,
+                          inactiveTrackColor: isDarkMode
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade300,
                           thumbColor: AppTheme.primaryGreen,
-                          overlayColor: AppTheme.primaryGreen.withOpacity(0.2),
+                          overlayColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
                         ),
                         child: Slider(
                           value: progress.clamp(0.0, 1.0),
@@ -696,7 +723,7 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryGreen.withOpacity(0.4),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),

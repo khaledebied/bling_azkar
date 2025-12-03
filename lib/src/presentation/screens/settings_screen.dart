@@ -5,7 +5,6 @@ import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
-import '../../data/services/notification_service.dart';
 import '../../domain/models/user_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -68,11 +67,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Language Section
             _buildSectionHeader(l10n.language, Icons.language),
             _buildLanguageCard(l10n),
-            const SizedBox(height: 24),
-
-            // Notifications Section
-            _buildSectionHeader(l10n.notifications, Icons.notifications),
-            _buildNotificationCard(l10n),
             const SizedBox(height: 24),
 
             // Appearance Section
@@ -171,128 +165,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildNotificationCard(AppLocalizations l10n) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          SwitchListTile(
-            title: Text(l10n.enableNotifications),
-            subtitle: Text(
-              _prefs.notificationsEnabled
-                  ? (l10n.isArabic ? 'مفعل' : 'Enabled')
-                  : (l10n.isArabic ? 'معطل' : 'Disabled'),
-              style: AppTheme.bodySmall.copyWith(
-                color: context.textSecondary,
-              ),
-            ),
-            value: _prefs.notificationsEnabled,
-            onChanged: (value) {
-              _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
-            },
-            activeColor: AppTheme.primaryGreen,
-          ),
-          Divider(
-            height: 1,
-            color: context.isDarkMode 
-                ? Colors.grey.shade700
-                : Colors.grey.shade100,
-          ),
-          ListTile(
-            leading: const Icon(Icons.notification_important, color: AppTheme.primaryGreen),
-            title: Text(l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification'),
-            subtitle: Text(l10n.isArabic 
-                ? 'إرسال إشعار تجريبي الآن'
-                : 'Send a test notification now'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () async {
-              final notificationService = NotificationService();
-              final hasPermission = await notificationService.requestPermissions();
-              if (hasPermission) {
-                await notificationService.showTestNotification(
-                  l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification',
-                  l10n.isArabic 
-                      ? 'هذا إشعار تجريبي من تطبيق بلينج أذكار'
-                      : 'This is a test notification from Bling Azkar',
-                );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.isArabic 
-                          ? 'تم إرسال الإشعار التجريبي'
-                          : 'Test notification sent'),
-                      backgroundColor: AppTheme.primaryGreen,
-                    ),
-                  );
-                }
-              } else {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.pleaseEnableNotifications),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-          Divider(
-            height: 1,
-            color: context.isDarkMode 
-                ? Colors.grey.shade700
-                : Colors.grey.shade100,
-          ),
-          ListTile(
-            leading: const Icon(Icons.schedule, color: AppTheme.primaryTeal),
-            title: Text(l10n.isArabic ? 'اختبار بعد 10 ثواني' : 'Test in 10 seconds'),
-            subtitle: Text(l10n.isArabic 
-                ? 'جدولة إشعار تجريبي بعد 10 ثواني (للمحاكي)'
-                : 'Schedule a test notification in 10 seconds (for simulator)'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () async {
-              final notificationService = NotificationService();
-              final hasPermission = await notificationService.requestPermissions();
-              if (hasPermission) {
-                await notificationService.scheduleTestNotificationInSeconds(
-                  l10n.isArabic ? 'اختبار الإشعار' : 'Test Notification',
-                  l10n.isArabic 
-                      ? 'هذا إشعار مجدول من تطبيق بلينج أذكار'
-                      : 'This is a scheduled test notification from Bling Azkar',
-                  10,
-                );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.isArabic 
-                          ? 'سيتم إرسال الإشعار بعد 10 ثواني'
-                          : 'Notification will be sent in 10 seconds'),
-                      backgroundColor: AppTheme.primaryTeal,
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                }
-              } else {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.pleaseEnableNotifications),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildAppearanceCard(AppLocalizations l10n) {
     final currentThemeMode = _prefs.themeMode;
@@ -599,13 +471,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     '• تصفح الأذكار حسب الفئات\n'
                     '• أضف الأذكار إلى المفضلة\n'
                     '• استمع إلى الأذكار بصوت\n'
-                    '• اضبط التذكيرات اليومية\n'
                     '• اختر بين الوضع الفاتح والداكن'
                 : 'Bling Azkar helps you remember daily supplications.\n\n'
                     '• Browse azkar by categories\n'
                     '• Add azkar to favorites\n'
                     '• Listen to azkar with audio\n'
-                    '• Set daily reminders\n'
                     '• Choose between light and dark theme',
             style: AppTheme.bodyMedium,
           ),

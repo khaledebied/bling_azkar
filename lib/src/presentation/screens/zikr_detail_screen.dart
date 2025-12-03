@@ -58,7 +58,6 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                   RepaintBoundary(child: _buildTranslationSection()),
                   RepaintBoundary(child: _buildRepetitionSection()),
                   RepaintBoundary(child: _buildAudioSection()),
-                  _buildReminderSection(),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -374,70 +373,4 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
     );
   }
 
-  Widget _buildReminderSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ElevatedButton.icon(
-        onPressed: () {
-          _showReminderDialog(context);
-        },
-        icon: const Icon(Icons.notifications_active),
-        label: const Text('Set Reminder'),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showReminderDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Set Reminder',
-              style: AppTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: const Icon(Icons.schedule),
-              title: const Text('Daily at Fixed Time'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Show time picker
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.timer),
-              title: const Text('Every X Minutes'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Show interval picker
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
