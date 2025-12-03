@@ -272,7 +272,6 @@ class _ZikrListItemState extends State<ZikrListItem>
                     ),
                     const SizedBox(width: 8),
                     Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
@@ -283,19 +282,18 @@ class _ZikrListItemState extends State<ZikrListItem>
                             color: widget.isFavorite
                                 ? Colors.red
                                 : AppTheme.textSecondary,
-                            size: 22,
+                            size: 20,
                           ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
-                            minWidth: 40,
-                            minHeight: 40,
+                            minWidth: 36,
+                            minHeight: 36,
                           ),
                           onPressed: widget.onFavoriteToggle,
                         ),
-                        const SizedBox(height: 4),
                         const Icon(
                           Icons.arrow_forward_ios,
-                          size: 14,
+                          size: 12,
                           color: AppTheme.textSecondary,
                         ),
                       ],
