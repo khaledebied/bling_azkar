@@ -83,8 +83,9 @@ final azkarByCategoryProvider = FutureProvider.family<List<Zikr>, String>((ref, 
 });
 
 /// Provider for all categories
-final allCategoriesProvider = Provider<Map<String, String>>((ref) {
+final allCategoriesProvider = FutureProvider<Map<String, String>>((ref) async {
   final repository = ref.watch(azkarRepositoryProvider);
+  await repository.loadAzkar(); // Ensure azkar are loaded first
   return repository.getCategoryDisplayNames();
 });
 
@@ -95,8 +96,8 @@ final currentPageProvider = StateProvider<int>((ref) => 0);
 final pageSizeProvider = Provider<int>((ref) => 15);
 
 /// Provider for paginated categories
-final paginatedCategoriesProvider = Provider<List<MapEntry<String, String>>>((ref) {
-  final allCategories = ref.watch(allCategoriesProvider);
+final paginatedCategoriesProvider = FutureProvider<List<MapEntry<String, String>>>((ref) async {
+  final allCategories = await ref.watch(allCategoriesProvider.future);
   final currentPage = ref.watch(currentPageProvider);
   final pageSize = ref.watch(pageSizeProvider);
   
@@ -112,8 +113,8 @@ final paginatedCategoriesProvider = Provider<List<MapEntry<String, String>>>((re
 });
 
 /// Provider for total pages
-final totalPagesProvider = Provider<int>((ref) {
-  final allCategories = ref.watch(allCategoriesProvider);
+final totalPagesProvider = FutureProvider<int>((ref) async {
+  final allCategories = await ref.watch(allCategoriesProvider.future);
   final pageSize = ref.watch(pageSizeProvider);
   
   if (allCategories.isEmpty) return 0;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../utils/theme.dart';
 import '../widgets/category_card.dart';
 import '../widgets/floating_playlist_player.dart';
@@ -48,7 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             slivers: [
               _buildAppBar(ref),
               if (!isSearching) ...[
-              _buildWelcomeBanner(),
+                _buildWelcomeBanner(),
                 _buildCategoriesGridSection(ref),
                 _buildPaginationControls(ref),
               ] else ...[
@@ -57,33 +58,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             ],
           ),
           // Floating playlist player
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: StreamBuilder<PlaylistState>(
-              stream: _playlistService.stateStream,
-              initialData: PlaylistState.idle,
-              builder: (context, snapshot) {
-                final state = snapshot.data ?? PlaylistState.idle;
-                final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
-                
-                return AnimatedPositioned(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  bottom: isVisible ? 0 : -100,
-                  left: 0,
-                  right: 0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: isVisible ? 1.0 : 0.0,
-                    child: FloatingPlaylistPlayer(
-                      playlistService: _playlistService,
-                    ),
+          StreamBuilder<PlaylistState>(
+            stream: _playlistService.stateStream,
+            initialData: PlaylistState.idle,
+            builder: (context, snapshot) {
+              final state = snapshot.data ?? PlaylistState.idle;
+              final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
+              
+              return AnimatedPositioned(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                bottom: isVisible ? 0 : -100,
+                left: 0,
+                right: 0,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: isVisible ? 1.0 : 0.0,
+                  child: FloatingPlaylistPlayer(
+                    playlistService: _playlistService,
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -93,7 +89,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
         },
         icon: const Icon(Icons.notifications_outlined),
         label: const Text('Reminders'),
-    ),
+      ),
     );
   }
 
@@ -183,29 +179,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           final isSearching = ref.watch(isSearchingProvider);
           
           return TextField(
-        onChanged: (value) {
+            onChanged: (value) {
               ref.read(searchQueryProvider.notifier).state = value;
               ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
-        },
-        decoration: InputDecoration(
+            },
+            decoration: InputDecoration(
               hintText: 'Search azkar...',
-          prefixIcon: const Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
               suffixIcon: isSearching
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
                         ref.read(searchQueryProvider.notifier).state = '';
                         ref.read(isSearchingProvider.notifier).state = false;
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-        ),
-      ),
-    );
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+          );
         },
       ),
     );
@@ -213,33 +209,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
 
   Widget _buildWelcomeBanner() {
     return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
           padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+          decoration: BoxDecoration(
             gradient: AppTheme.goldGradient,
             borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
+            boxShadow: [
+              BoxShadow(
                 color: AppTheme.accentGold.withOpacity(0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
           child: const Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                       'Daily Azkar',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        color: Colors.white,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -247,11 +243,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                       'Keep your heart close to Allah',
                       style: TextStyle(
                         fontSize: 14,
-                    color: Colors.white,
-                  ),
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
               ),
               Icon(
                 Icons.auto_awesome,
@@ -266,114 +262,161 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   Widget _buildCategoriesGridSection(WidgetRef ref) {
-    final paginatedCategories = ref.watch(paginatedCategoriesProvider);
-    final allCategories = ref.watch(allCategoriesProvider);
-    final currentPage = ref.watch(currentPageProvider);
-    final totalPages = ref.watch(totalPagesProvider);
+    final paginatedCategoriesAsync = ref.watch(paginatedCategoriesProvider);
+    final totalPagesAsync = ref.watch(totalPagesProvider);
 
-    if (allCategories.isEmpty) {
-      return const SliverToBoxAdapter(
+    return paginatedCategoriesAsync.when(
+      loading: () => _buildShimmerLoading(),
+      error: (error, stack) => SliverToBoxAdapter(
         child: Center(
           child: Padding(
-            padding: EdgeInsets.all(32.0),
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      );
-    }
-
-        return SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
               children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+                const SizedBox(height: 16),
                 Text(
-                  'Categories',
-                  style: AppTheme.titleMedium.copyWith(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Page ${currentPage + 1} of $totalPages',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  'Error loading categories',
+                  style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondary),
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TweenAnimationBuilder<double>(
-              key: ValueKey(currentPage),
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, 20 * (1 - value)),
-                    child: child,
-                  ),
-                );
-              },
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.85,
-                ),
-                itemCount: paginatedCategories.length,
-                  itemBuilder: (context, index) {
-                  final entry = paginatedCategories[index];
-                  final categoryKey = entry.key;
-                  final categoryName = entry.value;
-
-                  return TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: Duration(milliseconds: 200 + (index * 50)),
-                    curve: Curves.easeOut,
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value,
-                        child: child,
-                      );
-                    },
-                    child: CategoryCard(
-                      title: categoryName,
-                      titleAr: categoryName,
-                      heroTag: 'category_$categoryKey',
-                      onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
+        ),
+      ),
+      data: (paginatedCategories) {
+        return totalPagesAsync.when(
+          loading: () => _buildShimmerLoading(),
+          error: (error, stack) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+          data: (totalPages) {
+            final currentPage = ref.watch(currentPageProvider);
+            
+            return SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Categories',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Page ${currentPage + 1} of $totalPages',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    );
-                  },
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TweenAnimationBuilder<double>(
+                      key: ValueKey(currentPage),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, 20 * (1 - value)),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.85,
+                        ),
+                        itemCount: paginatedCategories.length,
+                        itemBuilder: (context, index) {
+                          final entry = paginatedCategories[index];
+                          final categoryKey = entry.key;
+                          final categoryName = entry.value;
+
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: Duration(milliseconds: 200 + (index * 50)),
+                            curve: Curves.easeOut,
+                            builder: (context, value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: child,
+                              );
+                            },
+                            child: CategoryCard(
+                              title: categoryName,
+                              titleAr: categoryName,
+                              heroTag: 'category_$categoryKey',
+                              onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.85,
+            ),
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildPaginationControls(WidgetRef ref) {
-    final currentPage = ref.watch(currentPageProvider);
     final hasNext = ref.watch(hasNextPageProvider);
     final hasPrevious = ref.watch(hasPreviousPageProvider);
 
@@ -450,11 +493,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     final azkarAsync = ref.watch(searchedAzkarProvider);
 
     return azkarAsync.when(
-      loading: () => const SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32.0),
-            child: CircularProgressIndicator(),
+      loading: () => SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Column(
+              children: List.generate(
+                5,
+                (index) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -496,22 +553,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
                       Icons.search_off,
-                  size: 64,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(height: 16),
-                Text(
+                      size: 64,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
                       'No azkar found',
-                  style: AppTheme.titleMedium.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ],
+                      style: AppTheme.titleMedium.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -533,15 +590,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                       child: ZikrListItem(
                         zikr: zikr,
                         isFavorite: isFavorite,
-              onTap: () {
-                Navigator.push(
-                  context,
+                        onTap: () {
+                          Navigator.push(
+                            context,
                             MaterialPageRoute(
                               builder: (context) => ZikrDetailScreen(zikr: zikr),
                             ),
-                );
-              },
-              onFavoriteToggle: () async {
+                          );
+                        },
+                        onFavoriteToggle: () async {
                           try {
                             final toggleFavorite = ref.read(toggleFavoriteProvider);
                             await toggleFavorite(zikr.id);
@@ -556,9 +613,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                       ),
                     ),
                   );
-              },
-            );
-          },
+                },
+              );
+            },
             childCount: azkar.length,
           ),
         );
