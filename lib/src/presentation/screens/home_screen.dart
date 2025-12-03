@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../widgets/category_card.dart';
 import '../widgets/floating_playlist_player.dart';
 import '../widgets/category_audio_bottom_sheet.dart';
@@ -284,7 +285,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Error loading categories',
-                  style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondary),
+                  style: AppTheme.titleMedium.copyWith(color: context.textSecondary),
                 ),
               ],
             ),
@@ -303,13 +304,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Categories',
-                      style: AppTheme.titleMedium.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                        Text(
+                          'Categories',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: context.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -435,14 +436,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   'Error loading azkar',
                   style: AppTheme.titleMedium.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   error.toString(),
                   style: AppTheme.caption.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -469,7 +470,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Text(
                       'No azkar found',
                       style: AppTheme.titleMedium.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],

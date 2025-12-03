@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../data/services/audio_player_service.dart';
 import 'player_screen.dart';
 
@@ -133,7 +134,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           Text(
             widget.zikr.title.en,
             style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -188,7 +189,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           Text(
             widget.zikr.text,
             style: AppTheme.arabicLarge.copyWith(
-              color: AppTheme.textPrimary,
+              color: context.textPrimary,
             ),
             textAlign: TextAlign.right,
           ),
@@ -241,7 +242,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           Text(
             widget.zikr.translation!.en,
             style: AppTheme.bodyLarge.copyWith(
-              color: AppTheme.textPrimary,
+              color: context.textPrimary,
               height: 1.6,
             ),
           ),

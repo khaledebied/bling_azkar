@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../domain/models/zikr.dart';
 import '../../data/services/playlist_service.dart';
@@ -204,7 +205,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               Text(
                 'No favorites yet',
                 style: AppTheme.titleLarge.copyWith(
-                  color: AppTheme.textPrimary,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -214,7 +215,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 child: Text(
                   'Tap the heart icon on any zikr to add it to your favorites',
                   style: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: context.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -265,7 +266,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                       Text(
                         '${favorites.fold<int>(0, (sum, z) => sum + z.defaultCount)} total items',
                         style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
@@ -443,14 +444,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             Text(
               'Error loading favorites',
               style: AppTheme.titleMedium.copyWith(
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               error.toString(),
               style: AppTheme.caption.copyWith(
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),

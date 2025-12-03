@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/reminder.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/page_transitions.dart';
 import '../../data/services/reminder_service.dart';
@@ -73,14 +74,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
           Text(
             l10n.noReminders,
             style: AppTheme.titleLarge.copyWith(
-              color: AppTheme.textPrimary,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.noRemindersDesc,
             style: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.textSecondary,
+              color: context.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -157,7 +158,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             Text(
                               _getReminderDescription(reminder, l10n),
                               style: AppTheme.bodySmall.copyWith(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                               ),
                             ),
                           ],

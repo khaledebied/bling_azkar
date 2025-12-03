@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../data/services/audio_player_service.dart';
 import '../providers/player_providers.dart';
 import 'dart:math' as math;
@@ -350,7 +351,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         Text(
                           'of $targetCount',
                           style: AppTheme.caption.copyWith(
-                            color: AppTheme.textSecondary,
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -554,13 +555,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                             Text(
                               _formatDuration(position),
                               style: AppTheme.caption.copyWith(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                               ),
                             ),
                             Text(
                               _formatDuration(duration),
                               style: AppTheme.caption.copyWith(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                               ),
                             ),
                           ],
@@ -579,7 +580,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
               IconButton(
                 icon: const Icon(Icons.replay_10),
                 iconSize: 32,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 onPressed: () {
                   final newPosition = audioService.position - const Duration(seconds: 10);
                   audioService.seek(newPosition);
@@ -615,7 +616,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
               IconButton(
                 icon: const Icon(Icons.forward_10),
                 iconSize: 32,
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
                 onPressed: () {
                   final newPosition = audioService.position + const Duration(seconds: 10);
                   audioService.seek(newPosition);

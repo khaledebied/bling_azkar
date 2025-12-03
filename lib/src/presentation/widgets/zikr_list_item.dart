@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../data/services/audio_player_service.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -195,7 +196,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                             widget.zikr.title.ar,
                             style: AppTheme.arabicMedium.copyWith(
                               fontSize: 15,
-                              color: AppTheme.textPrimary,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -205,7 +206,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                             Text(
                               widget.zikr.translation!.en,
                               style: AppTheme.bodyMedium.copyWith(
-                                color: AppTheme.textSecondary,
+                                color: context.textSecondary,
                                 fontSize: 12,
                               ),
                               maxLines: 1,
@@ -216,7 +217,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                           Text(
                             widget.zikr.text,
                             style: AppTheme.arabicSmall.copyWith(
-                              color: AppTheme.textSecondary,
+                              color: context.textSecondary,
                               fontSize: 13,
                               height: 1.5,
                             ),
@@ -290,7 +291,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                         const Icon(
                           Icons.arrow_forward_ios,
                           size: 12,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                         ),
                       ],
                     ),

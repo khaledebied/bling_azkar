@@ -3,6 +3,7 @@ import '../../data/repositories/azkar_repository.dart';
 import '../../data/services/playlist_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/page_transitions.dart';
 import '../widgets/category_card.dart';
@@ -73,7 +74,7 @@ class _CategoriesGridScreenState extends State<CategoriesGridScreen> {
                       ),
                       child: const Icon(
                         Icons.arrow_back,
-                        color: AppTheme.textPrimary,
+                        color: context.textPrimary,
                       ),
                     ),
                     onPressed: () => Navigator.pop(context),

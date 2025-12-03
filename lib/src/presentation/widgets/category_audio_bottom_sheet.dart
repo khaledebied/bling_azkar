@@ -8,6 +8,7 @@ import '../../data/services/playlist_service.dart';
 import '../../data/services/storage_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import 'floating_playlist_player.dart';
 import '../screens/player_screen.dart';
 import '../providers/azkar_providers.dart';
@@ -240,7 +241,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                                     Text(
                                       '$audioCount audios • $totalPlaylistItems items',
                                       style: AppTheme.bodySmall.copyWith(
-                                        color: AppTheme.textSecondary,
+                                        color: context.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -323,7 +324,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
               Text(
                 'No audios available',
                 style: AppTheme.titleMedium.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondary,
                 ),
               ),
             ],
@@ -515,7 +516,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                         zikr.text,
                         style: AppTheme.arabicSmall.copyWith(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: context.textSecondary,
                           height: 1.5,
                         ),
                         maxLines: 2,

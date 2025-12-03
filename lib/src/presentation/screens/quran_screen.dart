@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quran_library/quran_library.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 
 class QuranScreen extends StatefulWidget {
@@ -251,7 +252,7 @@ class _QuranScreenState extends State<QuranScreen>
             Text(
               'Error Loading Quran',
               style: AppTheme.titleLarge.copyWith(
-                color: AppTheme.textPrimary,
+                color: context.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -259,7 +260,7 @@ class _QuranScreenState extends State<QuranScreen>
             Text(
               error,
               style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -327,7 +328,7 @@ class _QuranScreenState extends State<QuranScreen>
                   Text(
                     'Quran Library Error',
                     style: AppTheme.titleLarge.copyWith(
-                      color: AppTheme.textPrimary,
+                      color: context.textPrimary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -335,7 +336,7 @@ class _QuranScreenState extends State<QuranScreen>
                   Text(
                     _errorMessage,
                     style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: context.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),

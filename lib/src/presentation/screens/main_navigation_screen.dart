@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import 'home_screen.dart';
 import 'tasbih_screen.dart';
@@ -118,8 +119,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
+                icon: Icons.auto_awesome_rounded,
+                label: 'Azkar',
                 index: 0,
               ),
               _buildNavItem(

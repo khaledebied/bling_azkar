@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
@@ -105,7 +106,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title,
             style: AppTheme.titleMedium.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -182,7 +183,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ? (l10n.isArabic ? 'مفعل' : 'Enabled')
                   : (l10n.isArabic ? 'معطل' : 'Disabled'),
               style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondary,
+                color: context.textSecondary,
               ),
             ),
             value: _prefs.notificationsEnabled,
