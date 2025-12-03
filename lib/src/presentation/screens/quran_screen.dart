@@ -88,10 +88,13 @@ class _QuranScreenState extends State<QuranScreen>
     
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
+    
+    // Detect dark mode
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     // Show error state if initialization failed
     if (_hasError) {
-      return _buildErrorState(context);
+      return _buildErrorState(context, isDarkMode);
     }
 
     return Directionality(
@@ -102,10 +105,15 @@ class _QuranScreenState extends State<QuranScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppTheme.primaryGreen,
-                AppTheme.primaryTeal,
-              ],
+              colors: isDarkMode
+                  ? [
+                      const Color(0xFF1A3A2E),
+                      const Color(0xFF0D2921),
+                    ]
+                  : [
+                      AppTheme.primaryGreen,
+                      AppTheme.primaryTeal,
+                    ],
             ),
           ),
           child: SafeArea(
@@ -124,7 +132,9 @@ class _QuranScreenState extends State<QuranScreen>
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: isDarkMode
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: const Icon(
@@ -148,7 +158,7 @@ class _QuranScreenState extends State<QuranScreen>
                                   Text(
                                     isArabic ? 'القرآن الكريم' : 'The Holy Quran',
                                     style: AppTheme.bodyMedium.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                     ),
                                   ),
                                 ],
@@ -173,11 +183,15 @@ class _QuranScreenState extends State<QuranScreen>
                           bottom: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDarkMode
+                              ? const Color(0xFF1E1E1E)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
+                              color: Colors.black.withValues(
+                                alpha: isDarkMode ? 0.4 : 0.15,
+                              ),
                               blurRadius: 30,
                               offset: const Offset(0, 10),
                               spreadRadius: 5,
@@ -188,6 +202,7 @@ class _QuranScreenState extends State<QuranScreen>
                         child: _buildQuranLibrary(
                           context,
                           isArabic,
+                          isDarkMode,
                           screenWidth,
                           screenHeight,
                         ),
@@ -206,22 +221,27 @@ class _QuranScreenState extends State<QuranScreen>
   Widget _buildQuranLibrary(
     BuildContext context,
     bool isArabic,
+    bool isDarkMode,
     double screenWidth,
     double screenHeight,
   ) {
     try {
       return QuranLibraryScreen(
         parentContext: context,
-        isDark: false,
+        isDark: isDarkMode,
         showAyahBookmarkedIcon: true,
         appLanguageCode: isArabic ? 'ar' : 'en',
         ayahIconColor: AppTheme.primaryGreen,
-        backgroundColor: Colors.white,
-        textColor: Colors.black87,
+        backgroundColor: isDarkMode
+            ? const Color(0xFF1E1E1E)
+            : Colors.white,
+        textColor: isDarkMode
+            ? Colors.white.withValues(alpha: 0.95)
+            : Colors.black87,
         isFontsLocal: false,
         // Custom styling for better UI/UX
         tafsirStyle: TafsirStyle.defaults(
-          isDark: false,
+          isDark: isDarkMode,
           context: context,
         ).copyWith(
           widthOfBottomSheet: screenWidth * 0.95,
@@ -232,11 +252,11 @@ class _QuranScreenState extends State<QuranScreen>
       );
     } catch (e) {
       debugPrint('Error building QuranLibrary: $e');
-      return _buildQuranError(e.toString());
+      return _buildQuranError(e.toString(), isDarkMode);
     }
   }
 
-  Widget _buildQuranError(String error) {
+  Widget _buildQuranError(String error, bool isDarkMode) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -252,7 +272,7 @@ class _QuranScreenState extends State<QuranScreen>
             Text(
               'Error Loading Quran',
               style: AppTheme.titleLarge.copyWith(
-                color: context.textPrimary,
+                color: isDarkMode ? Colors.white : context.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -260,7 +280,9 @@ class _QuranScreenState extends State<QuranScreen>
             Text(
               error,
               style: AppTheme.bodyMedium.copyWith(
-                color: context.textSecondary,
+                color: isDarkMode 
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -287,17 +309,22 @@ class _QuranScreenState extends State<QuranScreen>
     );
   }
 
-  Widget _buildErrorState(BuildContext context) {
+  Widget _buildErrorState(BuildContext context, bool isDarkMode) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppTheme.primaryGreen,
-              AppTheme.primaryTeal,
-            ],
+            colors: isDarkMode
+                ? [
+                    const Color(0xFF1A3A2E),
+                    const Color(0xFF0D2921),
+                  ]
+                : [
+                    AppTheme.primaryGreen,
+                    AppTheme.primaryTeal,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -306,11 +333,15 @@ class _QuranScreenState extends State<QuranScreen>
               margin: const EdgeInsets.all(24),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDarkMode
+                    ? const Color(0xFF1E1E1E)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(
+                      alpha: isDarkMode ? 0.4 : 0.15,
+                    ),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
@@ -328,7 +359,7 @@ class _QuranScreenState extends State<QuranScreen>
                   Text(
                     'Quran Library Error',
                     style: AppTheme.titleLarge.copyWith(
-                      color: context.textPrimary,
+                      color: isDarkMode ? Colors.white : context.textPrimary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -336,7 +367,9 @@ class _QuranScreenState extends State<QuranScreen>
                   Text(
                     _errorMessage,
                     style: AppTheme.bodyMedium.copyWith(
-                      color: context.textSecondary,
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : context.textSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
