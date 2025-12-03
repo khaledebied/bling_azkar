@@ -245,7 +245,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
             end: Alignment.bottomRight,
             colors: [
               widget.tasbihType.color,
-              widget.tasbihType.color.withOpacity(0.7),
+              widget.tasbihType.color.withValues(alpha: 0.7),
             ],
           ),
         ),
@@ -281,7 +281,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                           Text(
                             isArabic ? widget.tasbihType.meaningAr : widget.tasbihType.meaningEn,
                             style: AppTheme.bodySmall.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
                             ),
                             textAlign: TextAlign.center,
@@ -363,8 +363,8 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(
-                                      0.2 * (1 - _rippleAnimation.value),
+                                    color: Colors.white.withValues(
+                                      alpha: (0.2 * (1 - _rippleAnimation.value)).clamp(0.0, 1.0),
                                     ),
                                     width: 2,
                                   ),
@@ -378,15 +378,15 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                           AnimatedBuilder(
                             animation: _bounceAnimation,
                             builder: (context, child) {
+                              // Clamp opacity between 0 and 1
+                              final opacity = (0.6 * (1 - (_bounceAnimation.value - 1) / 0.3)).clamp(0.0, 1.0);
                               return Container(
                                 width: 240 * _bounceAnimation.value,
                                 height: 240 * _bounceAnimation.value,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(
-                                      0.6 * (1 - (_bounceAnimation.value - 1) / 0.3),
-                                    ),
+                                    color: Colors.white.withValues(alpha: opacity),
                                     width: 4,
                                   ),
                                 ),
@@ -677,7 +677,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -701,12 +701,12 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white.withOpacity(0.8), size: 20),
+        Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 20),
         const SizedBox(width: 8),
         Text(
           text,
           style: AppTheme.bodySmall.copyWith(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
       ],
