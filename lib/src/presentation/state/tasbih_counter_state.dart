@@ -61,12 +61,15 @@ class TasbihCounterNotifier extends StateNotifier<TasbihSession> {
       HapticFeedback.selectionClick();
     }
 
-    state = state.copyWith(
+    final newSession = TasbihSession(
+      tasbihTypeId: state.tasbihTypeId,
       currentCount: state.currentCount - 1,
+      targetCount: state.targetCount,
       isCompleted: false,
       completedAt: null,
     );
 
+    state = newSession;
     _repository.saveSession(state);
   }
 
