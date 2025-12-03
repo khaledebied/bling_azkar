@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/azkar_repository.dart';
@@ -146,35 +147,10 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
       await Future.delayed(const Duration(milliseconds: 100));
       ref.read(favoriteAzkarProvider);
       
-      // Show feedback
-      final isFav = _isFavorite(zikrId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 12),
-                Text(isFav ? 'Added to favorites' : 'Removed from favorites'),
-              ],
-            ),
-            backgroundColor: isFav ? AppTheme.primaryGreen : AppTheme.textSecondary,
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      // Visual feedback without SnackBar (just the heart animation is enough)
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating favorite: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Silent error handling - the heart icon won't change if there's an error
+      debugPrint('Error updating favorite: ${e.toString()}');
     }
   }
 
