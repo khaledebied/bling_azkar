@@ -315,10 +315,10 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                 margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
@@ -394,7 +394,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                             painter: ProgressRingPainter(
                               progress: counter.progress,
                               color: widget.tasbihType.color,
-                              backgroundColor: Colors.white.withOpacity(0.3),
+                              backgroundColor: Colors.white.withValues(alpha: 0.3),
                               strokeWidth: 12,
                             ),
                           ),
@@ -418,40 +418,40 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                   width: 220,
                                   height: 220,
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.white,
-                                        Colors.white.withOpacity(0.95),
-                                        const Color(0xFFF8F8F8),
-                                      ],
-                                      stops: const [0.0, 0.5, 1.0],
-                                    ),
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Colors.white,
+                                          Color(0xFFFEFEFE),
+                                          Color(0xFFF8F8F8),
+                                        ],
+                                        stops: [0.0, 0.5, 1.0],
+                                      ),
                                     shape: BoxShape.circle,
-                                    boxShadow: [
-                                      // Outer shadow
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 40,
-                                        offset: const Offset(0, 20),
-                                        spreadRadius: -5,
-                                      ),
-                                      // Colored glow
-                                      BoxShadow(
-                                        color: widget.tasbihType.color.withOpacity(0.4),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 10),
-                                        spreadRadius: -8,
-                                      ),
-                                      // Inner highlight
-                                      BoxShadow(
-                                        color: Colors.white.withOpacity(0.8),
-                                        blurRadius: 10,
-                                        offset: const Offset(-5, -5),
-                                        spreadRadius: -10,
-                                      ),
-                                    ],
+                                      boxShadow: [
+                                        // Outer shadow
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 40,
+                                          offset: const Offset(0, 20),
+                                          spreadRadius: -5,
+                                        ),
+                                        // Colored glow
+                                        BoxShadow(
+                                          color: widget.tasbihType.color.withValues(alpha: 0.4),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 10),
+                                          spreadRadius: -8,
+                                        ),
+                                        // Inner highlight
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                          blurRadius: 10,
+                                          offset: const Offset(-5, -5),
+                                          spreadRadius: -10,
+                                        ),
+                                      ],
                                   ),
                                   child: Stack(
                                     alignment: Alignment.center,
@@ -463,7 +463,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: widget.tasbihType.color.withOpacity(0.15),
+                                            color: widget.tasbihType.color.withValues(alpha: 0.15),
                                             width: 3,
                                           ),
                                         ),
@@ -476,7 +476,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: widget.tasbihType.color.withOpacity(0.1),
+                                            color: widget.tasbihType.color.withValues(alpha: 0.1),
                                             width: 2,
                                           ),
                                         ),
@@ -490,7 +490,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                           shape: BoxShape.circle,
                                           gradient: RadialGradient(
                                             colors: [
-                                              widget.tasbihType.color.withOpacity(0.05),
+                                              widget.tasbihType.color.withValues(alpha: 0.05),
                                               Colors.transparent,
                                             ],
                                             stops: const [0.5, 1.0],
@@ -514,13 +514,13 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                         },
                                         child: ShaderMask(
                                           key: ValueKey(counter.currentCount),
-                                          shaderCallback: (bounds) {
+                                            shaderCallback: (bounds) {
                                             return LinearGradient(
                                               begin: Alignment.topCenter,
                                               end: Alignment.bottomCenter,
                                               colors: [
                                                 widget.tasbihType.color,
-                                                widget.tasbihType.color.withOpacity(0.7),
+                                                widget.tasbihType.color.withValues(alpha: 0.7),
                                               ],
                                             ).createShader(bounds);
                                           },
@@ -533,7 +533,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                               letterSpacing: -3,
                                               shadows: [
                                                 Shadow(
-                                                  color: widget.tasbihType.color.withOpacity(0.3),
+                                                  color: widget.tasbihType.color.withValues(alpha: 0.3),
                                                   offset: const Offset(0, 4),
                                                   blurRadius: 12,
                                                 ),
@@ -552,7 +552,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                             vertical: 6,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: widget.tasbihType.color.withOpacity(0.15),
+                                            color: widget.tasbihType.color.withValues(alpha: 0.15),
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                           child: Text(
@@ -573,7 +573,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                           child: Container(
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
-                                              color: widget.tasbihType.color.withOpacity(0.2),
+                                              color: widget.tasbihType.color.withValues(alpha: 0.2),
                                               shape: BoxShape.circle,
                                             ),
                                             child: Icon(
@@ -599,13 +599,13 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                                               gradient: LinearGradient(
                                                 colors: [
                                                   widget.tasbihType.color,
-                                                  widget.tasbihType.color.withOpacity(0.8),
+                                                  widget.tasbihType.color.withValues(alpha: 0.8),
                                                 ],
                                               ),
                                               borderRadius: BorderRadius.circular(20),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: widget.tasbihType.color.withOpacity(0.4),
+                                                  color: widget.tasbihType.color.withValues(alpha: 0.4),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 4),
                                                 ),
@@ -640,59 +640,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                           },
                         ),
                         
-                        // Decorative beads with enhanced design
-                        if (animationsEnabled)
-                          ...List.generate(12, (index) {
-                            final angle = (index * 2 * math.pi / 12) - math.pi / 2;
-                            final radius = 145.0;
-                            final beadSize = index % 3 == 0 ? 20.0 : 14.0; // Vary sizes
-                            
-                            return Positioned(
-                              left: 110 + radius * math.cos(angle) - (beadSize / 2),
-                              top: 110 + radius * math.sin(angle) - (beadSize / 2),
-                              child: AnimatedBuilder(
-                                animation: _rippleAnimation,
-                                builder: (context, child) {
-                                  final opacity = 0.4 + (_rippleAnimation.value * 0.3);
-                                  final scale = 1.0 + (_rippleAnimation.value * 0.1);
-                                  
-                                  return Transform.scale(
-                                    scale: scale,
-                                    child: Opacity(
-                                      opacity: opacity,
-                                      child: Container(
-                                        width: beadSize,
-                                        height: beadSize,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Colors.white,
-                                              Colors.white.withOpacity(0.8),
-                                            ],
-                                          ),
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: widget.tasbihType.color.withOpacity(0.2),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                            BoxShadow(
-                                              color: Colors.white.withOpacity(0.5),
-                                              blurRadius: 4,
-                                              offset: const Offset(-1, -1),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          }),
+                        // Removed decorative beads for cleaner design
                       ],
                     ),
                   ),

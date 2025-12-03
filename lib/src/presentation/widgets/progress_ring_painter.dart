@@ -34,7 +34,7 @@ class ProgressRingPainter extends CustomPainter {
       ..shader = LinearGradient(
         colors: [
           color,
-          color.withOpacity(0.7),
+          color.withValues(alpha: 0.7),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -63,7 +63,7 @@ class ProgressRingPainter extends CustomPainter {
       );
 
       final glowPaint = Paint()
-        ..color = color.withOpacity(0.6)
+        ..color = color.withValues(alpha: 0.6)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
       canvas.drawCircle(endPoint, strokeWidth / 2, glowPaint);
