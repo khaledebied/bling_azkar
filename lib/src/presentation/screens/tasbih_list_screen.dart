@@ -13,6 +13,23 @@ class TasbihListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tasbihTypes = ref.watch(tasbihTypesProvider);
+    final sharedPrefsAsync = ref.watch(sharedPreferencesProvider);
+    
+    // Wait for SharedPreferences to initialize
+    return sharedPrefsAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        body: Center(
+          child: Text('Error initializing: $error'),
+        ),
+      ),
+      data: (_) => _buildContent(context, ref, tasbihTypes),
+    );
+  }
+  
+  Widget _buildContent(BuildContext context, WidgetRef ref, List<TasbihType> tasbihTypes) {
     
     return Scaffold(
       body: Container(
