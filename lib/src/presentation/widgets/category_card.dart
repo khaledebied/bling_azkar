@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
-import '../../utils/localizations.dart';
 
 class CategoryCard extends StatefulWidget {
   final String title;
@@ -150,7 +149,6 @@ class _CategoryCardState extends State<CategoryCard>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.ofWithFallback(context);
     final emoji = _getCategoryEmoji(widget.titleAr);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -175,57 +173,57 @@ class _CategoryCardState extends State<CategoryCard>
           ),
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            // Gradient background matching header - very light pastel green to white (vertical)
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDarkMode
-                  ? [
-                      AppTheme.primaryGreen.withValues(alpha: 0.25),
-                      AppTheme.primaryGreen.withValues(alpha: 0.15),
-                      AppTheme.cardDark,
-                    ]
-                  : [
-                      AppTheme.primaryGreen.withValues(alpha: 0.2), // Very light pastel green at top
-                      AppTheme.primaryGreen.withValues(alpha: 0.1),
-                      Colors.white, // Pure white at bottom
-                    ],
-            ),
+            // Gray background with opacity
+            color: isDarkMode
+                ? Colors.grey.shade800.withValues(alpha: 0.6)
+                : Colors.grey.shade200.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(20),
             border: isDarkMode
                 ? Border.all(
                     color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   )
-                : null,
-          boxShadow: [
-            BoxShadow(
+                : Border.all(
+                    color: Colors.grey.shade300.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+            boxShadow: [
+              BoxShadow(
                 color: isDarkMode
-                    ? Colors.black.withValues(alpha: 0.3)
-                    : AppTheme.primaryGreen.withValues(alpha: 0.2),
-                blurRadius: isDarkMode ? 15 : 12,
-              offset: const Offset(0, 4),
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : Colors.black.withValues(alpha: 0.15),
+                blurRadius: isDarkMode ? 20 : 15,
+                offset: const Offset(0, 4),
                 spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-                // Circular emoji container on the left (like audio icon in zikr item)
-              Container(
-                  width: 50,
-                  height: 50,
-                decoration: BoxDecoration(
+              ),
+              BoxShadow(
+                color: isDarkMode
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.08),
+                blurRadius: isDarkMode ? 10 : 8,
+                offset: const Offset(0, 2),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Circular emoji container in the center
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: isDarkMode ? 0.2 : 0.3),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -233,70 +231,28 @@ class _CategoryCardState extends State<CategoryCard>
                     child: Text(
                       emoji,
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 32,
                         height: 1.0,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Text content on the right
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Category title
+                const SizedBox(height: 12),
+                      // Category title below the icon
                       Text(
                         widget.titleAr,
                         style: AppTheme.arabicMedium.copyWith(
-                          fontSize: 15,
-                  color: Colors.white,
+                          fontSize: 14,
+                          color: isDarkMode ? Colors.white : Colors.grey.shade800,
                           fontWeight: FontWeight.w600,
+                          height: 1.3,
                         ),
+                        textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8),
-                      // Explore button badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                              l10n.explore,
-                              style: AppTheme.bodySmall.copyWith(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  ),
-                ],
-              ),
+              ],
+            ),
           ),
         ),
       ),
