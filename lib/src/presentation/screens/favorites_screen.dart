@@ -71,7 +71,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           title: Text(
             isArabic ? 'المفضلة' : 'Favorites',
             style: AppTheme.titleMedium.copyWith(
-              color: Colors.white,
+              color: Colors.black54,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -101,7 +101,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 : const Color(0xFFF5F5F5),
           ),
           child: SafeArea(
-            top: false,
+            top: true,
             child: Stack(
               children: [
                 CustomScrollView(
@@ -141,7 +141,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildFavoritesList(List<Zikr> favorites) {
@@ -203,7 +203,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         children: [
           // Stats and Play All button
           Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 80.0, 16.0, 16.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 30.0, 16.0, 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

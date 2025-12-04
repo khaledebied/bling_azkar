@@ -108,7 +108,7 @@ class _QuranScreenState extends State<QuranScreen>
           title: Text(
             isArabic ? 'القرآن الكريم' : 'Quran Kareem',
             style: AppTheme.titleMedium.copyWith(
-              color: Colors.white,
+              color: Colors.black54,
               fontWeight: FontWeight.bold,
             ),
           ),
