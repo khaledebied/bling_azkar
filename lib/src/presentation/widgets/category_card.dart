@@ -319,9 +319,9 @@ class _CategoryCardState extends State<CategoryCard>
         child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          width: 170,
+          width: double.infinity,
           height: 140, // Fixed height to match ListView height
-          margin: const EdgeInsets.only(right: 16),
+          margin: const EdgeInsets.only(bottom: 0),
           decoration: BoxDecoration(
             gradient: isDarkMode ? null : gradient,
             color: isDarkMode ? Theme.of(context).cardColor : null,

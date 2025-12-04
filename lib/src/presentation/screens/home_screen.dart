@@ -13,6 +13,7 @@ import '../../data/services/playlist_service.dart';
 import '../widgets/zikr_list_item.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
+import 'categories_list_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -431,6 +432,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       data: (allCategories) {
         final categoriesList = allCategories.entries.toList();
+        final displayedCategories = categoriesList.take(4).toList();
+        final hasMoreCategories = categoriesList.length > 4;
 
         return SliverToBoxAdapter(
           child: Column(
@@ -441,32 +444,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                        Text(
-                          'Categories',
-                          style: AppTheme.titleMedium.copyWith(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                    Text(
+                      'Categories',
+                      style: AppTheme.titleMedium.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Text(
-                        '${categoriesList.length} items',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                    ),
+                    if (hasMoreCategories)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CategoriesListScreen(
+                                categories: categoriesList.map((e) => e.key).toList(),
+                                categoryMap: allCategories,
+                              ),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                    Text(
+                              'See All',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          ],
                       ),
                     ),
                   ],
@@ -483,9 +500,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisSpacing: 10,
                     childAspectRatio: 1.1,
                   ),
-                  itemCount: categoriesList.length,
+                  itemCount: displayedCategories.length,
                   itemBuilder: (context, index) {
-                    final entry = categoriesList[index];
+                    final entry = displayedCategories[index];
                     final categoryKey = entry.key;
                     final categoryName = entry.value;
 

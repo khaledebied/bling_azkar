@@ -208,13 +208,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (value) async {
               final notificationService = NotificationService();
               
+              // Optimistically update the UI immediately
+              setState(() {
+                _prefs = _prefs.copyWith(notificationsEnabled: value);
+              });
+              
               if (value) {
                 // Request permissions first
                 final hasPermission = await notificationService.requestPermissions();
                 if (hasPermission) {
                   // Start 10-minute reminders
                   await notificationService.startPeriodicReminders();
-                  _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
+                  // Save preferences
+                  _storage.savePreferences(_prefs);
                   
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -229,7 +235,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     );
                   }
                 } else {
+                  // Revert the state if permission is denied
                   if (mounted) {
+                    setState(() {
+                      _prefs = _prefs.copyWith(notificationsEnabled: false);
+                    });
+                    _storage.savePreferences(_prefs);
+                    
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -245,7 +257,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               } else {
                 // Stop reminders
                 await notificationService.stopPeriodicReminders();
-                _updatePreferences(_prefs.copyWith(notificationsEnabled: value));
+                // Save preferences
+                _storage.savePreferences(_prefs);
                 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
