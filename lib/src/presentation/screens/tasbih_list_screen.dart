@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import 'tasbih_detail_screen.dart';
@@ -327,9 +328,7 @@ class _TasbihTypeCardState extends ConsumerState<TasbihTypeCard>
                         
                         // Arrow
                         Icon(
-                          widget.isArabic
-                              ? Icons.arrow_back_ios_rounded
-                              : Icons.arrow_forward_ios_rounded,
+                          DirectionIcons.forwardArrow(context),
                           color: widget.type.color,
                           size: 20,
                         ),

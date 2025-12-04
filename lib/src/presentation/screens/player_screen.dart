@@ -7,6 +7,7 @@ import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../../data/services/audio_player_service.dart';
 import '../providers/player_providers.dart';
 import 'dart:math' as math;
@@ -191,7 +192,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.arrow_back,
+              DirectionIcons.backArrow(context),
               color: isDarkMode ? Colors.white : AppTheme.primaryGreen,
             ),
           ),

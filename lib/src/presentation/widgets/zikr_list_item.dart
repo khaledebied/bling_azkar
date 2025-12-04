@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/direction_icons.dart';
 import '../../data/services/audio_player_service.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -299,7 +300,7 @@ class _ZikrListItemState extends State<ZikrListItem>
                           onPressed: widget.onFavoriteToggle,
                         ),
                          Icon(
-                          Icons.arrow_forward_ios,
+                          DirectionIcons.listArrow(context),
                           size: 12,
                           color: context.textSecondary.withValues(alpha: 0.5),
                         ),

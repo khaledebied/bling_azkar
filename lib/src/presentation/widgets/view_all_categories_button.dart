@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
+import '../../utils/direction_icons.dart';
 
 class ViewAllCategoriesButton extends StatefulWidget {
   final VoidCallback onTap;
@@ -100,7 +101,7 @@ class _ViewAllCategoriesButtonState extends State<ViewAllCategoriesButton>
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    Icons.arrow_forward_ios,
+                    DirectionIcons.listArrow(context),
                     color: AppTheme.primaryGreen,
                     size: 16,
                   ),

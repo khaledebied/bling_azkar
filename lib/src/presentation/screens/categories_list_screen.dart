@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../widgets/category_card.dart';
 import '../widgets/category_audio_bottom_sheet.dart';
 import '../widgets/floating_playlist_player.dart';
@@ -96,7 +97,7 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                         ],
                       ),
                       child: Icon(
-                        isArabic ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_rounded,
+                        DirectionIcons.backArrow(context),
                         color: context.textPrimary,
                         size: 16,
                       ),

@@ -5,6 +5,7 @@ import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../../utils/page_transitions.dart';
 import '../widgets/category_card.dart';
 import '../widgets/category_audio_bottom_sheet.dart';
@@ -72,8 +73,8 @@ class _CategoriesGridScreenState extends State<CategoriesGridScreen> {
                           ),
                         ],
                       ),
-                      child:  Icon(
-                        Icons.arrow_back,
+                      child: Icon(
+                        DirectionIcons.backArrow(context),
                         color: context.textPrimary,
                       ),
                     ),

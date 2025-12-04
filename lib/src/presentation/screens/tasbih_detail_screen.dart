@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import '../widgets/tasbih_celebration_dialog.dart';
@@ -260,7 +261,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(
-                        isArabic ? Icons.arrow_forward : Icons.arrow_back,
+                        DirectionIcons.backArrow(context),
                         color: Colors.white,
                       ),
                       iconSize: 28,

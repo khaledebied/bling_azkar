@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
 import '../../data/services/notification_service.dart';
@@ -402,7 +403,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
             leading: const Icon(Icons.text_fields),
             title: Text(l10n.textSize),
             subtitle: Text('${(_prefs.textScale * 100).toInt()}%'),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
             onTap: () {
               _showTextSizeDialog(l10n);
             },
@@ -425,7 +426,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
           ListTile(
             leading: const Icon(Icons.delete_outline, color: Colors.orange),
             title: Text(l10n.clearCache),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
             onTap: () {
               _showClearCacheDialog(l10n);
             },
@@ -439,7 +440,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
           ListTile(
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             title: Text(l10n.clearAllData),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
             onTap: () {
               _showClearAllDataDialog(l10n);
             },
@@ -463,7 +464,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
             leading: const Icon(Icons.info_outline),
             title: Text(l10n.version),
             subtitle: const Text('1.0.0'),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
           ),
           Divider(
             height: 1,
@@ -474,7 +475,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
           ListTile(
             leading: const Icon(Icons.help_outline),
             title: Text(l10n.help),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
             onTap: () {
               _showHelpDialog(l10n);
             },
@@ -488,7 +489,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
           ListTile(
             leading: const Icon(Icons.feedback_outlined),
             title: Text(l10n.feedback),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
             onTap: () {
               _showFeedbackDialog(l10n);
             },

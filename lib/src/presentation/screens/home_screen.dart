@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 import '../widgets/category_card.dart';
 import '../widgets/floating_playlist_player.dart';
 import '../widgets/category_audio_bottom_sheet.dart';
@@ -474,7 +475,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.arrow_forward_ios,
+                              DirectionIcons.listArrow(context),
                               size: 12,
                               color: AppTheme.primaryGreen,
                             ),

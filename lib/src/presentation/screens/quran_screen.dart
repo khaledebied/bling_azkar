@@ -3,6 +3,7 @@ import 'package:quran_library/quran_library.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/direction_icons.dart';
 
 class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
@@ -345,7 +346,7 @@ class _QuranScreenState extends State<QuranScreen>
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      icon: const Icon(Icons.arrow_back),
+                      icon: Icon(DirectionIcons.backArrow(context)),
                       label: Text(l10n.goBack),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
