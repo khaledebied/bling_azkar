@@ -7,6 +7,7 @@ import '../../utils/localizations.dart';
 import '../widgets/category_card.dart';
 import '../widgets/floating_playlist_player.dart';
 import '../widgets/category_audio_bottom_sheet.dart';
+import '../widgets/animated_zikr_header.dart';
 import '../providers/search_providers.dart';
 import '../providers/azkar_providers.dart';
 import '../../data/services/playlist_service.dart';
@@ -55,12 +56,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: Text(
-            l10n.azkar,
-            style: AppTheme.titleMedium.copyWith(
-              color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
-              fontWeight: FontWeight.bold,
-            ),
+          title: AnimatedZikrHeader(
+            isDarkMode: isDarkMode,
           ),
           centerTitle: true,
           actions: [
@@ -173,7 +170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+          decoration: BoxDecoration(
         gradient: isDarkMode
             ? LinearGradient(
                 begin: Alignment.topLeft,
@@ -192,46 +189,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
         color: isDarkMode ? context.cardColor : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDarkMode
               ? AppTheme.primaryGreen.withValues(alpha: 0.2)
               : AppTheme.primaryGreen.withValues(alpha: 0.15),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
+            boxShadow: [
+              BoxShadow(
             color: isDarkMode
                 ? Colors.black.withValues(alpha: 0.3)
                 : AppTheme.primaryGreen.withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                   l10n.dailyAzkar,
-                  style: AppTheme.titleLarge.copyWith(
+                      style: AppTheme.titleLarge.copyWith(
                     color: context.textPrimary,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
                   l10n.keepHeartClose,
-                  style: AppTheme.bodyMedium.copyWith(
+                      style: AppTheme.bodyMedium.copyWith(
                     color: context.textSecondary,
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -246,10 +243,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
             child: const Icon(
-              Icons.auto_awesome,
+                Icons.auto_awesome,
               size: 32,
-              color: Colors.white,
-            ),
+                color: Colors.white,
+              ),
           ),
         ],
       ),
@@ -433,18 +430,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final displayedCategories = categoriesList.take(4).toList();
         final hasMoreCategories = categoriesList.length > 4;
 
-        return SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       l10n.categories,
-                      style: AppTheme.titleMedium.copyWith(
+              style: AppTheme.titleMedium.copyWith(
                         color: context.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -499,14 +496,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     childAspectRatio: 1.0, // Square cards for better grid layout
                   ),
                   itemCount: displayedCategories.length,
-                  itemBuilder: (context, index) {
+              itemBuilder: (context, index) {
                     final entry = displayedCategories[index];
                     final categoryKey = entry.key;
                     final categoryName = entry.value;
 
-                    return CategoryCard(
+                return CategoryCard(
                       key: ValueKey(categoryKey),
-                      title: categoryName,
+                  title: categoryName,
                       titleAr: categoryName,
                       heroTag: 'category_$categoryKey',
                       onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
@@ -582,10 +579,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   (index) => Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     height: 100,
-                    decoration: BoxDecoration(
+            decoration: BoxDecoration(
                       color: isDarkMode ? context.cardColor : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+              borderRadius: BorderRadius.circular(16),
+            ),
                   ),
                 ),
               ),
@@ -635,7 +632,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                      Icons.search_off,
+                  Icons.search_off,
                   size: 64,
                   color: Colors.grey.shade400,
                 ),
@@ -666,14 +663,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                       child: ZikrListItem(
-                        zikr: zikr,
-                        isFavorite: isFavorite,
+              zikr: zikr,
+              isFavorite: isFavorite,
               onTap: () {
                 Navigator.push(
                   context,
-                            MaterialPageRoute(
-                              builder: (context) => ZikrDetailScreen(zikr: zikr),
-                            ),
+                  MaterialPageRoute(
+                    builder: (context) => ZikrDetailScreen(zikr: zikr),
+                  ),
                 );
               },
               onFavoriteToggle: () async {
@@ -689,8 +686,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           }
                         },
                       ),
-                    ),
-                  );
+                  ),
+                );
               },
             );
           },
