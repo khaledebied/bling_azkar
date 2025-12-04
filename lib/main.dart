@@ -101,7 +101,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserv
   final _storage = StorageService();
   final _appState = AppStateNotifier();
   final _notificationService = NotificationService();
-  Locale _locale = const Locale('en');
+  Locale _locale = const Locale('ar');
   ThemeMode _themeMode = ThemeMode.system;
   double _textScale = 1.0;
 

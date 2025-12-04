@@ -269,10 +269,12 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                                 Row(
                                   children: [
                                     Expanded(
+                                      flex: 1,
                                       child: _buildPlayAllButton(totalPlaylistItems),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 8),
                                     Expanded(
+                                      flex: 1,
                                       child: _buildReadAllButton(azkar),
                                     ),
                                   ],
@@ -416,12 +418,13 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
             onTap: _playAll,
             borderRadius: BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.25),
                       shape: BoxShape.circle,
@@ -431,36 +434,41 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                           ? Icons.pause
                           : Icons.play_arrow,
                       color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    _isPlayingAll
-                        ? (_playlistState == PlaylistState.playing
-                            ? l10n.pauseAll
-                            : l10n.resumeAll)
-                        : l10n.playAll,
-                    style: AppTheme.titleMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      size: 20,
                     ),
                   ),
                   const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _isPlayingAll
+                          ? (_playlistState == PlaylistState.playing
+                              ? l10n.pauseAll
+                              : l10n.resumeAll)
+                          : l10n.playAll,
+                      style: AppTheme.titleSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+                      horizontal: 8,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '$totalItems',
                       style: AppTheme.bodySmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
+                        fontSize: 11,
                       ),
                     ),
                   ),
@@ -482,14 +490,14 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryTeal,
-            AppTheme.primaryGreen,
+            Colors.indigo.shade600,
+            Colors.purple.shade600,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryTeal.withOpacity(0.4),
+            color: Colors.purple.withOpacity(0.4),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -511,12 +519,13 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.25),
                     shape: BoxShape.circle,
@@ -524,15 +533,19 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                   child: const Icon(
                     Icons.menu_book,
                     color: Colors.white,
-                    size: 24,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  l10n.readAll,
-                  style: AppTheme.titleMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    l10n.readAll,
+                    style: AppTheme.titleSmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

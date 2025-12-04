@@ -8,7 +8,7 @@ part 'user_preferences.g.dart';
 @HiveType(typeId: 4)
 class UserPreferences with _$UserPreferences {
   const factory UserPreferences({
-    @HiveField(0) @Default('en') String language,
+    @HiveField(0) @Default('ar') String language,
     @HiveField(1) @Default('sh01') String selectedSheikhId,
     @HiveField(2) @Default(false) bool notificationsEnabled,
     @HiveField(3) @Default([]) List<String> favoriteZikrIds,
