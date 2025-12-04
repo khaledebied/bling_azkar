@@ -494,9 +494,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1.1,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.0, // Square cards for better grid layout
                   ),
                   itemCount: displayedCategories.length,
                   itemBuilder: (context, index) {

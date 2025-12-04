@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
+import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 
 class CategoryCard extends StatefulWidget {
@@ -184,7 +185,6 @@ class _CategoryCardState extends State<CategoryCard>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
     final emoji = _getCategoryEmoji(widget.titleAr);
-    final gradient = _getCategoryGradient(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final cardWidget = GestureDetector(
@@ -203,17 +203,18 @@ class _CategoryCardState extends State<CategoryCard>
         scale: _scaleAnimation,
         child: Container(
           width: double.infinity,
-          height: 140, // Fixed height to match ListView height
-          margin: const EdgeInsets.only(bottom: 0),
+          constraints: const BoxConstraints(
+            minHeight: 100,
+          ),
+          margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            // White background in light mode, gradient in dark mode
-            color: isDarkMode ? null : Colors.white,
-            gradient: isDarkMode ? gradient : null,
+            // White background like zikr item
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(20),
             border: isDarkMode
                 ? Border.all(
-                    color: gradient.colors[1].withValues(alpha: 0.4),
-                    width: 1.5,
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 1,
                   )
                 : null,
             boxShadow: [
@@ -226,162 +227,76 @@ class _CategoryCardState extends State<CategoryCard>
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Stack(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Decorative elements - only in dark mode
-                if (isDarkMode) ...[
-                  Positioned(
-                    top: -30,
-                    right: -30,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
+                // Circular emoji container on the left (like audio icon in zikr item)
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        height: 1.0,
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: -20,
-                    left: -20,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                ],
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+                ),
+                const SizedBox(width: 12),
+                // Text content on the right
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Emoji container with elegant design
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          // In light mode: use gradient background, in dark mode: subtle white
-                          gradient: isDarkMode
-                              ? null
-                              : LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    gradient.colors[0].withValues(alpha: 0.1),
-                                    gradient.colors[1].withValues(alpha: 0.15),
-                                  ],
-                                ),
-                          color: isDarkMode
-                              ? Colors.white.withValues(alpha: 0.15)
-                              : null,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isDarkMode
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : gradient.colors[1].withValues(alpha: 0.2),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDarkMode
-                                  ? Colors.black.withValues(alpha: 0.3)
-                                  : gradient.colors[1].withValues(alpha: 0.15),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                      // Category title
+                      Text(
+                        widget.titleAr,
+                        style: AppTheme.arabicMedium.copyWith(
+                          fontSize: 15,
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: Text(
-                          emoji,
-                          style: const TextStyle(
-                            fontSize: 36,
-                            height: 1.0,
-                          ),
-                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
-                      // Text content - flexible to prevent overflow
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      // Explore button badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Flexible(
-                              child: Text(
-                                widget.titleAr,
-                                style: AppTheme.arabicSmall.copyWith(
-                                  color: isDarkMode
-                                      ? Theme.of(context).textTheme.bodyLarge?.color
-                                      : AppTheme.textPrimary, // Use primary text color in light mode
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.3,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                            Text(
+                              l10n.explore,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                // In light mode: use gradient, in dark mode: subtle white
-                                gradient: isDarkMode
-                                    ? null
-                                    : LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          gradient.colors[0],
-                                          gradient.colors[1],
-                                        ],
-                                      ),
-                                color: isDarkMode
-                                    ? Colors.white.withValues(alpha: 0.15)
-                                    : null,
-                                borderRadius: BorderRadius.circular(10),
-                                border: isDarkMode
-                                    ? Border.all(
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                        width: 1,
-                                      )
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    l10n.explore,
-                                    style: AppTheme.bodySmall.copyWith(
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.white,
-                                    size: 12,
-                                  ),
-                                ],
-                              ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: Colors.white,
+                              size: 12,
                             ),
                           ],
                         ),
