@@ -24,11 +24,37 @@ class CategoriesListScreen extends ConsumerStatefulWidget {
 
 class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
   final _playlistService = PlaylistService();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _playlistService.initialize();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
+  }
+
+  List<String> get _filteredCategories {
+    if (_searchQuery.isEmpty) {
+      return widget.categories;
+    }
+    return widget.categories.where((categoryKey) {
+      final categoryName = (widget.categoryMap[categoryKey] ?? categoryKey).toLowerCase();
+      return categoryName.contains(_searchQuery);
+    }).toList();
   }
 
   @override
@@ -85,20 +111,61 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                     ),
                   ),
                   centerTitle: true,
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.0, // Square cards for better grid layout
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(80),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: _buildSearchBar(isDarkMode, isArabic),
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final categoryKey = widget.categories[index];
-                        final categoryName = widget.categoryMap[categoryKey] ?? categoryKey;
+                  ),
+                ),
+                if (_filteredCategories.isEmpty && _searchQuery.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.search_off_rounded,
+                            size: 64,
+                            color: isDarkMode
+                                ? Colors.white.withValues(alpha: 0.3)
+                                : Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            isArabic ? 'لا توجد نتائج' : 'No results found',
+                            style: AppTheme.titleMedium.copyWith(
+                              color: context.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isArabic
+                                ? 'جرب البحث بكلمات مختلفة'
+                                : 'Try searching with different words',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.0, // Square cards for better grid layout
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final categoryKey = _filteredCategories[index];
+                          final categoryName = widget.categoryMap[categoryKey] ?? categoryKey;
 
                         return TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.0, end: 1.0),
@@ -127,10 +194,10 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                           ),
                         );
                       },
-                      childCount: widget.categories.length,
+                      childCount: _filteredCategories.length,
                     ),
                   ),
-                ),
+                  ),
                 // Add bottom padding for floating player
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 100),
@@ -162,6 +229,101 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(bool isDarkMode, bool isArabic) {
+    final isSearching = _searchQuery.isNotEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: isSearching
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.1),
+                  AppTheme.primaryTeal.withValues(alpha: 0.1),
+                ],
+              )
+            : null,
+        color: isSearching ? null : (isDarkMode ? context.cardColor : Colors.white),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSearching
+              ? AppTheme.primaryGreen.withValues(alpha: 0.5)
+              : (isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.15)),
+          width: isSearching ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isSearching
+                ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                : (isDarkMode
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.08)),
+            blurRadius: isSearching ? 20 : 12,
+            offset: Offset(0, isSearching ? 6 : 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+        style: AppTheme.bodyMedium.copyWith(
+          color: isDarkMode ? Colors.white : AppTheme.textPrimary,
+          fontSize: 15,
+        ),
+        decoration: InputDecoration(
+          hintText: isArabic ? 'ابحث عن الفئات...' : 'Search categories...',
+          hintStyle: AppTheme.bodyMedium.copyWith(
+            color: isDarkMode
+                ? Colors.white.withValues(alpha: 0.4)
+                : Colors.grey.shade400,
+            fontSize: 15,
+          ),
+          prefixIcon: isArabic ? null : Icon(
+            Icons.search_rounded,
+            color: isSearching
+                ? AppTheme.primaryGreen
+                : (isDarkMode
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : Colors.grey.shade600),
+            size: 22,
+          ),
+          suffixIcon: isArabic
+              ? Icon(
+                  Icons.search_rounded,
+                  color: isSearching
+                      ? AppTheme.primaryGreen
+                      : (isDarkMode
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : Colors.grey.shade600),
+                  size: 22,
+                )
+              : (isSearching
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.clear_rounded,
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.grey.shade600,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                      },
+                    )
+                  : null),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isArabic ? 16 : 20,
+            vertical: 16,
+          ),
         ),
       ),
     );
