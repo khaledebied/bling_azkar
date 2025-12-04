@@ -33,93 +33,62 @@ class TasbihListScreen extends ConsumerWidget {
   Widget _buildContent(BuildContext context, WidgetRef ref, List<TasbihType> tasbihTypes) {
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    return Scaffold(
-      body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.primaryGreen.withValues(alpha: 0.1),
-                AppTheme.primaryTeal.withValues(alpha: 0.1),
-              ],
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            isArabic ? 'التسبيح الإلكتروني' : 'Electronic Tasbih',
+            style: AppTheme.titleMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isArabic ? 'التسبيح الإلكتروني' : 'Electronic Tasbih',
-                                style: AppTheme.headlineMedium.copyWith(
-                                  color: context.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                isArabic ? 'اختر نوع الذكر' : 'Choose your dhikr',
-                                style: AppTheme.bodyMedium.copyWith(
-                                  color: context.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDarkMode
+                    ? [
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.transparent,
+                      ]
+                    : [
+                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                        Colors.transparent,
                       ],
-                    ),
-                  ],
-                ),
               ),
-              
-              // List of Dhikr types
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: tasbihTypes.length,
-                  itemBuilder: (context, index) {
-                    final type = tasbihTypes[index];
-                    return TasbihTypeCard(
-                      type: type,
-                      index: index,
-                      isArabic: isArabic,
-                    );
-                  },
-                ),
-              ),
-            ],
+            ),
+          ),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? const Color(0xFF0F1419)
+                : const Color(0xFFF5F5F5),
+          ),
+          child: SafeArea(
+            top: false,
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
+              itemCount: tasbihTypes.length,
+              itemBuilder: (context, index) {
+                final type = tasbihTypes[index];
+                return TasbihTypeCard(
+                  type: type,
+                  index: index,
+                  isArabic: isArabic,
+                );
+              },
+            ),
           ),
         ),
       ),

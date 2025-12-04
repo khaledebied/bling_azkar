@@ -42,128 +42,216 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.ofWithFallback(context);
+    final isArabic = l10n.isArabic;
+    final isDarkMode = context.isDarkMode;
     final isSearching = ref.watch(isSearchingProvider);
-    
-    return Scaffold(
-      body: Stack(
-        children: [
-          CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              _buildAppBar(ref),
-              if (!isSearching) ...[
-              _buildWelcomeBanner(),
-                _buildCategoriesGridSection(ref),
-              ] else ...[
-                _buildSearchResults(ref),
-              ],
-            ],
+
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            isArabic ? 'الأذكار' : 'Azkar',
+            style: AppTheme.titleMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          // Floating playlist player
-          StreamBuilder<PlaylistState>(
-            stream: _playlistService.stateStream,
-            initialData: PlaylistState.idle,
-            builder: (context, snapshot) {
-              final state = snapshot.data ?? PlaylistState.idle;
-              final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
-              
-              return AnimatedPositioned(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                bottom: isVisible ? 0 : -100,
-                left: 0,
-                right: 0,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: isVisible ? 1.0 : 0.0,
-                  child: FloatingPlaylistPlayer(
-                    playlistService: _playlistService,
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: Colors.white,
+              ),
+        onPressed: () {
+          Navigator.push(
+            context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
+          ],
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDarkMode
+                    ? [
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.transparent,
+                      ]
+                    : [
+                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+              ),
+            ),
           ),
-        ],
-    ),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? const Color(0xFF0F1419)
+                : const Color(0xFFF5F5F5),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Stack(
+              children: [
+                CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
+                        child: Column(
+                          children: [
+                            if (!isSearching) ...[
+                              _buildSearchBar(ref),
+                              const SizedBox(height: 16),
+                              _buildWelcomeBannerContent(),
+                              const SizedBox(height: 16),
+                            ] else ...[
+                              _buildSearchBar(ref),
+                              const SizedBox(height: 16),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (!isSearching) ...[
+                      _buildCategoriesGridSection(ref),
+                    ] else ...[
+                      _buildSearchResults(ref),
+                    ],
+                  ],
+                ),
+                // Floating playlist player
+                StreamBuilder<PlaylistState>(
+                  stream: _playlistService.stateStream,
+                  initialData: PlaylistState.idle,
+                  builder: (context, snapshot) {
+                    final state = snapshot.data ?? PlaylistState.idle;
+                    final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
+                    
+                    return AnimatedPositioned(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      bottom: isVisible ? 0 : -100,
+                      left: 0,
+                      right: 0,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: isVisible ? 1.0 : 0.0,
+                        child: FloatingPlaylistPlayer(
+                          playlistService: _playlistService,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildAppBar(WidgetRef ref) {
-    final isSearching = ref.watch(isSearchingProvider);
+  Widget _buildWelcomeBannerContent() {
+    final isDarkMode = context.isDarkMode;
     
-    return SliverAppBar(
-      floating: true,
-      snap: true,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      expandedHeight: isSearching ? 120 : 200,
-      collapsedHeight: 70,
-      flexibleSpace: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDarkMode = context.isDarkMode;
-          return FlexibleSpaceBar(
-            background: Container(
-              decoration: BoxDecoration(
-                gradient: isDarkMode
-                    ? AppTheme.darkBackgroundGradient
-                    : AppTheme.primaryGradient,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: isDarkMode
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.15),
+                  AppTheme.primaryTeal.withValues(alpha: 0.15),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.1),
+                  AppTheme.primaryTeal.withValues(alpha: 0.1),
+                ],
               ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 60, 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!isSearching) ...[ 
-                        Text(
-                          'السلام عليكم',
-                          style: AppTheme.arabicMedium.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Peace be upon you',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      _buildSearchBar(ref),
-                    ],
+        color: isDarkMode ? context.cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDarkMode
+              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+              : AppTheme.primaryGreen.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode
+                ? Colors.black.withValues(alpha: 0.3)
+                : AppTheme.primaryGreen.withValues(alpha: 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Azkar',
+                  style: AppTheme.titleLarge.copyWith(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  'Keep your heart close to Allah',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: context.textSecondary,
+                  ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: IconButton(
-            icon: Icon(
-              Icons.settings_outlined,
+          ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              size: 32,
               color: Colors.white,
             ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -315,98 +403,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildWelcomeBanner() {
-    final isDarkMode = context.isDarkMode;
-    
-    return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-          child: Container(
-          padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-            gradient: isDarkMode
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppTheme.primaryGreen.withValues(alpha: 0.15),
-                      AppTheme.primaryTeal.withValues(alpha: 0.15),
-                    ],
-                  )
-                : LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                      AppTheme.primaryGreen.withValues(alpha: 0.1),
-                      AppTheme.primaryTeal.withValues(alpha: 0.1),
-                    ],
-                  ),
-            color: isDarkMode ? context.cardColor : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDarkMode
-                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                  : AppTheme.primaryGreen.withValues(alpha: 0.15),
-              width: 1,
-            ),
-              boxShadow: [
-                BoxShadow(
-                color: isDarkMode
-                    ? Colors.black.withValues(alpha: 0.3)
-                    : AppTheme.primaryGreen.withValues(alpha: 0.1),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                      'Daily Azkar',
-                        style: AppTheme.titleLarge.copyWith(
-                        color: context.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                      'Keep your heart close to Allah',
-                        style: AppTheme.bodyMedium.copyWith(
-                        color: context.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGradient,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                  size: 32,
-                    color: Colors.white,
-                  ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildCategoriesGridSection(WidgetRef ref) {
     final allCategoriesAsync = ref.watch(allCategoriesProvider);
