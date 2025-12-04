@@ -94,7 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
 
             // Zikr Reminders Section
             _buildSectionHeader(
-              l10n.isArabic ? 'تذكير الأذكار' : 'Zikr Reminders',
+              l10n.zikrReminders,
               Icons.notifications_active,
             ),
             _buildRemindersCard(l10n),
@@ -213,15 +213,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         children: [
           SwitchListTile(
             title: Text(
-              l10n.isArabic ? 'تفعيل التذكير' : 'Enable Reminders',
+              l10n.enableReminders,
               style: AppTheme.bodyMedium.copyWith(
                 color: context.textPrimary,
               ),
             ),
             subtitle: Text(
               _prefs.notificationsEnabled
-                  ? (l10n.isArabic ? 'مفعل - كل 10 دقائق' : 'Enabled - Every 10 minutes')
-                  : (l10n.isArabic ? 'معطل' : 'Disabled'),
+                  ? l10n.enabledEvery10Minutes
+                  : l10n.disabled,
               style: AppTheme.bodySmall.copyWith(
                 color: context.textSecondary,
               ),
@@ -248,9 +248,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          l10n.isArabic 
-                              ? 'تم تفعيل التذكير كل 10 دقائق ❤️'
-                              : 'Reminders enabled - Every 10 minutes ❤️',
+                          l10n.remindersEnabledEvery10Minutes,
                         ),
                         backgroundColor: AppTheme.primaryGreen,
                       ),
@@ -267,9 +265,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          l10n.isArabic 
-                              ? 'يرجى السماح بالإشعارات من إعدادات الجهاز'
-                              : 'Please enable notifications in device settings',
+                          l10n.pleaseEnableNotificationsDevice,
                         ),
                         backgroundColor: Colors.orange,
                       ),
@@ -286,9 +282,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        l10n.isArabic 
-                            ? 'تم إيقاف التذكير'
-                            : 'Reminders disabled',
+                        l10n.remindersDisabled,
                       ),
                       backgroundColor: Colors.grey,
                     ),
@@ -340,7 +334,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
               children: [
                 const Icon(Icons.light_mode, size: 20),
                 const SizedBox(width: 12),
-                Text(l10n.isArabic ? 'فاتح' : 'Light'),
+                Text(l10n.light),
               ],
             ),
             value: 'light',
@@ -363,7 +357,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
               children: [
                 const Icon(Icons.dark_mode, size: 20),
                 const SizedBox(width: 12),
-                Text(l10n.isArabic ? 'داكن' : 'Dark'),
+                Text(l10n.dark),
               ],
             ),
             value: 'dark',
@@ -386,7 +380,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
               children: [
                 const Icon(Icons.brightness_auto, size: 20),
                 const SizedBox(width: 12),
-                Text(l10n.isArabic ? 'نظام' : 'System'),
+                Text(l10n.system),
               ],
             ),
             value: 'system',
@@ -549,7 +543,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              l10n.isArabic ? 'إلغاء' : 'Cancel',
+              l10n.cancel,
               style: TextStyle(color: context.textSecondary),
             ),
           ),
@@ -600,7 +594,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
               // Clear cache logic
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.isArabic ? 'تم مسح الذاكرة المؤقتة' : 'Cache cleared')),
+                SnackBar(content: Text(l10n.cacheCleared)),
               );
             },
             child: Text(l10n.clear, style: const TextStyle(color: Colors.orange)),

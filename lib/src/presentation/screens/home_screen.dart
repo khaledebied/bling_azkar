@@ -56,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isArabic ? 'الأذكار' : 'Azkar',
+            l10n.azkar,
             style: AppTheme.titleMedium.copyWith(
               color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
               fontWeight: FontWeight.bold,
@@ -215,7 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Daily Azkar',
+                  l10n.dailyAzkar,
                   style: AppTheme.titleLarge.copyWith(
                     color: context.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -223,7 +223,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Keep your heart close to Allah',
+                  l10n.keepHeartClose,
                   style: AppTheme.bodyMedium.copyWith(
                     color: context.textSecondary,
                   ),
@@ -418,7 +418,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'Error loading categories',
+                  l10n.errorLoadingCategories,
                   style: AppTheme.titleMedium.copyWith(color: context.textSecondary),
                 ),
               ],
@@ -441,7 +441,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Categories',
+                      l10n.categories,
                       style: AppTheme.titleMedium.copyWith(
                         color: context.textPrimary,
                         fontWeight: FontWeight.bold,
@@ -467,7 +467,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                     Text(
-                              'See All',
+                              l10n.seeAll,
                               style: AppTheme.bodySmall.copyWith(
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
@@ -604,7 +604,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Error loading azkar',
+                  l10n.errorLoadingAzkar,
                   style: AppTheme.titleMedium.copyWith(
                     color: context.textSecondary,
                   ),
@@ -638,7 +638,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                      'No azkar found',
+                      l10n.noAzkarFound,
                   style: AppTheme.titleMedium.copyWith(
                         color: context.textSecondary,
                   ),

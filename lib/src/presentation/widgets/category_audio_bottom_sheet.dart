@@ -9,6 +9,7 @@ import '../../data/services/storage_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/localizations.dart';
 import 'floating_playlist_player.dart';
 import '../screens/player_screen.dart';
 import '../providers/azkar_providers.dart';
@@ -245,7 +246,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                                       Icon(Icons.headphones, color: AppTheme.primaryGreen, size: 20),
                                       const SizedBox(width: 8),
                                       Text(
-                                        '$audioCount audio${audioCount > 1 ? 's' : ''}',
+                                        '$audioCount ${audioCount > 1 ? l10n.audios : l10n.audio}',
                                         style: AppTheme.bodyMedium.copyWith(
                                           color: AppTheme.primaryGreen,
                                           fontWeight: FontWeight.w600,
@@ -253,7 +254,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                                       ),
                                       const Spacer(),
                                       Text(
-                                        '$totalPlaylistItems total items',
+                                        '$totalPlaylistItems ${l10n.totalItems}',
                                         style: AppTheme.bodySmall.copyWith(
                                           color: context.textSecondary,
                                         ),
@@ -331,7 +332,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
               ),
               const SizedBox(height: 16),
               Text(
-                'No audios available',
+                l10n.noAudiosAvailable,
                 style: AppTheme.titleMedium.copyWith(
                   color: context.textSecondary,
                 ),
@@ -423,9 +424,9 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                   Text(
                     _isPlayingAll
                         ? (_playlistState == PlaylistState.playing
-                            ? 'Pause All'
-                            : 'Resume All')
-                        : 'Play All',
+                            ? l10n.pauseAll
+                            : l10n.resumeAll)
+                        : l10n.playAll,
                     style: AppTheme.titleMedium.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

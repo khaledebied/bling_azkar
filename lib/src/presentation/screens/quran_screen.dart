@@ -106,7 +106,7 @@ class _QuranScreenState extends State<QuranScreen>
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isArabic ? 'القرآن الكريم' : 'Quran Kareem',
+            l10n.quranKareem,
             style: AppTheme.titleMedium.copyWith(
               color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
               fontWeight: FontWeight.bold,
@@ -214,7 +214,7 @@ class _QuranScreenState extends State<QuranScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Error Loading Quran',
+              l10n.errorLoadingQuran,
               style: AppTheme.titleLarge.copyWith(
                 color: isDarkMode ? Colors.white : context.textPrimary,
               ),
@@ -239,7 +239,7 @@ class _QuranScreenState extends State<QuranScreen>
                 _checkInitialization();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.retry),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -263,7 +263,7 @@ class _QuranScreenState extends State<QuranScreen>
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          'Quran Kareem',
+          l10n.quranKareem,
           style: AppTheme.titleMedium.copyWith(
             color: isDarkMode ? Colors.white : Colors.black87,
             fontWeight: FontWeight.bold,
@@ -301,7 +301,7 @@ class _QuranScreenState extends State<QuranScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Quran Library Error',
+                  l10n.quranLibraryError,
                   style: AppTheme.titleLarge.copyWith(
                     color: isDarkMode ? Colors.white : context.textPrimary,
                   ),
@@ -330,7 +330,7 @@ class _QuranScreenState extends State<QuranScreen>
                         _checkInitialization();
                       },
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(l10n.retry),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -344,7 +344,7 @@ class _QuranScreenState extends State<QuranScreen>
                         Navigator.of(context).pop();
                       },
                       icon: const Icon(Icons.arrow_back),
-                      label: const Text('Go Back'),
+                      label: Text(l10n.goBack),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,

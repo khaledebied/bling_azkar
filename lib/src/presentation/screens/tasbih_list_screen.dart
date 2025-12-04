@@ -23,7 +23,7 @@ class TasbihListScreen extends ConsumerWidget {
       ),
       error: (error, stack) => Scaffold(
         body: Center(
-          child: Text('Error initializing: $error'),
+          child: Text('${l10n.errorInitializing}: $error'),
         ),
       ),
       data: (_) => _buildContent(context, ref, tasbihTypes),
@@ -44,7 +44,7 @@ class TasbihListScreen extends ConsumerWidget {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isArabic ? 'التسبيح الإلكتروني' : 'Electronic Tasbih',
+            l10n.electronicTasbih,
             style: AppTheme.titleMedium.copyWith(
               color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
               fontWeight: FontWeight.bold,

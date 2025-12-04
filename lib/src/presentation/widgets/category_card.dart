@@ -297,6 +297,7 @@ class _CategoryCardState extends State<CategoryCard>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final icon = _getCategoryIcon(widget.titleAr);
     final gradient = _getCategoryGradient(widget.titleAr, context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -468,7 +469,7 @@ class _CategoryCardState extends State<CategoryCard>
                                   ),
                                   const SizedBox(width: 3),
                                   Text(
-                                    'Explore',
+                                    l10n.explore,
                                     style: AppTheme.bodySmall.copyWith(
                                       color: isDarkMode
                                           ? gradient.colors.first

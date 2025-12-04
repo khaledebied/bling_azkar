@@ -133,6 +133,67 @@ class AppLocalizations {
   String get hour => _get('hour');
   String get minute => _get('minute');
 
+  // Tab Names
+  String get azkar => _get('azkar');
+  String get tasbih => _get('tasbih');
+  String get quranKareem => _get('quranKareem');
+  String get electronicTasbih => _get('electronicTasbih');
+
+  // Common Actions
+  String get playAll => _get('playAll');
+  String get pauseAll => _get('pauseAll');
+  String get resumeAll => _get('resumeAll');
+  String get playAllFavorites => _get('playAllFavorites');
+  String get retry => _get('retry');
+  String get goBack => _get('goBack');
+  String get restart => _get('restart');
+  String get explore => _get('explore');
+  String get seeAll => _get('seeAll');
+  String get viewAllCategories => _get('viewAllCategories');
+
+  // Messages
+  String get noAudiosAvailable => _get('noAudiosAvailable');
+  String get errorLoadingCategories => _get('errorLoadingCategories');
+  String get errorLoadingFavorites => _get('errorLoadingFavorites');
+  String get errorLoadingQuran => _get('errorLoadingQuran');
+  String get quranLibraryError => _get('quranLibraryError');
+  String get errorPlayingAudio => _get('errorPlayingAudio');
+  String get errorInitializing => _get('errorInitializing');
+  String get cacheCleared => _get('cacheCleared');
+
+  // Player Screen
+  String get playFullAudio => _get('playFullAudio');
+  String get audioRecitation => _get('audioRecitation');
+  String get tapToPlay => _get('tapToPlay');
+  String get arabicText => _get('arabicText');
+  String get translation => _get('translation');
+  String get recommendedRepetitions => _get('recommendedRepetitions');
+  String get audioPreview => _get('audioPreview');
+  String completedRepetitions(int count) => _get('completedRepetitions').replaceAll('{count}', count.toString());
+
+  // Tasbih
+  String get sessionComplete => _get('sessionComplete');
+  String get mayAllahAccept => _get('mayAllahAccept');
+  String get tapToCount => _get('tapToCount');
+  String get selectTasbihType => _get('selectTasbihType');
+  String get completedTapRestart => _get('completedTapRestart');
+
+  // Settings
+  String get zikrReminders => _get('zikrReminders');
+  String get enableReminders => _get('enableReminders');
+  String get enabledEvery10Minutes => _get('enabledEvery10Minutes');
+  String get remindersEnabledEvery10Minutes => _get('remindersEnabledEvery10Minutes');
+  String get remindersDisabled => _get('remindersDisabled');
+  String get light => _get('light');
+  String get dark => _get('dark');
+  String get system => _get('system');
+  String get pleaseEnableNotificationsDevice => _get('pleaseEnableNotificationsDevice');
+
+  // Stats
+  String get totalItems => _get('totalItems');
+  String get audio => _get('audio');
+  String get audios => _get('audios');
+
   // English strings
   static const Map<String, String> _englishStrings = {
     'appName': 'Bling Azkar',
@@ -236,6 +297,53 @@ class AppLocalizations {
     'send': 'Send',
     'hour': 'hour',
     'minute': 'minute',
+    'azkar': 'Azkar',
+    'tasbih': 'Tasbih',
+    'quranKareem': 'Quran Kareem',
+    'electronicTasbih': 'Electronic Tasbih',
+    'playAll': 'Play All',
+    'pauseAll': 'Pause All',
+    'resumeAll': 'Resume All',
+    'playAllFavorites': 'Play All Favorites',
+    'retry': 'Retry',
+    'goBack': 'Go Back',
+    'restart': 'Restart',
+    'explore': 'Explore',
+    'seeAll': 'See All',
+    'viewAllCategories': 'View All Categories',
+    'noAudiosAvailable': 'No audios available',
+    'errorLoadingCategories': 'Error loading categories',
+    'errorLoadingFavorites': 'Error loading favorites',
+    'errorLoadingQuran': 'Error Loading Quran',
+    'quranLibraryError': 'Quran Library Error',
+    'errorPlayingAudio': 'Error playing audio',
+    'errorInitializing': 'Error initializing',
+    'cacheCleared': 'Cache cleared',
+    'playFullAudio': 'Play Full Audio',
+    'audioRecitation': 'Audio Recitation',
+    'tapToPlay': 'Tap to play',
+    'arabicText': 'Arabic Text',
+    'translation': 'Translation',
+    'recommendedRepetitions': 'Recommended Repetitions',
+    'audioPreview': 'Audio Preview',
+    'completedRepetitions': 'Completed {count}x repetitions!',
+    'sessionComplete': 'Session Complete',
+    'mayAllahAccept': 'May Allah accept your dhikr',
+    'tapToCount': 'Tap to count',
+    'selectTasbihType': 'Select Tasbih Type',
+    'completedTapRestart': 'Completed — Tap Restart to begin again',
+    'zikrReminders': 'Zikr Reminders',
+    'enableReminders': 'Enable Reminders',
+    'enabledEvery10Minutes': 'Enabled - Every 10 minutes',
+    'remindersEnabledEvery10Minutes': 'Reminders enabled - Every 10 minutes ❤️',
+    'remindersDisabled': 'Reminders disabled',
+    'light': 'Light',
+    'dark': 'Dark',
+    'system': 'System',
+    'pleaseEnableNotificationsDevice': 'Please enable notifications in device settings',
+    'totalItems': 'total items',
+    'audio': 'audio',
+    'audios': 'audios',
   };
 
   // Arabic strings
@@ -341,6 +449,53 @@ class AppLocalizations {
     'send': 'إرسال',
     'hour': 'ساعة',
     'minute': 'دقيقة',
+    'azkar': 'الأذكار',
+    'tasbih': 'التسبيح',
+    'quranKareem': 'القرآن الكريم',
+    'electronicTasbih': 'التسبيح الإلكتروني',
+    'playAll': 'تشغيل الكل',
+    'pauseAll': 'إيقاف الكل',
+    'resumeAll': 'استئناف الكل',
+    'playAllFavorites': 'تشغيل كل المفضلة',
+    'retry': 'إعادة المحاولة',
+    'goBack': 'رجوع',
+    'restart': 'إعادة',
+    'explore': 'استكشف',
+    'seeAll': 'عرض الكل',
+    'viewAllCategories': 'عرض جميع الفئات',
+    'noAudiosAvailable': 'لا توجد ملفات صوتية متاحة',
+    'errorLoadingCategories': 'خطأ في تحميل الفئات',
+    'errorLoadingFavorites': 'خطأ في تحميل المفضلة',
+    'errorLoadingQuran': 'خطأ في تحميل القرآن',
+    'quranLibraryError': 'خطأ في مكتبة القرآن',
+    'errorPlayingAudio': 'خطأ في تشغيل الصوت',
+    'errorInitializing': 'خطأ في التهيئة',
+    'cacheCleared': 'تم مسح الذاكرة المؤقتة',
+    'playFullAudio': 'تشغيل الصوت الكامل',
+    'audioRecitation': 'تلاوة صوتية',
+    'tapToPlay': 'اضغط للتشغيل',
+    'arabicText': 'النص العربي',
+    'translation': 'الترجمة',
+    'recommendedRepetitions': 'التكرارات الموصى بها',
+    'audioPreview': 'معاينة الصوت',
+    'completedRepetitions': 'اكتمل {count} تكرار!',
+    'sessionComplete': 'جلسة مكتملة',
+    'mayAllahAccept': 'تقبل الله منك',
+    'tapToCount': 'اضغط للعد',
+    'selectTasbihType': 'اختر نوع التسبيح',
+    'completedTapRestart': 'مكتمل — اضغط إعادة للبدء من جديد',
+    'zikrReminders': 'تذكير الأذكار',
+    'enableReminders': 'تفعيل التذكير',
+    'enabledEvery10Minutes': 'مفعل - كل 10 دقائق',
+    'remindersEnabledEvery10Minutes': 'تم تفعيل التذكير كل 10 دقائق ❤️',
+    'remindersDisabled': 'تم إيقاف التذكير',
+    'light': 'فاتح',
+    'dark': 'داكن',
+    'system': 'نظام',
+    'pleaseEnableNotificationsDevice': 'يرجى السماح بالإشعارات من إعدادات الجهاز',
+    'totalItems': 'إجمالي العناصر',
+    'audio': 'صوت',
+    'audios': 'أصوات',
   };
 }
 

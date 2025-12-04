@@ -78,7 +78,7 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   title: Text(
-                    'Categories',
+                    l10n.categories,
                     style: AppTheme.titleLarge.copyWith(
                       color: context.textPrimary,
                       fontWeight: FontWeight.bold,

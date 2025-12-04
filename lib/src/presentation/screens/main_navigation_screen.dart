@@ -130,22 +130,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
             children: [
               _buildNavItem(
                 icon: Icons.auto_awesome_rounded,
-                label: 'Azkar',
+                label: l10n.azkar,
                 index: 0,
               ),
               _buildNavItem(
                 icon: Icons.touch_app_rounded,
-                label: 'Tasbih',
+                label: l10n.tasbih,
                 index: 1,
               ),
               _buildNavItem(
                 icon: Icons.favorite_rounded,
-                label: 'Favorites',
+                label: l10n.favorites,
                 index: 2,
               ),
               _buildNavItem(
                 icon: Icons.menu_book_rounded,
-                label: 'Quran',
+                label: l10n.quranKareem,
                 index: 3,
               ),
             ],

@@ -658,7 +658,7 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildInstruction(Icons.touch_app_rounded, 'Tap to count'),
+                    _buildInstruction(Icons.touch_app_rounded, l10n.tapToCount),
                     const SizedBox(width: 24),
                     _buildInstruction(Icons.swipe_vertical_rounded, 'Drag up/down'),
                   ],

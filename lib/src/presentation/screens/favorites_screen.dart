@@ -69,7 +69,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isArabic ? 'المفضلة' : 'Favorites',
+            l10n.favorites,
             style: AppTheme.titleMedium.copyWith(
               color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
               fontWeight: FontWeight.bold,
@@ -173,7 +173,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'No favorites yet',
+                l10n.noFavoritesYet,
                 style: AppTheme.titleLarge.copyWith(
                   color: context.textPrimary,
                   fontWeight: FontWeight.bold,
@@ -183,7 +183,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 48.0),
                 child: Text(
-                  'Tap the heart icon on any zikr to add it to your favorites',
+                  l10n.addFavoritesHint,
                   style: AppTheme.bodyMedium.copyWith(
                     color: context.textSecondary,
                   ),
@@ -341,9 +341,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 Text(
                   _isPlayingAll
                       ? (_playlistState == PlaylistState.playing
-                          ? 'Pause All'
-                          : 'Resume All')
-                      : 'Play All Favorites',
+                          ? l10n.pauseAll
+                          : l10n.resumeAll)
+                      : l10n.playAllFavorites,
                   style: AppTheme.titleMedium.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -422,7 +422,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Error loading favorites',
+              l10n.errorLoadingFavorites,
               style: AppTheme.titleMedium.copyWith(
                 color: context.textSecondary,
               ),

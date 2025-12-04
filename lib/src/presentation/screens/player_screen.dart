@@ -6,6 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/localizations.dart';
 import '../../data/services/audio_player_service.dart';
 import '../providers/player_providers.dart';
 import 'dart:math' as math;
@@ -89,7 +90,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
-                Text('Completed ${widget.zikr.defaultCount}x repetitions!'),
+                Text(l10n.completedRepetitions(widget.zikr.defaultCount)),
               ],
             ),
             backgroundColor: AppTheme.primaryGreen,
@@ -148,7 +149,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error playing audio: ${e.toString()}'),
+            content: Text('${l10n.errorPlayingAudio}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -171,6 +172,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isDarkMode = context.isDarkMode;
     
     return Scaffold(
@@ -302,7 +304,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     return Column(
       children: [
         Text(
-          'Repetition Count',
+          l10n.repetitionCount,
           style: AppTheme.bodyMedium.copyWith(
             color: Colors.white.withValues(alpha: 0.8),
           ),
@@ -402,7 +404,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
             ref.read(currentCountProvider(widget.zikr.id).notifier).state = 0;
           },
           icon: const Icon(Icons.refresh),
-          label: const Text('Reset'),
+          label: Text(l10n.reset),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withValues(alpha: 0.2),
             foregroundColor: Colors.white,
@@ -499,7 +501,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                     ),
                   ),
                   Text(
-                    'Completed',
+                    l10n.completed,
                     style: AppTheme.bodyMedium.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                     ),

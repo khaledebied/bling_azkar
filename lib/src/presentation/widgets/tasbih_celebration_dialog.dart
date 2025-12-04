@@ -3,6 +3,7 @@ import 'package:lottie/lottie.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../utils/localizations.dart';
 import '../../domain/models/tasbih_type.dart';
 
 /// Celebration dialog shown when Tasbih session completes
@@ -133,7 +134,7 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          isArabic ? 'جلسة مكتملة' : 'Session Complete',
+                          l10n.sessionComplete,
                           style: AppTheme.titleMedium.copyWith(
                             color: context.textSecondary,
                           ),
@@ -212,9 +213,7 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                   
                   // Message
                   Text(
-                    isArabic 
-                        ? 'تقبل الله منا ومنك'
-                        : 'May Allah accept your dhikr',
+                    l10n.mayAllahAccept,
                     style: AppTheme.bodyLarge.copyWith(
                       color: context.textSecondary,
                     ),
@@ -230,7 +229,7 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                         child: OutlinedButton.icon(
                           onPressed: widget.onDone,
                           icon: const Icon(Icons.check),
-                          label: Text(isArabic ? 'تم' : 'Done'),
+                          label: Text(l10n.done),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -248,7 +247,7 @@ class _TasbihCelebrationDialogState extends State<TasbihCelebrationDialog>
                         child: ElevatedButton.icon(
                           onPressed: widget.onRestart,
                           icon: const Icon(Icons.refresh),
-                          label: Text(isArabic ? 'إعادة' : 'Restart'),
+                          label: Text(l10n.restart),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: widget.tasbihType.color,
                             foregroundColor: Colors.white,
