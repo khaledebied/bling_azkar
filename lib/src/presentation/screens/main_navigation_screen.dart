@@ -100,6 +100,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   }
 
   Widget _buildBottomNavigationBar() {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isDarkMode = context.isDarkMode;
     
     return Container(

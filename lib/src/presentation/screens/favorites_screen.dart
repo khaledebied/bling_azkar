@@ -145,6 +145,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildFavoritesList(List<Zikr> favorites) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     if (favorites.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
@@ -292,6 +293,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildPlayAllButton(List<Zikr> favorites) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final totalItems = favorites.fold<int>(0, (sum, z) => sum + z.defaultCount);
     
     return Container(
@@ -407,6 +409,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildError(Object error) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Padding(

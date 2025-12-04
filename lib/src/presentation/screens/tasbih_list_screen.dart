@@ -13,6 +13,7 @@ class TasbihListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final tasbihTypes = ref.watch(tasbihTypesProvider);
     final sharedPrefsAsync = ref.watch(sharedPreferencesProvider);
     

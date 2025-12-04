@@ -201,6 +201,7 @@ class _QuranScreenState extends State<QuranScreen>
   }
 
   Widget _buildQuranError(String error, bool isDarkMode) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -254,6 +255,7 @@ class _QuranScreenState extends State<QuranScreen>
   }
 
   Widget _buildErrorState(BuildContext context, bool isDarkMode) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     return Scaffold(
       backgroundColor: isDarkMode
           ? const Color(0xFF0F1419)

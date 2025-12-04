@@ -66,6 +66,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   Future<void> _handleAudioCompletion() async {
+    final l10n = AppLocalizations.ofWithFallback(context);
     setState(() {
       _currentRepetition++;
     });
@@ -118,6 +119,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   Future<void> _playAudio() async {
+    final l10n = AppLocalizations.ofWithFallback(context);
     try {
       final audioService = ref.read(audioPlayerServiceProvider);
       if (widget.zikr.audio.isNotEmpty) {
@@ -172,7 +174,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.ofWithFallback(context);
     final isDarkMode = context.isDarkMode;
     
     return Scaffold(
@@ -298,6 +299,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   Widget _buildCounter() {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final currentCount = ref.watch(currentCountProvider(widget.zikr.id));
     final targetCount = ref.watch(targetCountProvider(widget.zikr.id));
     
@@ -438,6 +440,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   Widget _buildRepetitionIndicator() {
+    final l10n = AppLocalizations.ofWithFallback(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -460,8 +463,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
           const SizedBox(width: 8),
           Text(
             _isCompleted 
-                ? 'Completed!' 
-                : 'Repetition ${_currentRepetition + 1} of ${widget.zikr.defaultCount}',
+                ? l10n.completed
+                : '${l10n.repetitionCount}: ${_currentRepetition + 1} ${l10n.ofCount} ${widget.zikr.defaultCount}',
             style: AppTheme.bodyMedium.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -473,6 +476,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   Widget _buildProgressIndicator() {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final progress = ref.watch(progressProvider(widget.zikr.id));
 
     return RepaintBoundary(

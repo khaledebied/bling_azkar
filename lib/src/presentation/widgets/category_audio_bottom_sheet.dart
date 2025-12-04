@@ -166,6 +166,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
         return ValueListenableBuilder<bool>(
           valueListenable: _isLoadingNotifier,
           builder: (context, isLoading, _) {
+            final l10n = AppLocalizations.ofWithFallback(context);
             final audioCount = azkar.where((z) => z.audio.isNotEmpty).length;
             final totalPlaylistItems = azkar
                 .where((z) => z.audio.isNotEmpty)
@@ -309,6 +310,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
   }
 
   Widget _buildAzkarList(List<Zikr> azkar, bool isLoading) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     if (isLoading) {
       return const Center(
         child: Padding(
@@ -375,6 +377,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
   }
 
   Widget _buildPlayAllButton(int totalItems) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     return ScaleTransition(
       scale: _playAllScaleAnimation,
       child: Container(

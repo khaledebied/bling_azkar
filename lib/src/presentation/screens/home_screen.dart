@@ -168,6 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildWelcomeBannerContent() {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final isDarkMode = context.isDarkMode;
     
     return Container(
@@ -405,6 +406,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
   Widget _buildCategoriesGridSection(WidgetRef ref) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final allCategoriesAsync = ref.watch(allCategoriesProvider);
 
     return allCategoriesAsync.when(
@@ -558,6 +560,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
   Widget _buildSearchResults(WidgetRef ref) {
+    final l10n = AppLocalizations.ofWithFallback(context);
     final azkarAsync = ref.watch(searchedAzkarProvider);
 
     return azkarAsync.when(
