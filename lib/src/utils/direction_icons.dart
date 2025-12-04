@@ -11,7 +11,9 @@ class DirectionIcons {
     try {
       final l10n = AppLocalizations.ofWithFallback(context);
       final textDirection = Directionality.of(context);
-      return textDirection == TextDirection.rtl || l10n.isArabic;
+      var res = !l10n.isArabic ? TextDirection.rtl : TextDirection.ltr;
+      return textDirection == res;
+
     } catch (e) {
       // Fallback to checking directionality only
       return Directionality.of(context) == TextDirection.rtl;
