@@ -12,6 +12,7 @@ import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import 'floating_playlist_player.dart';
 import '../screens/player_screen.dart';
+import '../screens/zikr_reading_screen.dart';
 import '../providers/azkar_providers.dart';
 
 class CategoryAudioBottomSheet extends ConsumerStatefulWidget {
@@ -264,8 +265,18 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                // Play All button
-                                _buildPlayAllButton(totalPlaylistItems),
+                                // Play All and Read All buttons
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildPlayAllButton(totalPlaylistItems),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _buildReadAllButton(azkar),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
@@ -455,6 +466,76 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadAllButton(List<Zikr> azkar) {
+    final l10n = AppLocalizations.ofWithFallback(context);
+    
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryTeal,
+            AppTheme.primaryGreen,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryTeal.withOpacity(0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ZikrReadingScreen(
+                  azkar: azkar,
+                  categoryName: widget.categoryName,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.menu_book,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.readAll,
+                  style: AppTheme.titleMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

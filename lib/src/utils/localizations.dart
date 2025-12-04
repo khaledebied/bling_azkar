@@ -144,6 +144,7 @@ class AppLocalizations {
   String get pauseAll => _get('pauseAll');
   String get resumeAll => _get('resumeAll');
   String get playAllFavorites => _get('playAllFavorites');
+  String get readAll => _get('readAll');
   String get retry => _get('retry');
   String get goBack => _get('goBack');
   String get restart => _get('restart');
@@ -175,6 +176,7 @@ class AppLocalizations {
   String get sessionComplete => _get('sessionComplete');
   String get mayAllahAccept => _get('mayAllahAccept');
   String get tapToCount => _get('tapToCount');
+  String get longPressToReset => _get('longPressToReset');
   String get selectTasbihType => _get('selectTasbihType');
   String get completedTapRestart => _get('completedTapRestart');
 
@@ -305,6 +307,7 @@ class AppLocalizations {
     'pauseAll': 'Pause All',
     'resumeAll': 'Resume All',
     'playAllFavorites': 'Play All Favorites',
+    'readAll': 'Read All',
     'retry': 'Retry',
     'goBack': 'Go Back',
     'restart': 'Restart',
@@ -330,6 +333,7 @@ class AppLocalizations {
     'sessionComplete': 'Session Complete',
     'mayAllahAccept': 'May Allah accept your dhikr',
     'tapToCount': 'Tap to count',
+    'longPressToReset': 'Long press to reset',
     'selectTasbihType': 'Select Tasbih Type',
     'completedTapRestart': 'Completed — Tap Restart to begin again',
     'zikrReminders': 'Zikr Reminders',
@@ -457,6 +461,7 @@ class AppLocalizations {
     'pauseAll': 'إيقاف الكل',
     'resumeAll': 'استئناف الكل',
     'playAllFavorites': 'تشغيل كل المفضلة',
+    'readAll': 'قراءة الكل',
     'retry': 'إعادة المحاولة',
     'goBack': 'رجوع',
     'restart': 'إعادة',
@@ -482,6 +487,7 @@ class AppLocalizations {
     'sessionComplete': 'جلسة مكتملة',
     'mayAllahAccept': 'تقبل الله منك',
     'tapToCount': 'اضغط للعد',
+    'longPressToReset': 'اضغط مطولاً لإعادة تعيين',
     'selectTasbihType': 'اختر نوع التسبيح',
     'completedTapRestart': 'مكتمل — اضغط إعادة للبدء من جديد',
     'zikrReminders': 'تذكير الأذكار',
