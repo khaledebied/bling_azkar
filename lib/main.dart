@@ -47,7 +47,13 @@ void main() async {
   };
   
   // Check for initial notification (when app is opened from notification)
-  // This will be handled after app initialization
+  final initialNotification = await notificationService.getInitialNotification();
+  if (initialNotification != null) {
+    debugPrint('App opened from notification: ${initialNotification.payload}');
+    if (initialNotification.payload == 'zikr_reminder') {
+      await _handleZikrReminderTapFromNotification(notificationService);
+    }
+  }
   
   // Start periodic reminders if enabled
   final storage = StorageService();
@@ -57,6 +63,31 @@ void main() async {
   }
 
   runApp(const ProviderScope(child: BlingAzkarApp()));
+}
+
+// Handle zikr reminder tap from notification (top-level function)
+Future<void> _handleZikrReminderTapFromNotification(NotificationService notificationService) async {
+  final storage = StorageService();
+  final prefs = storage.getPreferences();
+  
+  // If reminders are not enabled, activate them
+  if (!prefs.notificationsEnabled) {
+    // Request permissions first
+    final hasPermission = await notificationService.requestPermissions();
+    if (hasPermission) {
+      // Activate reminders
+      await notificationService.startPeriodicReminders();
+      
+      // Update preferences
+      await storage.savePreferences(prefs.copyWith(notificationsEnabled: true));
+      
+      debugPrint('✅ Reminders activated from notification tap');
+    } else {
+      debugPrint('⚠️ Permission denied - cannot activate reminders');
+    }
+  } else {
+    debugPrint('ℹ️ Reminders already enabled');
+  }
 }
 
 class BlingAzkarApp extends StatefulWidget {
