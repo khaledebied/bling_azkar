@@ -88,7 +88,13 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  sliver: SliverList(
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.0, // Square cards for better grid layout
+                    ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final categoryKey = widget.categories[index];
@@ -101,26 +107,23 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                           builder: (context, value, child) {
                             return Opacity(
                               opacity: value,
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - value)),
+                              child: Transform.scale(
+                                scale: 0.8 + (0.2 * value),
                                 child: child,
                               ),
                             );
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: CategoryCard(
-                              title: categoryName,
-                              titleAr: categoryName,
-                              heroTag: 'category_list_$categoryKey', // Use different tag for list view
-                              onTap: () {
-                                _showCategoryAudioSheet(
-                                  context,
-                                  categoryKey,
-                                  categoryName,
-                                );
-                              },
-                            ),
+                          child: CategoryCard(
+                            title: categoryName,
+                            titleAr: categoryName,
+                            heroTag: 'category_grid_$categoryKey',
+                            onTap: () {
+                              _showCategoryAudioSheet(
+                                context,
+                                categoryKey,
+                                categoryName,
+                              );
+                            },
                           ),
                         );
                       },

@@ -174,19 +174,24 @@ class _CategoryCardState extends State<CategoryCard>
             minHeight: 100,
           ),
           margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-            // Gradient background matching tab header
-            gradient: isDarkMode
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppTheme.primaryGreen.withValues(alpha: 0.3),
-                      AppTheme.primaryTeal.withValues(alpha: 0.25),
+          decoration: BoxDecoration(
+            // Gradient background matching header - very light pastel green to white (vertical)
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode
+                  ? [
+                      AppTheme.primaryGreen.withValues(alpha: 0.25),
+                      AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      AppTheme.cardDark,
+                    ]
+                  : [
+                      AppTheme.primaryGreen.withValues(alpha: 0.2), // Very light pastel green at top
+                      AppTheme.primaryGreen.withValues(alpha: 0.1),
+                      Colors.white, // Pure white at bottom
                     ],
-                  )
-                : AppTheme.primaryGradient,
-          borderRadius: BorderRadius.circular(20),
+            ),
+            borderRadius: BorderRadius.circular(20),
             border: isDarkMode
                 ? Border.all(
                     color: Colors.white.withValues(alpha: 0.1),
