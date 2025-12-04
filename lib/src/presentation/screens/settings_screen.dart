@@ -15,14 +15,36 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBindingObserver {
   final _storage = StorageService();
   late UserPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _prefs = _storage.getPreferences();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Refresh preferences when app comes to foreground
+    // This catches changes made from notification taps
+    if (state == AppLifecycleState.resumed) {
+      if (mounted) {
+        setState(() {
+          _prefs = _storage.getPreferences();
+        });
+      }
+    }
   }
 
   void _updatePreferences(UserPreferences newPrefs) {

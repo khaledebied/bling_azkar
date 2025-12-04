@@ -154,6 +154,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
     return prefs.favoriteZikrIds.contains(zikrId);
   }
 
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.isDarkMode;
@@ -205,58 +206,67 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                             ),
                           ),
                         ),
-                        // Header
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  gradient: AppTheme.primaryGradient,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.headphones,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.categoryName,
-                                      style: AppTheme.titleLarge.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: context.textPrimary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '$audioCount audios • $totalPlaylistItems items',
-                                      style: AppTheme.bodySmall.copyWith(
-                                        color: context.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Play All button
+                        // Stats and Play All button (matching favorites tab style)
                         if (!isLoading && azkar.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                            child: _buildPlayAllButton(totalPlaylistItems),
+                            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Category title
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    widget.categoryName,
+                                    style: AppTheme.titleLarge.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: context.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                // Stats container
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppTheme.primaryGreen.withValues(alpha: 0.15),
+                                        AppTheme.primaryTeal.withValues(alpha: 0.15),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.headphones, color: AppTheme.primaryGreen, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '$audioCount audio${audioCount > 1 ? 's' : ''}',
+                                        style: AppTheme.bodyMedium.copyWith(
+                                          color: AppTheme.primaryGreen,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        '$totalPlaylistItems total items',
+                                        style: AppTheme.bodySmall.copyWith(
+                                          color: context.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                // Play All button
+                                _buildPlayAllButton(totalPlaylistItems),
+                              ],
+                            ),
                           ),
-                        // Divider
-                        const Divider(height: 24, thickness: 1),
                         // Audio list
                         Flexible(
                           child: _buildAzkarList(azkar, isLoading),

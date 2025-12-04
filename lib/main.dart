@@ -1,6 +1,7 @@
 import 'package:bling_azkar/src/data/services/audio_player_service.dart';
 import 'package:bling_azkar/src/data/services/notification_service.dart';
 import 'package:bling_azkar/src/data/services/storage_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -35,6 +36,19 @@ void main() async {
   // Initialize SharedPreferences for Tasbih
   await SharedPreferences.getInstance();
   
+  // Set up notification tap handler before app starts
+  notificationService.onNotificationTapped = (NotificationResponse response) {
+    debugPrint('Notification tapped with payload: ${response.payload}');
+    
+    // If it's a zikr reminder notification, activate reminders
+    if (response.payload == 'zikr_reminder') {
+      _handleZikrReminderTapFromNotification(notificationService);
+    }
+  };
+  
+  // Check for initial notification (when app is opened from notification)
+  // This will be handled after app initialization
+  
   // Start periodic reminders if enabled
   final storage = StorageService();
   final prefs = storage.getPreferences();
@@ -68,6 +82,75 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserv
     _loadThemeMode();
     _loadTextScale();
     _appState.addListener(_onAppStateChanged);
+    _setupNotificationTapHandler();
+  }
+
+  void _setupNotificationTapHandler() {
+    // Set up notification tap handler (for when app is already running)
+    _notificationService.onNotificationTapped = (NotificationResponse response) {
+      debugPrint('Notification tapped with payload: ${response.payload}');
+      
+      // If it's a zikr reminder notification, activate reminders
+      if (response.payload == 'zikr_reminder') {
+        _handleZikrReminderTap();
+      }
+    };
+    
+    // Check for initial notification (when app is opened from notification)
+    _checkInitialNotification();
+  }
+
+  Future<void> _checkInitialNotification() async {
+    final initialNotification = await _notificationService.getInitialNotification();
+    if (initialNotification != null) {
+      debugPrint('App opened from notification: ${initialNotification.payload}');
+      if (initialNotification.payload == 'zikr_reminder') {
+        await _handleZikrReminderTap();
+      }
+    }
+  }
+
+  Future<void> _handleZikrReminderTap() async {
+    final prefs = _storage.getPreferences();
+    
+    // If reminders are not enabled, activate them
+    if (!prefs.notificationsEnabled) {
+      // Request permissions first
+      final hasPermission = await _notificationService.requestPermissions();
+      if (hasPermission) {
+        // Activate reminders
+        await _notificationService.startPeriodicReminders();
+        
+        // Update preferences
+        final updatedPrefs = prefs.copyWith(notificationsEnabled: true);
+        await _storage.savePreferences(updatedPrefs);
+        
+        debugPrint('✅ Reminders activated from notification tap');
+        
+        // Show a message to user if app is in foreground
+        if (mounted && navigatorKey.currentContext != null) {
+          ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Reminders activated - Every 10 minutes ❤️',
+                style: AppTheme.bodyMedium.copyWith(color: Colors.white),
+              ),
+              backgroundColor: AppTheme.primaryGreen,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        
+        // Trigger UI update if needed
+        if (mounted) {
+          setState(() {});
+        }
+      } else {
+        debugPrint('⚠️ Permission denied - cannot activate reminders');
+      }
+    } else {
+      debugPrint('ℹ️ Reminders already enabled');
+    }
   }
 
   @override

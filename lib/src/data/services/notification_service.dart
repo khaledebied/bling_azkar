@@ -13,6 +13,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  
+  // Callback for notification tap handling
+  Function(NotificationResponse)? onNotificationTapped;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -35,14 +38,26 @@ class NotificationService {
     await _notifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     _isInitialized = true;
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    // Handle notification tap
-    // You can navigate to a specific screen or perform an action
+    debugPrint('Notification tapped: ${response.payload}');
+    
+    // Call the callback if set
+    if (onNotificationTapped != null) {
+      onNotificationTapped!(response);
+    }
+  }
+
+  @pragma('vm:entry-point')
+  static void notificationTapBackground(NotificationResponse response) {
+    debugPrint('Notification tapped in background: ${response.payload}');
+    // Background notification tap handling
+    NotificationService()._onNotificationTapped(response);
   }
 
   Future<bool> requestPermissions() async {
@@ -147,6 +162,7 @@ class NotificationService {
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
+          payload: 'zikr_reminder', // Payload to identify zikr reminder notifications
           );
           notificationCount++;
           notificationId++;
@@ -186,6 +202,15 @@ class NotificationService {
       debugPrint('⚠️ Low notification count (${pendingNotifications.length}), rescheduling...');
       await startPeriodicReminders();
     }
+  }
+
+  // Get initial notification when app is opened from notification
+  Future<NotificationResponse?> getInitialNotification() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    final launchDetails = await _notifications.getNotificationAppLaunchDetails();
+    return launchDetails?.notificationResponse;
   }
 
   Future<void> stopPeriodicReminders() async {
