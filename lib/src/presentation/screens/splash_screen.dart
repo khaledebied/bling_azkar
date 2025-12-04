@@ -128,7 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     children: [
                       Text(
-                        'Bling Azkar',
+                        'Noor',
                         style: AppTheme.headlineLarge.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -137,7 +137,7 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Daily Adhkar & Dua',
+                        'Daily Azkar',
                         style: AppTheme.bodyLarge.copyWith(
                           color: Colors.white.withValues(alpha: 0.8),
                           letterSpacing: 0.5,

@@ -82,6 +82,9 @@ dev_dependencies:
   mocktail: ^1.0.4
   integration_test:
     sdk: flutter
+  
+  # App Icons
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -91,3 +94,11 @@ flutter:
     - assets/audio/
     - assets/lottie/
     - assets/icons/
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

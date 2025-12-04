@@ -196,7 +196,7 @@ class AppLocalizations {
 
   // English strings
   static const Map<String, String> _englishStrings = {
-    'appName': 'Bling Azkar',
+    'appName': 'Noor - نُور',
     'ok': 'OK',
     'cancel': 'Cancel',
     'save': 'Save',
@@ -348,7 +348,7 @@ class AppLocalizations {
 
   // Arabic strings
   static const Map<String, String> _arabicStrings = {
-    'appName': 'بِلينج أذكار',
+    'appName': 'Noor - نُور',
     'ok': 'موافق',
     'cancel': 'إلغاء',
     'save': 'حفظ',

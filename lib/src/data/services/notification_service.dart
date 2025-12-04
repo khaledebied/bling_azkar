@@ -122,6 +122,8 @@ class NotificationService {
       playSound: true,
       ongoing: false,
       channelShowBadge: true,
+      icon: '@drawable/ic_notification',
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -232,6 +234,8 @@ class NotificationService {
       channelDescription: 'Test notifications',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@drawable/ic_notification',
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -268,6 +272,8 @@ class NotificationService {
       channelDescription: 'Test notifications',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@drawable/ic_notification',
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
     const iosDetails = DarwinNotificationDetails(
