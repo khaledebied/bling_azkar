@@ -173,10 +173,20 @@ class _CategoryCardState extends State<CategoryCard>
           ),
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            // Gray background with opacity
-            color: isDarkMode
-                ? Colors.grey.shade800.withValues(alpha: 0.6)
-                : Colors.grey.shade200.withValues(alpha: 0.7),
+            // White to gray gradient
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode
+                  ? [
+                      Colors.grey.shade700.withValues(alpha: 0.8),
+                      Colors.grey.shade800.withValues(alpha: 0.9),
+                    ]
+                  : [
+                      Colors.white,
+                      Colors.grey.shade100,
+                    ],
+            ),
             borderRadius: BorderRadius.circular(20),
             border: isDarkMode
                 ? Border.all(
@@ -184,7 +194,7 @@ class _CategoryCardState extends State<CategoryCard>
                     width: 1,
                   )
                 : Border.all(
-                    color: Colors.grey.shade300.withValues(alpha: 0.3),
+                    color: Colors.grey.shade300.withValues(alpha: 0.5),
                     width: 1,
                   ),
             boxShadow: [
