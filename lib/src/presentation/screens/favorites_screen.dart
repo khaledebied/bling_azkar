@@ -55,22 +55,64 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
+    final isArabic = l10n.isArabic;
+    final isDarkMode = context.isDarkMode;
     // Always watch the provider to ensure updates
     final favoritesAsync = ref.watch(favoriteAzkarProvider);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              _buildAppBar(l10n),
-              favoritesAsync.when(
-                loading: () => _buildShimmerLoading(),
-                error: (error, stack) => _buildError(error),
-                data: (favorites) => _buildFavoritesList(favorites),
-              ),
-            ],
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            isArabic ? 'المفضلة' : 'Favorites',
+            style: AppTheme.titleMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDarkMode
+                    ? [
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.transparent,
+                      ]
+                    : [
+                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+              ),
+            ),
+          ),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? const Color(0xFF0F1419)
+                : const Color(0xFFF5F5F5),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Stack(
+              children: [
+                CustomScrollView(
+                  slivers: [
+                    favoritesAsync.when(
+                      loading: () => _buildShimmerLoading(),
+                      error: (error, stack) => _buildError(error),
+                      data: (favorites) => _buildFavoritesList(favorites),
+                    ),
+                  ],
+                ),
           // Floating playlist player
           StreamBuilder<PlaylistState>(
             stream: _playlistService.stateStream,
@@ -94,85 +136,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 ),
               );
             },
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppBar(AppLocalizations l10n) {
-    return SliverAppBar(
-      floating: true,
-      snap: true,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      expandedHeight: 200,
-      collapsedHeight: 70,
-      flexibleSpace: LayoutBuilder(
-        builder: (context, constraints) {
-          return FlexibleSpaceBar(
-            background: Container(
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.favorite,
-                              color: Colors.white,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'My Favorites',
-                                  style: AppTheme.titleLarge.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 28,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Your saved azkar',
-                                  style: AppTheme.bodyMedium.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
+        ),
       ),
     );
   }
@@ -180,10 +147,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   Widget _buildFavoritesList(List<Zikr> favorites) {
     if (favorites.isEmpty) {
       return SliverFillRemaining(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        hasScrollBody: false,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 80.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
@@ -223,6 +193,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             ],
           ),
         ),
+      ),
       );
     }
 
@@ -232,7 +203,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         children: [
           // Stats and Play All button
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 80.0, 16.0, 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -407,7 +378,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   Widget _buildShimmerLoading() {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 80.0, 16.0, 16.0),
         child: Shimmer.fromColors(
           baseColor: Colors.grey.shade300,
           highlightColor: Colors.grey.shade100,
@@ -437,10 +408,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   Widget _buildError(Object error) {
     return SliverFillRemaining(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      hasScrollBody: false,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 80.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
             Icon(
               Icons.error_outline,
               size: 64,
@@ -463,6 +437,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -320,9 +320,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     
     return SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
           child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
             gradient: isDarkMode
                 ? LinearGradient(
@@ -440,7 +440,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -490,7 +490,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 2.0, 16.0, 16.0),
                 child: GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),

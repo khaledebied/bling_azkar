@@ -104,23 +104,7 @@ class _QuranScreenState extends State<QuranScreen>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: Icon(
-                isArabic ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
+          automaticallyImplyLeading: false,
           title: Text(
             isArabic ? 'القرآن الكريم' : 'Quran Kareem',
             style: AppTheme.titleMedium.copyWith(
@@ -277,13 +261,7 @@ class _QuranScreenState extends State<QuranScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: isDarkMode ? Colors.white : Colors.black87,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'Quran Kareem',
           style: AppTheme.titleMedium.copyWith(

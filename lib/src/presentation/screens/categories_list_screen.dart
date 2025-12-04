@@ -109,23 +109,17 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                           },
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: Hero(
-                              tag: 'category_$categoryKey',
-                              child: Material(
-                                color: Colors.transparent,
-                                child: CategoryCard(
-                                  title: categoryName,
-                                  titleAr: categoryName,
-                                  heroTag: 'category_$categoryKey',
-                                  onTap: () {
-                                    _showCategoryAudioSheet(
-                                      context,
-                                      categoryKey,
-                                      categoryName,
-                                    );
-                                  },
-                                ),
-                              ),
+                            child: CategoryCard(
+                              title: categoryName,
+                              titleAr: categoryName,
+                              heroTag: 'category_list_$categoryKey', // Use different tag for list view
+                              onTap: () {
+                                _showCategoryAudioSheet(
+                                  context,
+                                  categoryKey,
+                                  categoryName,
+                                );
+                              },
                             ),
                           ),
                         );
@@ -141,33 +135,28 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
               ],
             ),
             // Floating playlist player
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: StreamBuilder<PlaylistState>(
-                stream: _playlistService.stateStream,
-                initialData: PlaylistState.idle,
-                builder: (context, snapshot) {
-                  final state = snapshot.data ?? PlaylistState.idle;
-                  final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
-                  
-                  return AnimatedPositioned(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOutCubic,
-                    bottom: isVisible ? 0 : -100,
-                    left: 0,
-                    right: 0,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
-                      opacity: isVisible ? 1.0 : 0.0,
-                      child: FloatingPlaylistPlayer(
-                        playlistService: _playlistService,
-                      ),
+            StreamBuilder<PlaylistState>(
+              stream: _playlistService.stateStream,
+              initialData: PlaylistState.idle,
+              builder: (context, snapshot) {
+                final state = snapshot.data ?? PlaylistState.idle;
+                final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
+                
+                return AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  bottom: isVisible ? 0 : -100,
+                  left: 0,
+                  right: 0,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: isVisible ? 1.0 : 0.0,
+                    child: FloatingPlaylistPlayer(
+                      playlistService: _playlistService,
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ],
         ),
