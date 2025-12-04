@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
+import '../../utils/localizations.dart';
 
 class CategoryCard extends StatefulWidget {
   final String title;
@@ -156,143 +157,29 @@ class _CategoryCardState extends State<CategoryCard>
   }
 
   LinearGradient _getCategoryGradient(String categoryName, BuildContext context) {
-    final lowerName = categoryName.toLowerCase();
-    final hash = categoryName.hashCode;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    // Softer, more comfortable gradients for dark mode
-    if (isDarkMode) {
-      final darkGradients = [
-        // Soft Emerald gradients (reduced opacity)
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF10B981).withValues(alpha: 0.25),
-            const Color(0xFF059669).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Teal/Cyan gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF14B8A6).withValues(alpha: 0.25),
-            const Color(0xFF06B6D4).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Blue gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF3B82F6).withValues(alpha: 0.25),
-            const Color(0xFF60A5FA).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Amber/Gold gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFFF59E0B).withValues(alpha: 0.25),
-            const Color(0xFFFBBF24).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Purple gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF8B5CF6).withValues(alpha: 0.25),
-            const Color(0xFFA78BFA).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Rose/Pink gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFFEC4899).withValues(alpha: 0.25),
-            const Color(0xFFF472B6).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Indigo gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF6366F1).withValues(alpha: 0.25),
-            const Color(0xFF818CF8).withValues(alpha: 0.2),
-          ],
-        ),
-        // Soft Emerald to Teal gradients
-        LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF10B981).withValues(alpha: 0.25),
-            const Color(0xFF14B8A6).withValues(alpha: 0.2),
-          ],
-        ),
-      ];
-      return darkGradients[hash.abs() % darkGradients.length];
+    // Fixed gradient for all cards in light mode - using app's primary colors
+    if (!isDarkMode) {
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF10B981), // AppTheme.primaryGreen
+          Color(0xFF14B8A6), // AppTheme.primaryTeal
+        ],
+      );
     }
     
-    // Lighter, softer gradients for light mode (reduced saturation)
-    final lightGradients = [
-      // Soft Emerald gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF6EE7B7), Color(0xFF34D399)],
-      ),
-      // Soft Teal/Cyan gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF5EEAD4), Color(0xFF2DD4BF)],
-      ),
-      // Soft Blue gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF93C5FD), Color(0xFF60A5FA)],
-      ),
-      // Soft Amber/Gold gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFFCD34D), Color(0xFFFBBF24)],
-      ),
-      // Soft Purple gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFC4B5FD), Color(0xFFA78BFA)],
-      ),
-      // Soft Rose/Pink gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFF9A8D4), Color(0xFFF472B6)],
-      ),
-      // Soft Indigo gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFA5B4FC), Color(0xFF818CF8)],
-      ),
-      // Soft Emerald to Teal gradients
-      const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF6EE7B7), Color(0xFF5EEAD4)],
-      ),
-    ];
-    
-    // Use hash to consistently pick a gradient for each category
-    return lightGradients[hash.abs() % lightGradients.length];
+    // Consistent gradient for dark mode - subtle and comfortable
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        const Color(0xFF10B981).withValues(alpha: 0.2), // Subtle green
+        const Color(0xFF14B8A6).withValues(alpha: 0.15), // Subtle teal
+      ],
+    );
   }
 
   @override
