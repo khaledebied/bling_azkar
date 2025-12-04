@@ -155,70 +155,151 @@ class _CategoryCardState extends State<CategoryCard>
     return Icons.menu_book;
   }
 
-  LinearGradient _getCategoryGradient(String categoryName) {
+  LinearGradient _getCategoryGradient(String categoryName, BuildContext context) {
     final lowerName = categoryName.toLowerCase();
     final hash = categoryName.hashCode;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    // Create consistent gradients based on category - More attractive colors
-    final gradients = [
-      // Vibrant Emerald gradients
+    // Softer, more comfortable gradients for dark mode
+    if (isDarkMode) {
+      final darkGradients = [
+        // Soft Emerald gradients (reduced opacity)
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF10B981).withValues(alpha: 0.25),
+            const Color(0xFF059669).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Teal/Cyan gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF14B8A6).withValues(alpha: 0.25),
+            const Color(0xFF06B6D4).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Blue gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF3B82F6).withValues(alpha: 0.25),
+            const Color(0xFF60A5FA).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Amber/Gold gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFF59E0B).withValues(alpha: 0.25),
+            const Color(0xFFFBBF24).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Purple gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+            const Color(0xFFA78BFA).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Rose/Pink gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFEC4899).withValues(alpha: 0.25),
+            const Color(0xFFF472B6).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Indigo gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF6366F1).withValues(alpha: 0.25),
+            const Color(0xFF818CF8).withValues(alpha: 0.2),
+          ],
+        ),
+        // Soft Emerald to Teal gradients
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF10B981).withValues(alpha: 0.25),
+            const Color(0xFF14B8A6).withValues(alpha: 0.2),
+          ],
+        ),
+      ];
+      return darkGradients[hash.abs() % darkGradients.length];
+    }
+    
+    // Lighter, softer gradients for light mode (reduced saturation)
+    final lightGradients = [
+      // Soft Emerald gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF10B981), Color(0xFF059669)],
+        colors: [Color(0xFF6EE7B7), Color(0xFF34D399)],
       ),
-      // Bright Teal/Cyan gradients
+      // Soft Teal/Cyan gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF14B8A6), Color(0xFF06B6D4)],
+        colors: [Color(0xFF5EEAD4), Color(0xFF2DD4BF)],
       ),
-      // Rich Blue gradients
+      // Soft Blue gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+        colors: [Color(0xFF93C5FD), Color(0xFF60A5FA)],
       ),
-      // Warm Amber/Gold gradients
+      // Soft Amber/Gold gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)],
+        colors: [Color(0xFFFCD34D), Color(0xFFFBBF24)],
       ),
-      // Purple gradients
+      // Soft Purple gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+        colors: [Color(0xFFC4B5FD), Color(0xFFA78BFA)],
       ),
-      // Rose/Pink gradients
+      // Soft Rose/Pink gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFEC4899), Color(0xFFF472B6)],
+        colors: [Color(0xFFF9A8D4), Color(0xFFF472B6)],
       ),
-      // Indigo gradients
+      // Soft Indigo gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
+        colors: [Color(0xFFA5B4FC), Color(0xFF818CF8)],
       ),
-      // Emerald to Teal gradients
+      // Soft Emerald to Teal gradients
       const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF10B981), Color(0xFF14B8A6)],
+        colors: [Color(0xFF6EE7B7), Color(0xFF5EEAD4)],
       ),
     ];
     
     // Use hash to consistently pick a gradient for each category
-    return gradients[hash.abs() % gradients.length];
+    return lightGradients[hash.abs() % lightGradients.length];
   }
 
   @override
   Widget build(BuildContext context) {
     final icon = _getCategoryIcon(widget.titleAr);
-    final gradient = _getCategoryGradient(widget.titleAr);
+    final gradient = _getCategoryGradient(widget.titleAr, context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final cardWidget = GestureDetector(
       onTapDown: (_) {
@@ -235,58 +316,76 @@ class _CategoryCardState extends State<CategoryCard>
         setState(() => _isPressed = false);
         _controller.reverse();
       },
-      child: ScaleTransition(
+        child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
           width: 170,
           height: 140, // Fixed height to match ListView height
           margin: const EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
-            gradient: gradient,
+            gradient: isDarkMode ? null : gradient,
+            color: isDarkMode ? Theme.of(context).cardColor : null,
             borderRadius: BorderRadius.circular(24),
+            border: isDarkMode
+                ? Border.all(
+                    color: gradient.colors.first.withValues(alpha: 0.3),
+                    width: 1.5,
+                  )
+                : null,
             boxShadow: [
-              BoxShadow(
-                color: gradient.colors.first.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-                spreadRadius: 0,
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
+              if (isDarkMode)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 0,
+                )
+              else ...[
+                BoxShadow(
+                  color: gradient.colors.first.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Stack(
               children: [
-                // Decorative circles
-                Positioned(
-                  top: -20,
-                  right: -20,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                // Decorative circles (only in light mode)
+                if (!isDarkMode) ...[
+                  Positioned(
+                    top: -20,
+                    right: -20,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  bottom: -10,
-                  left: -10,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                  Positioned(
+                    bottom: -10,
+                    left: -10,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                     ),
                   ),
-                ),
+                ],
                 // Content
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -299,16 +398,27 @@ class _CategoryCardState extends State<CategoryCard>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          gradient: isDarkMode
+                              ? gradient
+                              : LinearGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.25),
+                                    Colors.white.withValues(alpha: 0.15),
+                                  ],
+                                ),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: isDarkMode
+                                ? gradient.colors.first.withValues(alpha: 0.4)
+                                : Colors.white.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                         ),
                         child: Icon(
                           icon,
-                          color: Colors.white,
+                          color: isDarkMode
+                              ? Colors.white
+                              : gradient.colors.first,
                           size: 28,
                         ),
                       ),
@@ -323,7 +433,9 @@ class _CategoryCardState extends State<CategoryCard>
                               child: Text(
                                 widget.titleAr,
                                 style: AppTheme.arabicSmall.copyWith(
-                                  color: Colors.white,
+                                  color: isDarkMode
+                                      ? Theme.of(context).textTheme.bodyLarge?.color
+                                      : Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   height: 1.3,
@@ -339,7 +451,9 @@ class _CategoryCardState extends State<CategoryCard>
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: isDarkMode
+                                    ? gradient.colors.first.withValues(alpha: 0.2)
+                                    : Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -347,14 +461,18 @@ class _CategoryCardState extends State<CategoryCard>
                                 children: [
                                   Icon(
                                     Icons.arrow_forward_ios,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: isDarkMode
+                                        ? gradient.colors.first
+                                        : Colors.white.withValues(alpha: 0.9),
                                     size: 10,
                                   ),
                                   const SizedBox(width: 3),
                                   Text(
                                     'Explore',
                                     style: AppTheme.bodySmall.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: isDarkMode
+                                          ? gradient.colors.first
+                                          : Colors.white.withValues(alpha: 0.9),
                                       fontSize: 10,
                                       fontWeight: FontWeight.w500,
                                     ),

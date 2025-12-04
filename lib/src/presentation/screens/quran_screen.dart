@@ -100,117 +100,70 @@ class _QuranScreenState extends State<QuranScreen>
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDarkMode
-                  ? [
-                      const Color(0xFF1A3A2E),
-                      const Color(0xFF0D2921),
-                    ]
-                  : [
-                      AppTheme.primaryGreen,
-                      AppTheme.primaryTeal,
-                    ],
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: Icon(
+                isArabic ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
+          title: Text(
+            isArabic ? 'القرآن الكريم' : 'Quran Kareem',
+            style: AppTheme.titleMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDarkMode
+                    ? [
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.transparent,
+                      ]
+                    : [
+                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+              ),
+            ),
+          ),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? const Color(0xFF0F1419)
+                : const Color(0xFFF5F5F5),
+          ),
           child: SafeArea(
-            child: Column(
-              children: [
-                // Custom App Bar
-                RepaintBoundary(
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? Colors.white.withValues(alpha: 0.1)
-                                    : Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(
-                                Icons.menu_book_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    isArabic ? 'القرآن الكريم' : 'Quran Kareem',
-                                    style: AppTheme.titleLarge.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    isArabic ? 'القرآن الكريم' : 'The Holy Quran',
-                                    style: AppTheme.bodyMedium.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Quran Library Screen
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Container(
-                        margin: const EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDarkMode
-                              ? const Color(0xFF1E1E1E)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                alpha: isDarkMode ? 0.4 : 0.15,
-                              ),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                              spreadRadius: 5,
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: _buildQuranLibrary(
-                          context,
-                          isArabic,
-                          isDarkMode,
-                          screenWidth,
-                          screenHeight,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            top: false,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: _buildQuranLibrary(
+                context,
+                isArabic,
+                isDarkMode,
+                screenWidth,
+                screenHeight,
+              ),
             ),
           ),
         ),
@@ -226,28 +179,35 @@ class _QuranScreenState extends State<QuranScreen>
     double screenHeight,
   ) {
     try {
-      return QuranLibraryScreen(
-        parentContext: context,
-        isDark: isDarkMode,
-        showAyahBookmarkedIcon: true,
-        appLanguageCode: isArabic ? 'ar' : 'en',
-        ayahIconColor: AppTheme.primaryGreen,
-        backgroundColor: isDarkMode
-            ? const Color(0xFF1E1E1E)
-            : Colors.white,
-        textColor: isDarkMode
-            ? Colors.white.withValues(alpha: 0.95)
-            : Colors.black87,
-        isFontsLocal: false,
-        // Custom styling for better UI/UX
-        tafsirStyle: TafsirStyle.defaults(
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: isDarkMode
+            ? const Color(0xFF0F1419)
+            : const Color(0xFFF5F5F5),
+        child: QuranLibraryScreen(
+          parentContext: context,
           isDark: isDarkMode,
-          context: context,
-        ).copyWith(
-          widthOfBottomSheet: screenWidth * 0.95,
-          heightOfBottomSheet: screenHeight * 0.85,
-          changeTafsirDialogHeight: screenHeight * 0.85,
-          changeTafsirDialogWidth: screenWidth * 0.9,
+          showAyahBookmarkedIcon: true,
+          appLanguageCode: isArabic ? 'ar' : 'en',
+          ayahIconColor: AppTheme.primaryGreen,
+          backgroundColor: isDarkMode
+              ? const Color(0xFF0F1419)
+              : const Color(0xFFF5F5F5),
+          textColor: isDarkMode
+              ? Colors.white.withValues(alpha: 0.95)
+              : Colors.black87,
+          isFontsLocal: false,
+          // Custom styling for better UI/UX - full screen
+          tafsirStyle: TafsirStyle.defaults(
+            isDark: isDarkMode,
+            context: context,
+          ).copyWith(
+            widthOfBottomSheet: screenWidth * 0.95,
+            heightOfBottomSheet: screenHeight * 0.85,
+            changeTafsirDialogHeight: screenHeight * 0.85,
+            changeTafsirDialogWidth: screenWidth * 0.9,
+          ),
         ),
       );
     } catch (e) {
@@ -311,107 +271,112 @@ class _QuranScreenState extends State<QuranScreen>
 
   Widget _buildErrorState(BuildContext context, bool isDarkMode) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode
-                ? [
-                    const Color(0xFF1A3A2E),
-                    const Color(0xFF0D2921),
-                  ]
-                : [
-                    AppTheme.primaryGreen,
-                    AppTheme.primaryTeal,
-                  ],
+      backgroundColor: isDarkMode
+          ? const Color(0xFF0F1419)
+          : const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_rounded,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Quran Kareem',
+          style: AppTheme.titleMedium.copyWith(
+            color: isDarkMode ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: Container(
-              margin: const EdgeInsets.all(24),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? const Color(0xFF1E1E1E)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(
-                      alpha: isDarkMode ? 0.4 : 0.15,
-                    ),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? const Color(0xFF1E1E1E)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: isDarkMode ? 0.4 : 0.15,
                   ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red.shade400,
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Quran Library Error',
+                  style: AppTheme.titleLarge.copyWith(
+                    color: isDarkMode ? Colors.white : context.textPrimary,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Quran Library Error',
-                    style: AppTheme.titleLarge.copyWith(
-                      color: isDarkMode ? Colors.white : context.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage,
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: isDarkMode
+                        ? Colors.white.withValues(alpha: 0.7)
+                        : context.textSecondary,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _errorMessage,
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: isDarkMode
-                          ? Colors.white.withValues(alpha: 0.7)
-                          : context.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _hasError = false;
-                            _errorMessage = '';
-                          });
-                          _checkInitialization();
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _hasError = false;
+                          _errorMessage = '';
+                        });
+                        _checkInitialization();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('Go Back'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Go Back'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

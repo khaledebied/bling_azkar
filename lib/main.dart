@@ -52,9 +52,10 @@ class BlingAzkarApp extends StatefulWidget {
   State<BlingAzkarApp> createState() => _BlingAzkarAppState();
 }
 
-class _BlingAzkarAppState extends State<BlingAzkarApp> {
+class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserver {
   final _storage = StorageService();
   final _appState = AppStateNotifier();
+  final _notificationService = NotificationService();
   Locale _locale = const Locale('en');
   ThemeMode _themeMode = ThemeMode.system;
   double _textScale = 1.0;
@@ -62,6 +63,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadLanguage();
     _loadThemeMode();
     _loadTextScale();
@@ -70,8 +72,22 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _appState.removeListener(_onAppStateChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // When app comes to foreground, check and reschedule notifications if needed
+    if (state == AppLifecycleState.resumed) {
+      final prefs = _storage.getPreferences();
+      if (prefs.notificationsEnabled) {
+        _notificationService.rescheduleIfNeeded();
+      }
+    }
   }
 
   void _onAppStateChanged() {

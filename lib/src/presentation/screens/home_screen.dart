@@ -83,7 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ],
-      ),
+    ),
     );
   }
 
@@ -99,10 +99,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       collapsedHeight: 70,
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
+          final isDarkMode = context.isDarkMode;
           return FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
+                gradient: isDarkMode
+                    ? AppTheme.darkBackgroundGradient
+                    : AppTheme.primaryGradient,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -145,7 +148,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: Icon(
+              Icons.settings_outlined,
+              color: Colors.white,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -309,23 +315,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildWelcomeBanner() {
+    final isDarkMode = context.isDarkMode;
+    
     return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Container(
           padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-            gradient: AppTheme.goldGradient,
+            gradient: isDarkMode
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.primaryGreen.withValues(alpha: 0.15),
+                      AppTheme.primaryTeal.withValues(alpha: 0.15),
+                    ],
+                  )
+                : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                      AppTheme.primaryGreen.withValues(alpha: 0.1),
+                      AppTheme.primaryTeal.withValues(alpha: 0.1),
+                    ],
+                  ),
+            color: isDarkMode ? context.cardColor : Colors.white,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDarkMode
+                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                  : AppTheme.primaryGreen.withValues(alpha: 0.15),
+              width: 1,
+            ),
               boxShadow: [
                 BoxShadow(
-                color: AppTheme.accentGold.withOpacity(0.3),
+                color: isDarkMode
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : AppTheme.primaryGreen.withValues(alpha: 0.1),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
                 ),
               ],
             ),
-          child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   child: Column(
@@ -333,31 +366,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       Text(
                       'Daily Azkar',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Keep your heart close to Allah',
-                      style: TextStyle(
-                        fontSize: 14,
-                          color: Colors.white,
-                      ),
-                            ),
-                          ],
+                        style: AppTheme.titleLarge.copyWith(
+                        color: context.textPrimary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-              Icon(
-                Icons.auto_awesome,
-                size: 48,
-                color: Colors.white,
+                      const SizedBox(height: 8),
+                      Text(
+                      'Keep your heart close to Allah',
+                        style: AppTheme.bodyMedium.copyWith(
+                        color: context.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                  size: 32,
+                    color: Colors.white,
+                  ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -408,11 +453,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       decoration: BoxDecoration(
                         gradient: AppTheme.primaryGradient,
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
                         '${categoriesList.length} items',
                         style: AppTheme.bodySmall.copyWith(
-                        color: Colors.white,
+                          color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -455,12 +507,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildShimmerLoading() {
+    final isDarkMode = context.isDarkMode;
+    
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Shimmer.fromColors(
-          baseColor: Colors.grey.shade300,
-          highlightColor: Colors.grey.shade100,
+          baseColor: isDarkMode
+              ? Colors.grey.shade800
+              : Colors.grey.shade300,
+          highlightColor: isDarkMode
+              ? Colors.grey.shade700
+              : Colors.grey.shade100,
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -474,7 +532,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             itemBuilder: (context, index) {
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDarkMode ? context.cardColor : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
               );
@@ -490,28 +548,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final azkarAsync = ref.watch(searchedAzkarProvider);
 
     return azkarAsync.when(
-      loading: () => SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Column(
-              children: List.generate(
-                5,
-                (index) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+      loading: () {
+        final isDarkMode = context.isDarkMode;
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Shimmer.fromColors(
+              baseColor: isDarkMode
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade300,
+              highlightColor: isDarkMode
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade100,
+              child: Column(
+                children: List.generate(
+                  5,
+                  (index) => Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? context.cardColor : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
       error: (error, stack) => SliverToBoxAdapter(
         child: Center(
           child: Padding(

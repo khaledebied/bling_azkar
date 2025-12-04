@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -49,9 +50,18 @@ class NotificationService {
       await initialize();
     }
 
-    // For Android 13+
-    final status = await Permission.notification.request();
-    return status.isGranted;
+    // For Android 13+ - request notification permission
+    final notificationStatus = await Permission.notification.request();
+    
+    // For Android 12+ - request exact alarm permission (required for exact scheduling)
+    if (await Permission.scheduleExactAlarm.isDenied) {
+      final exactAlarmStatus = await Permission.scheduleExactAlarm.request();
+      if (!exactAlarmStatus.isGranted) {
+        debugPrint('⚠️ Exact alarm permission denied - notifications may not work reliably');
+      }
+    }
+    
+    return notificationStatus.isGranted;
   }
 
   // Start periodic reminders every 10 minutes
@@ -60,22 +70,31 @@ class NotificationService {
       await initialize();
     }
 
-    await _cancelAllNotifications();
+    // Don't cancel all - check if we need to reschedule
+    final pendingNotifications = await _notifications.pendingNotificationRequests();
+    
+    // If we have less than 50 pending notifications, reschedule
+    if (pendingNotifications.length < 50) {
+      await _cancelAllNotifications();
 
-    // Schedule 10-minute reminders
-    await _schedulePeriodicNotification(
-      id: 1,
-      title: 'وقت الذكر',
-      body: 'لا تنسى ذكر الله ❤️',
-      intervalMinutes: 10,
-    );
+      // Schedule notifications for the next 12 hours (72 notifications every 10 minutes)
+      // This ensures we don't hit Android's notification limit
+      await _scheduleMultipleNotifications(
+        title: 'وقت الذكر',
+        body: 'لا تنسى ذكر الله ❤️',
+        intervalMinutes: 10,
+        hoursAhead: 12, // Schedule for next 12 hours
+      );
+    } else {
+      debugPrint('Notifications already scheduled (${pendingNotifications.length} pending)');
+    }
   }
 
-  Future<void> _schedulePeriodicNotification({
-    required int id,
+  Future<void> _scheduleMultipleNotifications({
     required String title,
     required String body,
     required int intervalMinutes,
+    required int hoursAhead,
   }) async {
     const androidDetails = AndroidNotificationDetails(
       'zikr_reminders',
@@ -86,6 +105,8 @@ class NotificationService {
       showWhen: true,
       enableVibration: true,
       playSound: true,
+      ongoing: false,
+      channelShowBadge: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -99,43 +120,72 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    // Schedule the first notification after 10 minutes
-    final scheduledDate = tz.TZDateTime.now(tz.local).add(
-      Duration(minutes: intervalMinutes),
-    );
+    final now = tz.TZDateTime.now(tz.local);
+    final endTime = now.add(Duration(hours: hoursAhead));
+    int notificationId = 1000; // Start from 1000 to avoid conflicts
+    int notificationCount = 0;
 
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    // Calculate how many notifications we need
+    final totalNotifications = (hoursAhead * 60 / intervalMinutes).ceil();
 
-    // For Android, we need to reschedule after each notification
-    // This is a workaround for periodic notifications
-    _scheduleNextNotification(id, title, body, intervalMinutes);
+    debugPrint('Starting to schedule $totalNotifications notifications...');
+
+    // Schedule all notifications
+    for (int i = 0; i < totalNotifications; i++) {
+      final scheduledDate = now.add(Duration(minutes: intervalMinutes * (i + 1)));
+      
+      // Only schedule if within the time range and in the future
+      if (scheduledDate.isAfter(now) && 
+          (scheduledDate.isBefore(endTime) || scheduledDate.isAtSameMomentAs(endTime))) {
+        try {
+        await _notifications.zonedSchedule(
+          notificationId,
+            title,
+            body,
+            scheduledDate,
+          details,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          );
+          notificationCount++;
+          notificationId++;
+          
+          // Prevent ID overflow (Android typically supports up to 5000)
+          if (notificationId > 5000) {
+            notificationId = 1000;
+          }
+          
+          // Log progress every 10 notifications
+          if (notificationCount % 10 == 0) {
+            debugPrint('Scheduled $notificationCount/$totalNotifications notifications...');
+          }
+        } catch (e) {
+          debugPrint('Error scheduling notification $notificationId: $e');
+        }
+      }
+    }
+
+    debugPrint('✅ Successfully scheduled $notificationCount notifications every $intervalMinutes minutes for the next $hoursAhead hours');
+    
+    // Verify scheduled notifications
+    final pending = await _notifications.pendingNotificationRequests();
+    debugPrint('📋 Total pending notifications: ${pending.length}');
   }
 
-  Future<void> _scheduleNextNotification(
-    int id,
-    String title,
-    String body,
-    int intervalMinutes,
-  ) async {
-    // This will be called repeatedly to create a chain of notifications
-    await Future.delayed(Duration(minutes: intervalMinutes), () async {
-      await _schedulePeriodicNotification(
-        id: id,
-        title: title,
-        body: body,
-        intervalMinutes: intervalMinutes,
-      );
-    });
+  // Reschedule notifications when app comes to foreground
+  Future<void> rescheduleIfNeeded() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    final pendingNotifications = await _notifications.pendingNotificationRequests();
+    
+    // If we have less than 20 pending notifications, reschedule
+    if (pendingNotifications.length < 20) {
+      debugPrint('⚠️ Low notification count (${pendingNotifications.length}), rescheduling...');
+      await startPeriodicReminders();
+    }
   }
 
   Future<void> stopPeriodicReminders() async {
