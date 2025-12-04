@@ -46,7 +46,7 @@ class TasbihListScreen extends ConsumerWidget {
           title: Text(
             isArabic ? 'التسبيح الإلكتروني' : 'Electronic Tasbih',
             style: AppTheme.titleMedium.copyWith(
-              color: Colors.white,
+              color: Colors.black54,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -76,9 +76,9 @@ class TasbihListScreen extends ConsumerWidget {
                 : const Color(0xFFF5F5F5),
           ),
           child: SafeArea(
-            top: false,
+            top: true,
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
               itemCount: tasbihTypes.length,
               itemBuilder: (context, index) {
                 final type = tasbihTypes[index];

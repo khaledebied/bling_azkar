@@ -58,16 +58,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           title: Text(
             isArabic ? 'الأذكار' : 'Azkar',
             style: AppTheme.titleMedium.copyWith(
-              color: Colors.white,
+              color: Colors.black54,
               fontWeight: FontWeight.bold,
             ),
           ),
           centerTitle: true,
           actions: [
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.settings_outlined,
-                color: Colors.white,
+                color: Colors.black54,
               ),
         onPressed: () {
           Navigator.push(
@@ -80,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
           flexibleSpace: Container(
-            decoration: BoxDecoration(
+              decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -102,19 +102,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             color: isDarkMode
                 ? const Color(0xFF0F1419)
                 : const Color(0xFFF5F5F5),
-          ),
-          child: SafeArea(
-            top: false,
+              ),
+              child: SafeArea(
+            top: true,
             child: Stack(
               children: [
                 CustomScrollView(
                   controller: _scrollController,
                   slivers: [
                     SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
-                        child: Column(
-                          children: [
+                child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
+                  child: Column(
+                    children: [
                             if (!isSearching) ...[
                               _buildSearchBar(ref),
                               const SizedBox(height: 16),
@@ -123,11 +123,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ] else ...[
                               _buildSearchBar(ref),
                               const SizedBox(height: 16),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
                     if (!isSearching) ...[
                       _buildCategoriesGridSection(ref),
                     ] else ...[
@@ -154,13 +154,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         opacity: isVisible ? 1.0 : 0.0,
                         child: FloatingPlaylistPlayer(
                           playlistService: _playlistService,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
             ),
+          ),
+        );
+      },
+          ),
+        ],
+      ),
           ),
         ),
       ),
@@ -265,18 +265,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final isSearching = ref.watch(isSearchingProvider);
         
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
+        tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
             return Transform.scale(
               scale: 0.95 + (0.05 * value),
               child: Opacity(
-          opacity: value,
-                child: child,
-              ),
-            );
-          },
+            opacity: value,
+              child: child,
+            ),
+          );
+        },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
@@ -290,9 +290,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     )
                   : LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
                         Colors.white,
                         Colors.white.withValues(alpha: 0.95),
                       ],
