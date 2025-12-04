@@ -135,7 +135,7 @@ class _ZikrReadingScreenState extends State<ZikrReadingScreen>
     }
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
     final isDarkMode = context.isDarkMode;
     

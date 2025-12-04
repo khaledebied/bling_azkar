@@ -221,7 +221,7 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$UserPreferencesImpl implements _UserPreferences {
   const _$UserPreferencesImpl(
-      {@HiveField(0) this.language = 'en',
+      {@HiveField(0) this.language = 'ar',
       @HiveField(1) this.selectedSheikhId = 'sh01',
       @HiveField(2) this.notificationsEnabled = false,
       @HiveField(3) final List<String> favoriteZikrIds = const [],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// import '../../utils/localizations.dart';
 import '../../utils/theme.dart';
 
 class CategoryCard extends StatefulWidget {

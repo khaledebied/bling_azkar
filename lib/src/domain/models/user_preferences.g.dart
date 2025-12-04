@@ -9,7 +9,7 @@ part of 'user_preferences.dart';
 _$UserPreferencesImpl _$$UserPreferencesImplFromJson(
         Map<String, dynamic> json) =>
     _$UserPreferencesImpl(
-      language: json['language'] as String? ?? 'en',
+      language: json['language'] as String? ?? 'ar',
       selectedSheikhId: json['selectedSheikhId'] as String? ?? 'sh01',
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? false,
       favoriteZikrIds: (json['favoriteZikrIds'] as List<dynamic>?)
