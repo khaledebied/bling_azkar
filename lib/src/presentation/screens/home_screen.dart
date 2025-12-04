@@ -58,7 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           title: Text(
             isArabic ? 'الأذكار' : 'Azkar',
             style: AppTheme.titleMedium.copyWith(
-              color: Colors.black54,
+              color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -67,7 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             IconButton(
               icon: Icon(
                 Icons.settings_outlined,
-                color: Colors.black54,
+                color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
               ),
         onPressed: () {
           Navigator.push(
