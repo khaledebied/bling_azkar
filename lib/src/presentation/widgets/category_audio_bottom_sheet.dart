@@ -445,7 +445,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                               ? l10n.pauseAll
                               : l10n.resumeAll)
                           : l10n.playAll,
-                      style: AppTheme.titleSmall.copyWith(
+                      style: AppTheme.bodyMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -540,7 +540,7 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
                 Flexible(
                   child: Text(
                     l10n.readAll,
-                    style: AppTheme.titleSmall.copyWith(
+                    style: AppTheme.bodyMedium.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
