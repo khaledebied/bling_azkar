@@ -85,6 +85,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         appBar: AppBar(
           title: Text(l10n.settings),
           elevation: 0,
+          leading: IconButton(
+            icon: Icon(DirectionIcons.backArrow(context)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
         body: ListView(
           children: [

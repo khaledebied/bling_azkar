@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
+import '../../utils/direction_icons.dart';
 import '../../data/services/audio_player_service.dart';
 import 'player_screen.dart';
 
@@ -84,6 +85,10 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
     return SliverAppBar(
       expandedHeight: 200,
       pinned: true,
+      leading: IconButton(
+        icon: Icon(DirectionIcons.backArrow(context)),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           widget.zikr.title.en,
