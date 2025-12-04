@@ -305,8 +305,8 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserv
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''),
         Locale('ar', ''),
+        Locale('en', ''),
       ],
       builder: (context, child) {
         final l10n = AppLocalizations.ofWithFallback(context);

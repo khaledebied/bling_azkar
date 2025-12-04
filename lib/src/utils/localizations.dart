@@ -11,7 +11,7 @@ class AppLocalizations {
   }
 
   static AppLocalizations ofWithFallback(BuildContext context) {
-    return of(context) ?? AppLocalizations(const Locale('en'));
+    return of(context) ?? AppLocalizations(const Locale('ar'));
   }
 
   bool get isArabic => locale.languageCode == 'ar';
