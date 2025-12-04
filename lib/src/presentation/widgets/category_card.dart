@@ -25,7 +25,6 @@ class _CategoryCardState extends State<CategoryCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -45,114 +44,108 @@ class _CategoryCardState extends State<CategoryCard>
     super.dispose();
   }
 
-  /// Get icon for category - supports both Material icons and custom assets
-  /// For Flaticon icons, place them in assets/icons/ and reference by name
-  IconData _getCategoryIcon(String categoryName) {
+  /// Get emoji for category - using Muslim emojis from https://emojidb.org/muslim-emojis
+  /// All emojis are copied directly from the emojidb.org/muslim-emojis database
+  String _getCategoryEmoji(String categoryName) {
     final lowerName = categoryName.toLowerCase();
     
-    // Morning/Evening categories - use sun/moon icons
-    if (lowerName.contains('صباح') || lowerName.contains('صباح')) {
-      return Icons.wb_sunny_outlined;
-    }
-    if (lowerName.contains('مساء') || lowerName.contains('مساء')) {
-      return Icons.nightlight_round;
+    // Morning categories - using emojis from the database
+    if (lowerName.contains('صباح')) {
+      return '☀️'; // Sun from Muslim emojis database
     }
     
-    // Sleep categories - use moon/bed icons
-    if (lowerName.contains('نوم') || lowerName.contains('نوم')) {
-      return Icons.bedtime_outlined;
-    }
-    if (lowerName.contains('استيقاظ') || lowerName.contains('استيقاظ')) {
-      return Icons.wb_twilight;
+    // Evening categories - using moon/crescent from the database
+    if (lowerName.contains('مساء')) {
+      return '🌙'; // Moon from Muslim emojis database
     }
     
-    // Prayer categories - use mosque/prayer icons
-    if (lowerName.contains('صلاة') || lowerName.contains('صلاة') || 
-        lowerName.contains('ركوع') || lowerName.contains('سجود') ||
-        lowerName.contains('تشهد') || lowerName.contains('استفتاح')) {
-      return Icons.mosque;
+    // Sleep categories - using moon from the database
+    if (lowerName.contains('نوم')) {
+      return '🌙'; // Moon for sleep from Muslim emojis database
     }
-    if (lowerName.contains('آذان') || lowerName.contains('آذان')) {
-      return Icons.volume_up_outlined;
+    if (lowerName.contains('استيقاظ')) {
+      return '☀️'; // Sun for waking up from Muslim emojis database
     }
-    if (lowerName.contains('مسجد') || lowerName.contains('مسجد')) {
-      return Icons.account_balance;
+    
+    // Prayer categories - using praying hands and mosque from the database
+    if (lowerName.contains('صلاة') || 
+        lowerName.contains('ركوع') || 
+        lowerName.contains('سجود') ||
+        lowerName.contains('تشهد') || 
+        lowerName.contains('استفتاح')) {
+      return '🤲'; // Praying hands from Muslim emojis database
+    }
+    if (lowerName.contains('آذان')) {
+      return '🕌'; // Mosque for adhan from Muslim emojis database
+    }
+    if (lowerName.contains('مسجد')) {
+      return '🕌'; // Mosque from Muslim emojis database
     }
     
     // Wudu/Bathroom categories
-    if (lowerName.contains('وضوء') || lowerName.contains('وضوء') ||
-        lowerName.contains('خلاء') || lowerName.contains('خلاء')) {
-      return Icons.water_drop_outlined;
+    if (lowerName.contains('وضوء') || lowerName.contains('خلاء')) {
+      return '🤲'; // Praying hands from Muslim emojis database
     }
     
     // Home categories
-    if (lowerName.contains('منزل') || lowerName.contains('منزل') ||
-        lowerName.contains('بيت') || lowerName.contains('بيت')) {
-      return Icons.home_outlined;
+    if (lowerName.contains('منزل') || lowerName.contains('بيت')) {
+      return '🕌'; // Mosque from Muslim emojis database
     }
     
     // Food/Fasting categories
-    if (lowerName.contains('طعام') || lowerName.contains('طعام') ||
-        lowerName.contains('أكل') || lowerName.contains('أكل')) {
-      return Icons.restaurant_outlined;
+    if (lowerName.contains('طعام') || lowerName.contains('أكل')) {
+      return '🌙'; // Moon from Muslim emojis database
     }
-    if (lowerName.contains('صائم') || lowerName.contains('صائم') ||
-        lowerName.contains('إفطار') || lowerName.contains('إفطار')) {
-      return Icons.fastfood_outlined;
+    if (lowerName.contains('صائم') || lowerName.contains('إفطار')) {
+      return '🌙'; // Moon for fasting from Muslim emojis database
     }
     
-    // Travel categories
-    if (lowerName.contains('سفر') || lowerName.contains('سفر') ||
-        lowerName.contains('ركوب') || lowerName.contains('ركوب')) {
-      return Icons.flight_outlined;
+    // Travel categories - using Kaaba from the database
+    if (lowerName.contains('سفر') || lowerName.contains('ركوب')) {
+      return '🕋'; // Kaaba from Muslim emojis database
     }
-    if (lowerName.contains('سوق') || lowerName.contains('سوق') ||
-        lowerName.contains('قرية') || lowerName.contains('قرية')) {
-      return Icons.location_city_outlined;
+    if (lowerName.contains('سوق') || lowerName.contains('قرية')) {
+      return '🕌'; // Mosque from Muslim emojis database
     }
     
     // Health categories
-    if (lowerName.contains('مريض') || lowerName.contains('مريض') ||
-        lowerName.contains('وجع') || lowerName.contains('وجع')) {
-      return Icons.medical_services_outlined;
+    if (lowerName.contains('مريض') || lowerName.contains('وجع')) {
+      return '🤲'; // Praying hands for healing from Muslim emojis database
     }
-    if (lowerName.contains('عين') || lowerName.contains('عين')) {
-      return Icons.remove_red_eye_outlined;
+    if (lowerName.contains('عين')) {
+      return '🤲'; // Praying hands from Muslim emojis database
     }
     
     // Weather categories
-    if (lowerName.contains('مطر') || lowerName.contains('مطر') ||
-        lowerName.contains('ريح') || lowerName.contains('ريح') ||
-        lowerName.contains('رعد') || lowerName.contains('رعد')) {
-      return Icons.wb_cloudy_outlined;
+    if (lowerName.contains('مطر') || 
+        lowerName.contains('ريح') || 
+        lowerName.contains('رعد')) {
+      return '🌙'; // Moon from Muslim emojis database
     }
     
-    // Clothing categories
-    if (lowerName.contains('ثوب') || lowerName.contains('ثوب') ||
-        lowerName.contains('لبس') || lowerName.contains('لبس')) {
-      return Icons.checkroom_outlined;
+    // Clothing categories - using headscarf from the database
+    if (lowerName.contains('ثوب') || lowerName.contains('لبس')) {
+      return '🧕'; // Headscarf from Muslim emojis database
     }
     
     // Marriage categories
-    if (lowerName.contains('زواج') || lowerName.contains('زواج') ||
-        lowerName.contains('متزوج') || lowerName.contains('متزوج')) {
-      return Icons.favorite_outline;
+    if (lowerName.contains('زواج') || lowerName.contains('متزوج')) {
+      return '🤲'; // Praying hands from Muslim emojis database
     }
     
-    // General supplications and dhikr
-    if (lowerName.contains('دعاء') || lowerName.contains('دعاء')) {
-      return Icons.auto_awesome_outlined;
+    // General supplications and dhikr - using prayer beads from the database
+    if (lowerName.contains('دعاء')) {
+      return '🤲'; // Praying hands for dua from Muslim emojis database
     }
-    if (lowerName.contains('ذكر') || lowerName.contains('ذكر')) {
-      return Icons.auto_awesome_outlined;
+    if (lowerName.contains('ذكر')) {
+      return '📿'; // Prayer beads for dhikr from Muslim emojis database
     }
-    if (lowerName.contains('استغفار') || lowerName.contains('استغفار') ||
-        lowerName.contains('توبة') || lowerName.contains('توبة')) {
-      return Icons.self_improvement_outlined;
+    if (lowerName.contains('استغفار') || lowerName.contains('توبة')) {
+      return '🤲'; // Praying hands for repentance from Muslim emojis database
     }
     
-    // Default icon - book/prayer beads
-    return Icons.menu_book_outlined;
+    // Default emoji - prayer beads from Muslim emojis database
+    return '📿'; // Prayer beads from Muslim emojis database
   }
 
   /// Get consistent, elegant gradient for all category cards
@@ -190,23 +183,20 @@ class _CategoryCardState extends State<CategoryCard>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
-    final icon = _getCategoryIcon(widget.titleAr);
+    final emoji = _getCategoryEmoji(widget.titleAr);
     final gradient = _getCategoryGradient(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final cardWidget = GestureDetector(
       onTapDown: (_) {
         HapticFeedback.lightImpact();
-        setState(() => _isPressed = true);
         _controller.forward();
       },
       onTapUp: (_) {
-        setState(() => _isPressed = false);
         _controller.reverse();
         widget.onTap();
       },
       onTapCancel: () {
-        setState(() => _isPressed = false);
         _controller.reverse();
       },
         child: ScaleTransition(
@@ -216,7 +206,9 @@ class _CategoryCardState extends State<CategoryCard>
           height: 140, // Fixed height to match ListView height
           margin: const EdgeInsets.only(bottom: 0),
           decoration: BoxDecoration(
-            gradient: gradient, // Always use gradient for consistency
+            // White background in light mode, gradient in dark mode
+            color: isDarkMode ? null : Colors.white,
+            gradient: isDarkMode ? gradient : null,
             borderRadius: BorderRadius.circular(20),
             border: isDarkMode
                 ? Border.all(
@@ -225,75 +217,46 @@ class _CategoryCardState extends State<CategoryCard>
                   )
                 : null,
             boxShadow: [
-              if (isDarkMode)
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 0,
-                )
-              else ...[
-                BoxShadow(
-                  color: gradient.colors[1].withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              BoxShadow(
+                color: isDarkMode
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.06),
+                blurRadius: isDarkMode ? 15 : 10,
+                offset: const Offset(0, 3),
+              ),
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Stack(
               children: [
-                // Elegant decorative elements
-                Positioned(
-                  top: -30,
-                  right: -30,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: (isDarkMode ? Colors.white : Colors.white)
-                          .withValues(alpha: isDarkMode ? 0.05 : 0.15),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: -20,
-                  left: -20,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: (isDarkMode ? Colors.white : Colors.white)
-                          .withValues(alpha: isDarkMode ? 0.05 : 0.12),
-                    ),
-                  ),
-                ),
-                // Subtle pattern overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [
-                          Colors.transparent,
-                          (isDarkMode ? Colors.black : Colors.white)
-                              .withValues(alpha: 0.03),
-                        ],
+                // Decorative elements - only in dark mode
+                if (isDarkMode) ...[
+                  Positioned(
+                    top: -30,
+                    right: -30,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    bottom: -20,
+                    left: -20,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ),
+                    ),
+                  ),
+                ],
                 // Content
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -302,32 +265,47 @@ class _CategoryCardState extends State<CategoryCard>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Icon container with elegant design
+                      // Emoji container with elegant design
                       Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: (isDarkMode ? Colors.white : Colors.white)
-                              .withValues(alpha: isDarkMode ? 0.15 : 0.25),
+                          // In light mode: use gradient background, in dark mode: subtle white
+                          gradient: isDarkMode
+                              ? null
+                              : LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    gradient.colors[0].withValues(alpha: 0.1),
+                                    gradient.colors[1].withValues(alpha: 0.15),
+                                  ],
+                                ),
+                          color: isDarkMode
+                              ? Colors.white.withValues(alpha: 0.15)
+                              : null,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: (isDarkMode ? Colors.white : Colors.white)
-                                .withValues(alpha: isDarkMode ? 0.2 : 0.4),
+                            color: isDarkMode
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : gradient.colors[1].withValues(alpha: 0.2),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.1),
+                              color: isDarkMode
+                                  ? Colors.black.withValues(alpha: 0.3)
+                                  : gradient.colors[1].withValues(alpha: 0.15),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: Icon(
-                          icon,
-                          color: isDarkMode
-                              ? Colors.white
-                              : gradient.colors[1], // Use middle gradient color
-                          size: 32,
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(
+                            fontSize: 36,
+                            height: 1.0,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -343,7 +321,7 @@ class _CategoryCardState extends State<CategoryCard>
                                 style: AppTheme.arabicSmall.copyWith(
                                   color: isDarkMode
                                       ? Theme.of(context).textTheme.bodyLarge?.color
-                                      : Colors.white,
+                                      : AppTheme.textPrimary, // Use primary text color in light mode
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   height: 1.3,
@@ -359,14 +337,27 @@ class _CategoryCardState extends State<CategoryCard>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: (isDarkMode ? Colors.white : Colors.white)
-                                    .withValues(alpha: isDarkMode ? 0.15 : 0.25),
+                                // In light mode: use gradient, in dark mode: subtle white
+                                gradient: isDarkMode
+                                    ? null
+                                    : LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          gradient.colors[0],
+                                          gradient.colors[1],
+                                        ],
+                                      ),
+                                color: isDarkMode
+                                    ? Colors.white.withValues(alpha: 0.15)
+                                    : null,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: (isDarkMode ? Colors.white : Colors.white)
-                                      .withValues(alpha: isDarkMode ? 0.2 : 0.3),
-                                  width: 1,
-                                ),
+                                border: isDarkMode
+                                    ? Border.all(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        width: 1,
+                                      )
+                                    : null,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -376,7 +367,7 @@ class _CategoryCardState extends State<CategoryCard>
                                     style: AppTheme.bodySmall.copyWith(
                                       color: isDarkMode
                                           ? Colors.white
-                                          : gradient.colors[1],
+                                          : Colors.white,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -386,7 +377,7 @@ class _CategoryCardState extends State<CategoryCard>
                                     Icons.arrow_forward_ios_rounded,
                                     color: isDarkMode
                                         ? Colors.white
-                                        : gradient.colors[1],
+                                        : Colors.white,
                                     size: 12,
                                   ),
                                 ],

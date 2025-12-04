@@ -1,88 +1,85 @@
-# Category Card UI Update & Icon Integration Guide
+# Category Card UI Update & Emoji Integration Guide
 
 ## Changes Made
 
 ### 1. Consistent Color Scheme
 - **Before**: Category cards used various colors based on category hash
 - **After**: All category cards now use a beautiful, consistent emerald-to-teal gradient
-  - Light mode: Deep emerald → Vibrant emerald → Bright teal
+  - Light mode: White background with shadow (matching zikr items)
   - Dark mode: Subtle versions of the same gradient with transparency
 
-### 2. Improved Icon Mapping
-- Updated all icons to use outlined Material Icons for a cleaner, more modern look
-- Better categorization of icons based on Islamic concepts:
-  - Mosque icons for prayer-related categories
-  - Sun/Moon icons for morning/evening categories
-  - Water drop for Wudu categories
+### 2. Emoji-Based Icons
+- **Replaced Material Icons with Muslim Emojis** from [emojidb.org/muslim-emojis](https://emojidb.org/muslim-emojis)
+- All category cards now use emojis as text instead of icons
+- Better categorization of emojis based on Islamic concepts:
+  - 🤲 (Praying hands) for prayer-related categories
+  - 🕌 (Mosque) for mosque and adhan categories
+  - 🌙 (Moon) for evening, sleep, and fasting categories
+  - 🌅 (Sunrise) for morning categories
+  - 📿 (Prayer beads) for dhikr categories
+  - 💧 (Water drop) for Wudu categories
   - And more...
 
 ### 3. Enhanced Card Design
-- More elegant decorative elements
-- Better shadows and borders
-- Improved icon container with subtle background
+- White background in light mode (matching zikr items)
+- Elegant shadows matching zikr item style
+- Emoji container with subtle gradient background
 - Refined typography and spacing
 - Consistent 20px border radius
 
-### 4. Flaticon Integration Structure
-- Created `assets/icons/` directory for custom icons
-- Added `IconHelper` utility class for easy icon management
-- Updated `pubspec.yaml` to include icon assets
+## Emoji Mapping
 
-## How to Add Flaticon Icons
+The app uses the following emoji mappings for categories:
 
-### Step 1: Download Icons
-1. Visit https://www.flaticon.com/free-icons/islamic
-2. Search for the icon you need (e.g., "mosque", "prayer", "quran")
-3. Download in SVG format (preferred) or PNG
-4. Save to `assets/icons/` directory
+| Category Type | Emoji | Usage |
+|-------------|-------|-------|
+| Morning | 🌅 | Sunrise for morning azkar |
+| Evening | 🌙 | Moon for evening azkar |
+| Sleep | 🌙 | Moon for sleep azkar |
+| Waking Up | ☀️ | Sun for waking up |
+| Prayer | 🤲 | Praying hands for prayer azkar |
+| Mosque/Adhan | 🕌 | Mosque for mosque-related azkar |
+| Wudu | 💧 | Water drop for wudu azkar |
+| Home | 🏠 | Home for home-related azkar |
+| Food | 🍽️ | Food for food-related azkar |
+| Fasting | 🌙 | Moon for fasting azkar |
+| Travel | ✈️ | Airplane for travel azkar |
+| Health | 🤲 | Praying hands for healing azkar |
+| Dhikr | 📿 | Prayer beads for dhikr |
+| Dua | 🤲 | Praying hands for supplications |
+| Default | 📿 | Prayer beads as default |
 
-### Step 2: Update Icon Helper
-Edit `lib/src/utils/icon_helper.dart` and add your icon mappings:
+## How to Update Emojis
+
+To change or add emojis for categories, edit the `_getCategoryEmoji()` method in `lib/src/presentation/widgets/category_card.dart`:
 
 ```dart
-static String? getCustomIconPath(String categoryName) {
+String _getCategoryEmoji(String categoryName) {
   final lowerName = categoryName.toLowerCase();
   
-  if (lowerName.contains('مسجد')) {
-    return 'assets/icons/mosque.svg';
+  if (lowerName.contains('your_category')) {
+    return '🕌'; // Your emoji here
   }
-  if (lowerName.contains('صلاة')) {
-    return 'assets/icons/prayer.svg';
-  }
+  
   // Add more mappings...
   
-  return null;
+  return '📿'; // Default emoji
 }
 ```
 
-### Step 3: Update Category Card
-In `lib/src/presentation/widgets/category_card.dart`, update the icon widget to use `IconHelper`:
+## Available Muslim Emojis
 
-```dart
-// Replace the Icon widget with:
-IconHelper.getCategoryIcon(
-  categoryName: widget.titleAr,
-  materialIcon: icon,
-  customIconPath: IconHelper.getCustomIconPath(widget.titleAr),
-  color: isDarkMode ? Colors.white : gradient.colors[1],
-  size: 32,
-)
-```
+You can find more Muslim emojis at:
+- [emojidb.org/muslim-emojis](https://emojidb.org/muslim-emojis)
 
-## Recommended Flaticon Icons
-
-Based on the categories in the app, here are recommended icons to download:
-
-1. **Mosque/Masjid** - For prayer and mosque-related categories
-2. **Prayer Beads (Tasbih)** - For dhikr categories
-3. **Crescent Moon & Star** - For evening/night categories
-4. **Sun** - For morning categories
-5. **Prayer Mat** - For prayer categories
-6. **Quran** - For general supplication categories
-7. **Kaaba** - For special Islamic occasions
-8. **Hands in Prayer (Dua)** - For supplication categories
-9. **Water Drop** - For Wudu categories
-10. **Bed/Moon** - For sleep categories
+Popular emojis used:
+- 🕌 (Mosque)
+- 🕋 (Kaaba)
+- 🤲 (Praying hands)
+- 🌙 (Moon)
+- ☪️ (Crescent moon)
+- 📿 (Prayer beads)
+- And many more...
 
 ## Color Scheme
 

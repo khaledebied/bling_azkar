@@ -1,34 +1,21 @@
-# Islamic Icons from Flaticon
+# Islamic Icons Directory
 
-This directory is for storing custom Islamic icons downloaded from [Flaticon - Islamic Icons](https://www.flaticon.com/free-icons/islamic).
+This directory was previously used for storing custom Islamic icons, but the app now uses **Muslim emojis** instead of icons.
 
-## How to Add Icons
+## Current Implementation
 
-1. Visit https://www.flaticon.com/free-icons/islamic
-2. Download icons in PNG or SVG format
-3. Place them in this directory
-4. Update `pubspec.yaml` to include the icon assets:
-   ```yaml
-   flutter:
-     assets:
-       - assets/icons/
-   ```
-5. Use them in the app using `Image.asset()` or `SvgPicture.asset()`
+The app now uses emojis from [emojidb.org/muslim-emojis](https://emojidb.org/muslim-emojis) as text in the category cards. This provides:
+- Better visual consistency
+- No need for asset files
+- Native emoji support across all platforms
+- Easy to update and customize
 
-## Recommended Icon Categories
+## If You Want to Use Custom Icons
 
-- Mosque/Masjid icons
-- Prayer beads (Tasbih)
-- Crescent moon and star
-- Prayer mat
-- Quran
-- Kaaba
-- Hands in prayer (Dua)
-- Islamic geometric patterns
+If you still want to use custom icon files (SVG/PNG), you can:
+1. Place them in this directory
+2. Update `category_card.dart` to use `Image.asset()` or `SvgPicture.asset()` instead of emoji text
+3. Make sure `pubspec.yaml` includes this directory in assets
 
-## Current Usage
-
-The app currently uses Material Icons, but you can replace them with custom Flaticon icons by:
-1. Adding the icon file here
-2. Updating `category_card.dart` to use `Image.asset()` instead of `Icon()`
+However, emojis are recommended as they provide better cross-platform support and don't require asset management.
 
