@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/theme.dart';
-import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 
 class CategoryCard extends StatefulWidget {
@@ -149,38 +148,6 @@ class _CategoryCardState extends State<CategoryCard>
     return '📿'; // Prayer beads from Muslim emojis database
   }
 
-  /// Get consistent, elegant gradient for all category cards
-  /// Using a beautiful emerald-to-teal gradient that works for all categories
-  LinearGradient _getCategoryGradient(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    // Elegant gradient for light mode - consistent across all cards
-    if (!isDarkMode) {
-      return const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF059669), // Deep emerald
-          Color(0xFF10B981), // Vibrant emerald
-          Color(0xFF14B8A6), // Bright teal
-        ],
-        stops: [0.0, 0.5, 1.0],
-      );
-    }
-    
-    // Elegant gradient for dark mode - subtle and sophisticated
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        const Color(0xFF059669).withValues(alpha: 0.25), // Deep emerald
-        const Color(0xFF10B981).withValues(alpha: 0.2), // Vibrant emerald
-        const Color(0xFF14B8A6).withValues(alpha: 0.15), // Bright teal
-      ],
-      stops: const [0.0, 0.5, 1.0],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
@@ -201,46 +168,61 @@ class _CategoryCardState extends State<CategoryCard>
       },
         child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Container(
+      child: Container(
           width: double.infinity,
           constraints: const BoxConstraints(
             minHeight: 100,
           ),
           margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            // White background like zikr item
-            color: context.cardColor,
-            borderRadius: BorderRadius.circular(20),
+        decoration: BoxDecoration(
+            // Gradient background matching tab header
+            gradient: isDarkMode
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      AppTheme.primaryTeal.withValues(alpha: 0.25),
+                    ],
+                  )
+                : AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(20),
             border: isDarkMode
                 ? Border.all(
                     color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   )
                 : null,
-            boxShadow: [
-              BoxShadow(
+          boxShadow: [
+            BoxShadow(
                 color: isDarkMode
                     ? Colors.black.withValues(alpha: 0.3)
-                    : Colors.black.withValues(alpha: 0.06),
-                blurRadius: isDarkMode ? 15 : 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Padding(
+                    : AppTheme.primaryGreen.withValues(alpha: 0.2),
+                blurRadius: isDarkMode ? 15 : 12,
+              offset: const Offset(0, 4),
+                spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                 // Circular emoji container on the left (like audio icon in zikr item)
-                Container(
+              Container(
                   width: 50,
                   height: 50,
-                  decoration: BoxDecoration(
-                    color: isDarkMode
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.grey.shade100,
+                decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: isDarkMode ? 0.2 : 0.3),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Text(
@@ -264,7 +246,7 @@ class _CategoryCardState extends State<CategoryCard>
                         widget.titleAr,
                         style: AppTheme.arabicMedium.copyWith(
                           fontSize: 15,
-                          color: context.textPrimary,
+                  color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 2,
@@ -278,13 +260,17 @@ class _CategoryCardState extends State<CategoryCard>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
+                children: [
+                  Text(
                               l10n.explore,
                               style: AppTheme.bodySmall.copyWith(
                                 color: Colors.white,
@@ -303,9 +289,9 @@ class _CategoryCardState extends State<CategoryCard>
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
           ),
         ),
       ),
