@@ -301,7 +301,7 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserv
 
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Bling Azkar',
+      title: 'Noor - نُور',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
