@@ -43,28 +43,100 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      body: CustomScrollView(
-        // Performance optimization: increase cache extent
-        cacheExtent: 500,
-        slivers: [
-          _buildAppBar(context),
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  _buildTitleSection(),
-                  RepaintBoundary(child: _buildArabicTextSection()),
-                  RepaintBoundary(child: _buildTranslationSection()),
-                  RepaintBoundary(child: _buildRepetitionSection()),
-                  RepaintBoundary(child: _buildAudioSection()),
-                  const SizedBox(height: 100),
-                ],
-              ),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            DirectionIcons.backArrow(context),
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode
+                  ? [
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.transparent,
+                    ]
+                  : [
+                      AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      Colors.transparent,
+                    ],
             ),
           ),
-        ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: isDarkMode
+              ? const Color(0xFF0F1419)
+              : const Color(0xFFF5F5F5),
+        ),
+        child: SafeArea(
+          top: true,
+          child: CustomScrollView(
+            // Performance optimization: increase cache extent
+            cacheExtent: 500,
+            slivers: [
+              SliverToBoxAdapter(
+                child: Hero(
+                  tag: 'zikr_${widget.zikr.id}',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 80, 24, 40),
+                    child: Column(
+                      children: [
+                        Text(
+                          widget.zikr.title.ar,
+                          style: AppTheme.arabicLarge.copyWith(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.zikr.title.en,
+                          style: AppTheme.titleMedium.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    children: [
+                      RepaintBoundary(child: _buildArabicTextSection()),
+                      RepaintBoundary(child: _buildTranslationSection()),
+                      RepaintBoundary(child: _buildRepetitionSection()),
+                      RepaintBoundary(child: _buildAudioSection()),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -81,71 +153,6 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 200,
-      pinned: true,
-      leading: IconButton(
-        icon: Icon(DirectionIcons.backArrow(context)),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          widget.zikr.title.en,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        background: Hero(
-          tag: 'zikr_${widget.zikr.id}',
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-            ),
-            child: SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Text(
-                    widget.zikr.title.ar,
-                    style: AppTheme.arabicLarge.copyWith(
-                      color: Colors.white,
-                      fontSize: 32,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTitleSection() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          Text(
-            widget.zikr.title.ar,
-            style: AppTheme.arabicLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            widget.zikr.title.en,
-            style: AppTheme.titleMedium.copyWith(
-              color: context.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildArabicTextSection() {
     return Container(
