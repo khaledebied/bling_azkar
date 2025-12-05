@@ -87,11 +87,12 @@ class _SplashScreenState extends State<SplashScreen>
     // Start pulse animation and repeat it
     _pulseController.repeat(reverse: true);
 
-    // Navigate after delay
-    Future.delayed(const Duration(seconds: 3), () {
+    // Navigate immediately after minimal delay (just for animation)
+    // App is already initialized, so we can navigate quickly
+    Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
         _fadeController.reverse();
-        Future.delayed(const Duration(milliseconds: 300), () {
+        Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted) {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
@@ -104,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: child,
                   );
                 },
-                transitionDuration: const Duration(milliseconds: 600),
+                transitionDuration: const Duration(milliseconds: 400),
               ),
             );
           }
