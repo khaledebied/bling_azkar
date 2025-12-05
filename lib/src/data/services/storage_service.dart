@@ -139,6 +139,7 @@ class StorageService {
     await _preferences.clear();
     final sheikhsBox = await _sheikhs;
     await sheikhsBox.clear();
-    await _downloadedAudio.clear();
+    final downloadedAudioBox = await _downloadedAudio;
+    await downloadedAudioBox.clear();
   }
 }
