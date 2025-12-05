@@ -232,8 +232,6 @@ class NotificationService {
       debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
       await startPeriodicReminders();
     }
-      await startPeriodicReminders();
-    }
   }
 
   // Get initial notification when app is opened from notification
