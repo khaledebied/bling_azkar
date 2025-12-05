@@ -122,7 +122,7 @@ class NotificationService {
       playSound: true,
       ongoing: false,
       channelShowBadge: true,
-      icon: '@drawable/ic_notification',
+      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -234,7 +234,7 @@ class NotificationService {
       channelDescription: 'Test notifications',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@drawable/ic_notification',
+      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -272,7 +272,7 @@ class NotificationService {
       channelDescription: 'Test notifications',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@drawable/ic_notification',
+      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -331,7 +331,7 @@ class NotificationService {
       playSound: true,
       ongoing: false,
       channelShowBadge: true,
-      icon: '@drawable/ic_notification',
+      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
