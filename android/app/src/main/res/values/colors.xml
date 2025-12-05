@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Splash screen colors matching app theme -->
+    <color name="splash_primary_green">#10B981</color>
+    <color name="splash_primary_teal">#14B8A6</color>
+    <color name="splash_cyan">#06B6D4</color>
+    <color name="splash_dark_bg">#0F1419</color>
+    <color name="splash_dark_card">#1C2128</color>
 </resources>

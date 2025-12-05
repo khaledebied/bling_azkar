@@ -88,6 +88,7 @@ dev_dependencies:
   
   # App Icons
   flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
@@ -107,3 +108,19 @@ flutter_launcher_icons:
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/icon/app_icon.png"
   remove_alpha_ios: true
+
+# Native Splash Screen Configuration
+flutter_native_splash:
+  color: "#10B981"
+  image: assets/icon/splash.png
+  color_dark: "#0F1419"
+  image_dark: assets/icon/splash.png
+  android: true
+  android_12:
+    image: assets/icon/splash.png
+    icon_background_color: "#10B981"
+    image_dark: assets/icon/splash.png
+    icon_background_color_dark: "#0F1419"
+  android_gravity: center
+  ios: true
+  web: false
