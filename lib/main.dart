@@ -1,4 +1,3 @@
-import 'package:bling_azkar/src/data/services/audio_player_service.dart';
 import 'package:bling_azkar/src/data/services/notification_service.dart';
 import 'package:bling_azkar/src/data/services/storage_service.dart';
 import 'package:flutter/foundation.dart';
@@ -7,71 +6,93 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:quran_library/quran_library.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
-import 'src/utils/page_transitions.dart';
 import 'src/utils/app_state_provider.dart';
 import 'src/presentation/screens/splash_screen.dart';
-import 'src/data/services/storage_service.dart';
-import 'src/data/services/notification_service.dart';
-import 'src/data/services/audio_player_service.dart';
-import 'src/data/repositories/azkar_repository.dart';
-import 'src/presentation/screens/player_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize services
+  // Only initialize critical storage service before app starts
+  // This is needed to read preferences immediately
   await StorageService().initialize();
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-  await AudioPlayerService().initialize();
-  
-  // Initialize Quran Library
-  await QuranLibrary.init();
-  
-  // Initialize SharedPreferences for Tasbih
-  await SharedPreferences.getInstance();
-  
-  // Set up notification tap handler before app starts
-  notificationService.onNotificationTapped = (NotificationResponse response) {
-    debugPrint('Notification tapped with payload: ${response.payload}');
-    
-    // If it's a zikr reminder notification, activate reminders
-    if (response.payload == 'zikr_reminder') {
-      _handleZikrReminderTapFromNotification(notificationService);
-    }
-  };
-  
-  // Check for initial notification (when app is opened from notification)
-  final initialNotification = await notificationService.getInitialNotification();
-  if (initialNotification != null) {
-    debugPrint('App opened from notification: ${initialNotification.payload}');
-    if (initialNotification.payload == 'zikr_reminder') {
-      await _handleZikrReminderTapFromNotification(notificationService);
-    }
-  }
-  
-  // Start periodic reminders if enabled
-  final storage = StorageService();
-  final prefs = storage.getPreferences();
-  if (prefs.notificationsEnabled) {
-    await notificationService.startPeriodicReminders();
-  }
-  
-  // Schedule daily notifications if times are configured
-  if (prefs.scheduledNotificationTimes.isNotEmpty) {
-    await notificationService.scheduleDailyNotifications(
-      times: prefs.scheduledNotificationTimes,
-      title: 'وقت الذكر',
-      body: 'لا تنسى ذكر الله ❤️',
-    );
-  }
 
+  // Start app immediately - heavy initializations will happen in background
   runApp(const ProviderScope(child: BlingAzkarApp()));
+  
+  // Defer heavy initializations to background after app starts
+  _initializeServicesInBackground();
+}
+
+/// Initialize non-critical services in background after app starts
+void _initializeServicesInBackground() async {
+  try {
+    // Initialize notification service (needed for notifications)
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    
+    // Set up notification tap handler
+    notificationService.onNotificationTapped = (NotificationResponse response) {
+      debugPrint('Notification tapped with payload: ${response.payload}');
+      
+      // If it's a zikr reminder notification, activate reminders
+      if (response.payload == 'zikr_reminder') {
+        _handleZikrReminderTapFromNotification(notificationService);
+      }
+    };
+    
+    // Check for initial notification (when app is opened from notification)
+    final initialNotification = await notificationService.getInitialNotification();
+    if (initialNotification != null) {
+      debugPrint('App opened from notification: ${initialNotification.payload}');
+      if (initialNotification.payload == 'zikr_reminder') {
+        await _handleZikrReminderTapFromNotification(notificationService);
+      }
+    }
+    
+    // Get preferences for notification scheduling
+    final storage = StorageService();
+    final prefs = storage.getPreferences();
+    
+    // Schedule notifications in background (non-blocking)
+    if (prefs.notificationsEnabled) {
+      // Don't await - let it run in background
+      notificationService.startPeriodicReminders().catchError((e) {
+        debugPrint('Error starting periodic reminders: $e');
+      });
+    }
+    
+    // Schedule daily notifications if times are configured
+    if (prefs.scheduledNotificationTimes.isNotEmpty) {
+      // Don't await - let it run in background
+      notificationService.scheduleDailyNotifications(
+        times: prefs.scheduledNotificationTimes,
+        title: 'وقت الذكر',
+        body: 'لا تنسى ذكر الله ❤️',
+      ).catchError((e) {
+        debugPrint('Error scheduling daily notifications: $e');
+      });
+    }
+    
+    // Initialize QuranLibrary in background (needed for Quran screen)
+    // This is a heavy operation, so we do it after app starts
+    try {
+      await QuranLibrary.init();
+      debugPrint('✅ QuranLibrary initialized');
+    } catch (e) {
+      debugPrint('⚠️ Error initializing QuranLibrary: $e');
+      // QuranLibrary will try to initialize when first accessed if this fails
+    }
+  } catch (e) {
+    debugPrint('Error in background initialization: $e');
+  }
+  
+  // Initialize other services lazily (they'll initialize on first use)
+  // AudioPlayerService will initialize when first used
+  // SharedPreferences will initialize when first accessed via FutureProvider
 }
 
 // Handle zikr reminder tap from notification (top-level function)
@@ -209,6 +230,15 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserv
       final prefs = _storage.getPreferences();
       if (prefs.notificationsEnabled) {
         _notificationService.rescheduleIfNeeded();
+      }
+      
+      // Reschedule daily notifications if times are configured
+      if (prefs.scheduledNotificationTimes.isNotEmpty) {
+        _notificationService.rescheduleDailyNotificationsIfNeeded(
+          prefs.scheduledNotificationTimes,
+        ).catchError((e) {
+          debugPrint('Error rescheduling daily notifications: $e');
+        });
       }
     }
   }

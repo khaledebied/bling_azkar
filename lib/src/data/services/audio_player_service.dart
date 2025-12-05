@@ -10,12 +10,26 @@ class AudioPlayerService {
 
   final AudioPlayer _player = AudioPlayer();
   bool _initialized = false;
+  Future<void>? _initFuture;
 
   AudioPlayer get player => _player;
 
+  /// Lazy initialization - only initializes when first needed
   Future<void> initialize() async {
     if (_initialized) return;
+    
+    // If already initializing, wait for that
+    if (_initFuture != null) {
+      return _initFuture!;
+    }
 
+    _initFuture = _doInitialize();
+    await _initFuture;
+  }
+  
+  Future<void> _doInitialize() async {
+    if (_initialized) return;
+    
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
 
@@ -82,6 +96,9 @@ class AudioPlayerService {
     if (audioPath.isEmpty) {
       throw ArgumentError('Audio path cannot be empty');
     }
+
+    // Lazy initialize if not already done
+    await initialize();
 
     try {
       if (isLocal) {
