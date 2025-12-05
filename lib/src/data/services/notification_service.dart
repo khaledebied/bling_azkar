@@ -86,22 +86,36 @@ class NotificationService {
     }
 
     // Don't cancel all - check if we need to reschedule
-    final pendingNotifications = await _notifications.pendingNotificationRequests();
-    
-    // If we have less than 50 pending notifications, reschedule
-    if (pendingNotifications.length < 50) {
-      await _cancelAllNotifications();
+    try {
+      final pendingNotifications = await _notifications.pendingNotificationRequests();
+      
+      // If we have less than 50 pending notifications, reschedule
+      if (pendingNotifications.length < 50) {
+        await _cancelAllNotifications();
 
-      // Schedule notifications for the next 12 hours (72 notifications every 10 minutes)
-      // This ensures we don't hit Android's notification limit
+        // Schedule notifications for the next 12 hours (72 notifications every 10 minutes)
+        // This ensures we don't hit Android's notification limit
+        await _scheduleMultipleNotifications(
+          title: 'وقت الذكر',
+          body: 'لا تنسى ذكر الله ❤️',
+          intervalMinutes: 10,
+          hoursAhead: 12, // Schedule for next 12 hours
+        );
+      } else {
+        debugPrint('Notifications already scheduled (${pendingNotifications.length} pending)');
+      }
+    } catch (e) {
+      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
+      // when notifications are scheduled with matchDateTimeComponents
+      // Reschedule to be safe
+      debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
+      await _cancelAllNotifications();
       await _scheduleMultipleNotifications(
         title: 'وقت الذكر',
         body: 'لا تنسى ذكر الله ❤️',
         intervalMinutes: 10,
-        hoursAhead: 12, // Schedule for next 12 hours
+        hoursAhead: 12,
       );
-    } else {
-      debugPrint('Notifications already scheduled (${pendingNotifications.length} pending)');
     }
   }
 
@@ -186,9 +200,13 @@ class NotificationService {
 
     debugPrint('✅ Successfully scheduled $notificationCount notifications every $intervalMinutes minutes for the next $hoursAhead hours');
     
-    // Verify scheduled notifications
-    final pending = await _notifications.pendingNotificationRequests();
-    debugPrint('📋 Total pending notifications: ${pending.length}');
+    // Verify scheduled notifications (wrapped in try-catch due to known plugin issue)
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      debugPrint('📋 Total pending notifications: ${pending.length}');
+    } catch (e) {
+      debugPrint('⚠️ Could not verify pending notifications (this is expected): $e');
+    }
   }
 
   // Reschedule notifications when app comes to foreground
@@ -197,11 +215,23 @@ class NotificationService {
       await initialize();
     }
 
-    final pendingNotifications = await _notifications.pendingNotificationRequests();
-    
-    // If we have less than 20 pending notifications, reschedule
-    if (pendingNotifications.length < 20) {
-      debugPrint('⚠️ Low notification count (${pendingNotifications.length}), rescheduling...');
+    try {
+      final pendingNotifications = await _notifications.pendingNotificationRequests();
+      
+      // If we have less than 20 pending notifications, reschedule
+      if (pendingNotifications.length < 20) {
+        debugPrint('⚠️ Low notification count (${pendingNotifications.length}), rescheduling...');
+        await startPeriodicReminders();
+      } else {
+        debugPrint('✅ Notifications are up to date (${pendingNotifications.length} pending)');
+      }
+    } catch (e) {
+      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
+      // when notifications are scheduled with matchDateTimeComponents
+      // Reschedule to be safe
+      debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
+      await startPeriodicReminders();
+    }
       await startPeriodicReminders();
     }
   }
@@ -424,14 +454,21 @@ class NotificationService {
     debugPrint('✅ Successfully scheduled $scheduledCount daily notification(s) at ${times.length} time(s)');
     debugPrint('📝 Scheduled times: ${times.join(", ")}');
     
-    // Verify scheduled notifications
-    final pending = await _notifications.pendingNotificationRequests();
-    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
-    debugPrint('📋 Total scheduled notifications pending: ${scheduledPending.length}');
-    
-    // Log details of pending notifications for debugging
-    for (final notification in scheduledPending.take(5)) {
-      debugPrint('   - ID: ${notification.id}, Title: ${notification.title}');
+    // Verify scheduled notifications (wrapped in try-catch due to known plugin issue)
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
+      debugPrint('📋 Total scheduled notifications pending: ${scheduledPending.length}');
+      
+      // Log details of pending notifications for debugging
+      for (final notification in scheduledPending.take(5)) {
+        debugPrint('   - ID: ${notification.id}, Title: ${notification.title}');
+      }
+    } catch (e) {
+      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
+      // when notifications are scheduled with matchDateTimeComponents
+      // This doesn't affect the actual scheduling, just the verification
+      debugPrint('⚠️ Could not verify pending notifications (this is expected): $e');
     }
   }
 
@@ -464,13 +501,28 @@ class NotificationService {
 
   /// Cancel only scheduled notifications (IDs 2000-4999)
   Future<void> cancelScheduledNotifications() async {
-    final pending = await _notifications.pendingNotificationRequests();
-    for (final notification in pending) {
-      if (notification.id >= 2000 && notification.id < 5000) {
-        await _notifications.cancel(notification.id);
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      for (final notification in pending) {
+        if (notification.id >= 2000 && notification.id < 5000) {
+          await _notifications.cancel(notification.id);
+        }
       }
+      debugPrint('Cancelled scheduled notifications');
+    } catch (e) {
+      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
+      // when notifications are scheduled with matchDateTimeComponents
+      // Cancel all notifications in the ID range as a fallback
+      debugPrint('⚠️ Could not get pending notifications, cancelling by ID range: $e');
+      for (int id = 2000; id < 5000; id++) {
+        try {
+          await _notifications.cancel(id);
+        } catch (_) {
+          // Ignore individual cancel errors
+        }
+      }
+      debugPrint('Cancelled scheduled notifications (fallback method)');
     }
-    debugPrint('Cancelled scheduled notifications');
   }
 
   /// Reschedule daily notifications if needed
@@ -479,12 +531,26 @@ class NotificationService {
       await initialize();
     }
 
-    final pending = await _notifications.pendingNotificationRequests();
-    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
-    
-    // With matchDateTimeComponents, we should have exactly one notification per time
-    if (scheduledPending.length < times.length) {
-      debugPrint('⚠️ Low scheduled notification count (${scheduledPending.length}/${times.length}), rescheduling...');
+    if (times.isEmpty) {
+      return;
+    }
+
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
+      
+      // With matchDateTimeComponents, we should have exactly one notification per time
+      if (scheduledPending.length < times.length) {
+        debugPrint('⚠️ Low scheduled notification count (${scheduledPending.length}/${times.length}), rescheduling...');
+        await scheduleDailyNotifications(times: times);
+      } else {
+        debugPrint('✅ Scheduled notifications are up to date (${scheduledPending.length} notifications)');
+      }
+    } catch (e) {
+      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
+      // when notifications are scheduled with matchDateTimeComponents
+      // Reschedule as a precaution
+      debugPrint('⚠️ Could not verify pending notifications, rescheduling to be safe: $e');
       await scheduleDailyNotifications(times: times);
     }
   }
@@ -495,12 +561,17 @@ class NotificationService {
       await initialize();
     }
 
-    final pending = await _notifications.pendingNotificationRequests();
-    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
-    
-    debugPrint('🔍 Debug: Found ${scheduledPending.length} scheduled notifications:');
-    for (final notification in scheduledPending) {
-      debugPrint('   - ID: ${notification.id}, Title: "${notification.title}", Body: "${notification.body}"');
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
+      
+      debugPrint('🔍 Debug: Found ${scheduledPending.length} scheduled notifications:');
+      for (final notification in scheduledPending) {
+        debugPrint('   - ID: ${notification.id}, Title: "${notification.title}", Body: "${notification.body}"');
+      }
+    } catch (e) {
+      debugPrint('❌ Could not list scheduled notifications: $e');
+      debugPrint('   This is a known issue with the plugin when using matchDateTimeComponents');
     }
     
     // Check permissions
