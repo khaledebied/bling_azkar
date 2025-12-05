@@ -44,6 +44,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         setState(() {
           _prefs = _storage.getPreferences();
         });
+        
+        // Reschedule notifications if they're enabled
+        if (_prefs.scheduledNotificationTimes.isNotEmpty) {
+          final notificationService = NotificationService();
+          notificationService.rescheduleDailyNotificationsIfNeeded(_prefs.scheduledNotificationTimes);
+        }
       }
     }
   }
@@ -218,55 +224,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         children: [
           SwitchListTile(
             title: Text(
-              l10n.enableReminders,
+              l10n.isArabic ? 'الإشعارات المجدولة' : 'Scheduled Notifications',
               style: AppTheme.bodyMedium.copyWith(
                 color: context.textPrimary,
+                fontWeight: FontWeight.w600,
               ),
             ),
             subtitle: Text(
-              _prefs.notificationsEnabled
-                  ? l10n.enabledEvery10Minutes
-                  : l10n.disabled,
+              _prefs.scheduledNotificationTimes.isEmpty
+                  ? (l10n.isArabic ? 'غير مفعل' : 'Disabled')
+                  : (l10n.isArabic 
+                      ? '${_prefs.scheduledNotificationTimes.length} ${_prefs.scheduledNotificationTimes.length == 1 ? 'وقت' : 'أوقات'}'
+                      : '${_prefs.scheduledNotificationTimes.length} time${_prefs.scheduledNotificationTimes.length == 1 ? '' : 's'}'),
               style: AppTheme.bodySmall.copyWith(
                 color: context.textSecondary,
               ),
             ),
-            value: _prefs.notificationsEnabled,
+            value: _prefs.scheduledNotificationTimes.isNotEmpty,
             onChanged: (value) async {
               final notificationService = NotificationService();
-              
-              // Optimistically update the UI immediately
-              setState(() {
-                _prefs = _prefs.copyWith(notificationsEnabled: value);
-              });
               
               if (value) {
                 // Request permissions first
                 final hasPermission = await notificationService.requestPermissions();
                 if (hasPermission) {
-                  // Start 10-minute reminders
-                  await notificationService.startPeriodicReminders();
-                  // Save preferences
-                  _storage.savePreferences(_prefs);
-                  
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.remindersEnabledEvery10Minutes,
-                        ),
-                        backgroundColor: AppTheme.primaryGreen,
-                      ),
-                    );
-                  }
+                  // Show time picker to add first time
+                  _showAddScheduledTimeDialog(l10n);
                 } else {
-                  // Revert the state if permission is denied
                   if (mounted) {
-                    setState(() {
-                      _prefs = _prefs.copyWith(notificationsEnabled: false);
-                    });
-                    _storage.savePreferences(_prefs);
-                    
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -278,16 +263,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
                   }
                 }
               } else {
-                // Stop reminders
-                await notificationService.stopPeriodicReminders();
-                // Save preferences
-                _storage.savePreferences(_prefs);
+                // Disable scheduled notifications
+                await notificationService.cancelScheduledNotifications();
+                final updatedPrefs = _prefs.copyWith(scheduledNotificationTimes: []);
+                _updatePreferences(updatedPrefs);
                 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        l10n.remindersDisabled,
+                        l10n.isArabic ? 'تم إلغاء الإشعارات المجدولة' : 'Scheduled notifications disabled',
                       ),
                       backgroundColor: Colors.grey,
                     ),
@@ -297,29 +282,250 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
             },
             activeColor: AppTheme.primaryGreen,
           ),
-          Divider(
-            height: 1,
-            color: context.isDarkMode 
-                ? Colors.grey.shade700
-                : Colors.grey.shade100,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.info_outline,
-              color: AppTheme.primaryTeal,
+          if (_prefs.scheduledNotificationTimes.isNotEmpty) ...[
+            Divider(
+              height: 1,
+              color: context.isDarkMode 
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade100,
             ),
-            title: Text(
-              l10n.isArabic 
-                  ? 'سيتم تذكيرك بالذكر كل 10 دقائق'
-                  : 'You will be reminded every 10 minutes',
-              style: AppTheme.bodySmall.copyWith(
-                color: context.textSecondary,
+            ..._prefs.scheduledNotificationTimes.map((timeStr) {
+              return Column(
+                children: [
+                  ListTile(
+                    leading: Icon(
+                      Icons.access_time,
+                      color: AppTheme.primaryGreen,
+                    ),
+                    title: Text(
+                      timeStr,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.edit,
+                            size: 20,
+                            color: AppTheme.primaryTeal,
+                          ),
+                          onPressed: () => _showEditScheduledTimeDialog(l10n, timeStr),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: Colors.red.shade400,
+                          ),
+                          onPressed: () => _removeScheduledTime(l10n, timeStr),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (timeStr != _prefs.scheduledNotificationTimes.last)
+                    Divider(
+                      height: 1,
+                      color: context.isDarkMode 
+                          ? Colors.grey.shade700
+                          : Colors.grey.shade100,
+                    ),
+                ],
+              );
+            }).toList(),
+            Divider(
+              height: 1,
+              color: context.isDarkMode 
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade100,
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.add_circle_outline,
+                color: AppTheme.primaryGreen,
               ),
+              title: Text(
+                l10n.isArabic ? 'إضافة وقت جديد' : 'Add New Time',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.primaryGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => _showAddScheduledTimeDialog(l10n),
             ),
-          ),
+          ],
         ],
       ),
     );
+  }
+
+  void _showAddScheduledTimeDialog(AppLocalizations l10n) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.primaryGreen,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final timeStr = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      
+      // Check if time already exists
+      if (_prefs.scheduledNotificationTimes.contains(timeStr)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.isArabic ? 'هذا الوقت موجود بالفعل' : 'This time already exists',
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Add the new time
+      final updatedTimes = List<String>.from(_prefs.scheduledNotificationTimes)..add(timeStr);
+      updatedTimes.sort(); // Sort times chronologically
+      
+      final updatedPrefs = _prefs.copyWith(scheduledNotificationTimes: updatedTimes);
+      _updatePreferences(updatedPrefs);
+      
+      // Schedule notifications
+      await _scheduleNotifications(updatedTimes);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.isArabic 
+                  ? 'تم إضافة الوقت بنجاح'
+                  : 'Time added successfully',
+            ),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showEditScheduledTimeDialog(AppLocalizations l10n, String currentTime) async {
+    final timeParts = currentTime.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+    
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: hour, minute: minute),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.primaryGreen,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final newTimeStr = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      
+      // Check if new time already exists (and it's not the current one)
+      if (_prefs.scheduledNotificationTimes.contains(newTimeStr) && newTimeStr != currentTime) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.isArabic ? 'هذا الوقت موجود بالفعل' : 'This time already exists',
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Update the time
+      final updatedTimes = List<String>.from(_prefs.scheduledNotificationTimes);
+      final index = updatedTimes.indexOf(currentTime);
+      if (index != -1) {
+        updatedTimes[index] = newTimeStr;
+        updatedTimes.sort(); // Sort times chronologically
+        
+        final updatedPrefs = _prefs.copyWith(scheduledNotificationTimes: updatedTimes);
+        _updatePreferences(updatedPrefs);
+        
+        // Reschedule notifications
+        await _scheduleNotifications(updatedTimes);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.isArabic 
+                    ? 'تم تحديث الوقت بنجاح'
+                    : 'Time updated successfully',
+              ),
+              backgroundColor: AppTheme.primaryGreen,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _removeScheduledTime(AppLocalizations l10n, String timeStr) async {
+    final updatedTimes = List<String>.from(_prefs.scheduledNotificationTimes)..remove(timeStr);
+    
+    final updatedPrefs = _prefs.copyWith(scheduledNotificationTimes: updatedTimes);
+    _updatePreferences(updatedPrefs);
+    
+    // Reschedule notifications
+    await _scheduleNotifications(updatedTimes);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.isArabic 
+                ? 'تم حذف الوقت'
+                : 'Time removed',
+          ),
+          backgroundColor: Colors.grey,
+        ),
+      );
+    }
+  }
+
+  Future<void> _scheduleNotifications(List<String> times) async {
+    final notificationService = NotificationService();
+    final l10n = AppLocalizations.ofWithFallback(context);
+    
+    // Request permissions first
+    final hasPermission = await notificationService.requestPermissions();
+    if (hasPermission) {
+      await notificationService.scheduleDailyNotifications(
+        times: times,
+        title: l10n.isArabic ? 'وقت الذكر' : 'Time for Zikr',
+        body: l10n.isArabic ? 'لا تنسى ذكر الله ❤️' : 'Don\'t forget to remember Allah ❤️',
+      );
+    }
   }
 
   Widget _buildAppearanceCard(AppLocalizations l10n) {

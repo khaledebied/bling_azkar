@@ -51,6 +51,9 @@ mixin _$UserPreferences {
   String? get selectedLocationCountryCode => throw _privateConstructorUsedError;
   @HiveField(15)
   String? get selectedLocationCountryName => throw _privateConstructorUsedError;
+  @HiveField(16)
+  List<String> get scheduledNotificationTimes =>
+      throw _privateConstructorUsedError;
 
   /// Serializes this UserPreferences to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -83,7 +86,8 @@ abstract class $UserPreferencesCopyWith<$Res> {
       @HiveField(12) double? selectedLocationLatitude,
       @HiveField(13) double? selectedLocationLongitude,
       @HiveField(14) String? selectedLocationCountryCode,
-      @HiveField(15) String? selectedLocationCountryName});
+      @HiveField(15) String? selectedLocationCountryName,
+      @HiveField(16) List<String> scheduledNotificationTimes});
 }
 
 /// @nodoc
@@ -116,6 +120,7 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
     Object? selectedLocationLongitude = freezed,
     Object? selectedLocationCountryCode = freezed,
     Object? selectedLocationCountryName = freezed,
+    Object? scheduledNotificationTimes = null,
   }) {
     return _then(_value.copyWith(
       language: null == language
@@ -178,6 +183,10 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
           ? _value.selectedLocationCountryName
           : selectedLocationCountryName // ignore: cast_nullable_to_non_nullable
               as String?,
+      scheduledNotificationTimes: null == scheduledNotificationTimes
+          ? _value.scheduledNotificationTimes
+          : scheduledNotificationTimes // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -205,7 +214,8 @@ abstract class _$$UserPreferencesImplCopyWith<$Res>
       @HiveField(12) double? selectedLocationLatitude,
       @HiveField(13) double? selectedLocationLongitude,
       @HiveField(14) String? selectedLocationCountryCode,
-      @HiveField(15) String? selectedLocationCountryName});
+      @HiveField(15) String? selectedLocationCountryName,
+      @HiveField(16) List<String> scheduledNotificationTimes});
 }
 
 /// @nodoc
@@ -236,6 +246,7 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
     Object? selectedLocationLongitude = freezed,
     Object? selectedLocationCountryCode = freezed,
     Object? selectedLocationCountryName = freezed,
+    Object? scheduledNotificationTimes = null,
   }) {
     return _then(_$UserPreferencesImpl(
       language: null == language
@@ -298,6 +309,10 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
           ? _value.selectedLocationCountryName
           : selectedLocationCountryName // ignore: cast_nullable_to_non_nullable
               as String?,
+      scheduledNotificationTimes: null == scheduledNotificationTimes
+          ? _value._scheduledNotificationTimes
+          : scheduledNotificationTimes // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ));
   }
 }
@@ -320,8 +335,10 @@ class _$UserPreferencesImpl implements _UserPreferences {
       @HiveField(12) this.selectedLocationLatitude,
       @HiveField(13) this.selectedLocationLongitude,
       @HiveField(14) this.selectedLocationCountryCode,
-      @HiveField(15) this.selectedLocationCountryName})
-      : _favoriteZikrIds = favoriteZikrIds;
+      @HiveField(15) this.selectedLocationCountryName,
+      @HiveField(16) final List<String> scheduledNotificationTimes = const []})
+      : _favoriteZikrIds = favoriteZikrIds,
+        _scheduledNotificationTimes = scheduledNotificationTimes;
 
   factory _$UserPreferencesImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserPreferencesImplFromJson(json);
@@ -385,10 +402,20 @@ class _$UserPreferencesImpl implements _UserPreferences {
   @override
   @HiveField(15)
   final String? selectedLocationCountryName;
+  final List<String> _scheduledNotificationTimes;
+  @override
+  @JsonKey()
+  @HiveField(16)
+  List<String> get scheduledNotificationTimes {
+    if (_scheduledNotificationTimes is EqualUnmodifiableListView)
+      return _scheduledNotificationTimes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_scheduledNotificationTimes);
+  }
 
   @override
   String toString() {
-    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName)';
+    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName, scheduledNotificationTimes: $scheduledNotificationTimes)';
   }
 
   @override
@@ -431,7 +458,10 @@ class _$UserPreferencesImpl implements _UserPreferences {
             (identical(other.selectedLocationCountryName,
                     selectedLocationCountryName) ||
                 other.selectedLocationCountryName ==
-                    selectedLocationCountryName));
+                    selectedLocationCountryName) &&
+            const DeepCollectionEquality().equals(
+                other._scheduledNotificationTimes,
+                _scheduledNotificationTimes));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -452,7 +482,8 @@ class _$UserPreferencesImpl implements _UserPreferences {
       selectedLocationLatitude,
       selectedLocationLongitude,
       selectedLocationCountryCode,
-      selectedLocationCountryName);
+      selectedLocationCountryName,
+      const DeepCollectionEquality().hash(_scheduledNotificationTimes));
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
@@ -487,7 +518,8 @@ abstract class _UserPreferences implements UserPreferences {
           @HiveField(12) final double? selectedLocationLatitude,
           @HiveField(13) final double? selectedLocationLongitude,
           @HiveField(14) final String? selectedLocationCountryCode,
-          @HiveField(15) final String? selectedLocationCountryName}) =
+          @HiveField(15) final String? selectedLocationCountryName,
+          @HiveField(16) final List<String> scheduledNotificationTimes}) =
       _$UserPreferencesImpl;
 
   factory _UserPreferences.fromJson(Map<String, dynamic> json) =
@@ -538,6 +570,9 @@ abstract class _UserPreferences implements UserPreferences {
   @override
   @HiveField(15)
   String? get selectedLocationCountryName;
+  @override
+  @HiveField(16)
+  List<String> get scheduledNotificationTimes;
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.

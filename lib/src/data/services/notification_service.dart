@@ -302,5 +302,180 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
+
+  /// Schedule daily notifications at specific times
+  /// times: List of time strings in format "HH:mm" (e.g., ["08:00", "12:30", "18:00"])
+  Future<void> scheduleDailyNotifications({
+    required List<String> times,
+    String title = 'وقت الذكر',
+    String body = 'لا تنسى ذكر الله ❤️',
+  }) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    if (times.isEmpty) {
+      debugPrint('No scheduled times provided, cancelling scheduled notifications');
+      await cancelScheduledNotifications();
+      return;
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'scheduled_zikr_reminders',
+      'Scheduled Zikr Reminders',
+      channelDescription: 'Daily scheduled reminders to remember Allah',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      ongoing: false,
+      channelShowBadge: true,
+      icon: '@drawable/ic_notification',
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    // Cancel existing scheduled notifications first
+    await cancelScheduledNotifications();
+
+    final now = tz.TZDateTime.now(tz.local);
+    int notificationId = 2000; // Start from 2000 to avoid conflicts with periodic reminders
+    int scheduledCount = 0;
+
+    // Schedule notifications for the next 30 days
+    for (int day = 0; day < 30; day++) {
+      for (final timeStr in times) {
+        try {
+          final timeParts = timeStr.split(':');
+          if (timeParts.length != 2) {
+            debugPrint('⚠️ Invalid time format: $timeStr (expected HH:mm)');
+            continue;
+          }
+
+          final hour = int.tryParse(timeParts[0]);
+          final minute = int.tryParse(timeParts[1]);
+
+          if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            debugPrint('⚠️ Invalid time values: $timeStr');
+            continue;
+          }
+
+          // Calculate the scheduled date
+          final scheduledDate = tz.TZDateTime(
+            tz.local,
+            now.year,
+            now.month,
+            now.day,
+            hour,
+            minute,
+          ).add(Duration(days: day));
+
+          // If the time has passed today, schedule for tomorrow
+          if (day == 0 && scheduledDate.isBefore(now)) {
+            final tomorrowDate = scheduledDate.add(const Duration(days: 1));
+            await _scheduleSingleNotification(
+              notificationId,
+              title,
+              body,
+              tomorrowDate,
+              details,
+            );
+            scheduledCount++;
+            notificationId++;
+          } else if (scheduledDate.isAfter(now)) {
+            await _scheduleSingleNotification(
+              notificationId,
+              title,
+              body,
+              scheduledDate,
+              details,
+            );
+            scheduledCount++;
+            notificationId++;
+          }
+
+          // Prevent ID overflow
+          if (notificationId > 4000) {
+            notificationId = 2000;
+          }
+        } catch (e) {
+          debugPrint('Error scheduling notification for time $timeStr: $e');
+        }
+      }
+    }
+
+    debugPrint('✅ Successfully scheduled $scheduledCount daily notifications at ${times.length} time(s)');
+    
+    // Verify scheduled notifications
+    final pending = await _notifications.pendingNotificationRequests();
+    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).length;
+    debugPrint('📋 Total scheduled notifications pending: $scheduledPending');
+  }
+
+  /// Schedule a single notification
+  Future<void> _scheduleSingleNotification(
+    int id,
+    String title,
+    String body,
+    tz.TZDateTime scheduledDate,
+    NotificationDetails details,
+  ) async {
+    try {
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'scheduled_zikr_reminder',
+        matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at this time
+      );
+    } catch (e) {
+      debugPrint('Error scheduling notification $id: $e');
+      rethrow;
+    }
+  }
+
+  /// Cancel only scheduled notifications (IDs 2000-4999)
+  Future<void> cancelScheduledNotifications() async {
+    final pending = await _notifications.pendingNotificationRequests();
+    for (final notification in pending) {
+      if (notification.id >= 2000 && notification.id < 5000) {
+        await _notifications.cancel(notification.id);
+      }
+    }
+    debugPrint('Cancelled scheduled notifications');
+  }
+
+  /// Reschedule daily notifications if needed
+  Future<void> rescheduleDailyNotificationsIfNeeded(List<String> times) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    final pending = await _notifications.pendingNotificationRequests();
+    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).length;
+    
+    // If we have less than expected notifications (times.length * 7 days minimum), reschedule
+    final expectedMinimum = times.length * 7;
+    if (scheduledPending < expectedMinimum) {
+      debugPrint('⚠️ Low scheduled notification count ($scheduledPending), rescheduling...');
+      await scheduleDailyNotifications(times: times);
+    }
+  }
 }
 

@@ -35,6 +35,11 @@ _$UserPreferencesImpl _$$UserPreferencesImplFromJson(
           json['selectedLocationCountryCode'] as String?,
       selectedLocationCountryName:
           json['selectedLocationCountryName'] as String?,
+      scheduledNotificationTimes:
+          (json['scheduledNotificationTimes'] as List<dynamic>?)
+                  ?.map((e) => e as String)
+                  .toList() ??
+              const [],
     );
 
 Map<String, dynamic> _$$UserPreferencesImplToJson(
@@ -55,4 +60,5 @@ Map<String, dynamic> _$$UserPreferencesImplToJson(
       'selectedLocationLongitude': instance.selectedLocationLongitude,
       'selectedLocationCountryCode': instance.selectedLocationCountryCode,
       'selectedLocationCountryName': instance.selectedLocationCountryName,
+      'scheduledNotificationTimes': instance.scheduledNotificationTimes,
     };

@@ -61,6 +61,15 @@ void main() async {
   if (prefs.notificationsEnabled) {
     await notificationService.startPeriodicReminders();
   }
+  
+  // Schedule daily notifications if times are configured
+  if (prefs.scheduledNotificationTimes.isNotEmpty) {
+    await notificationService.scheduleDailyNotifications(
+      times: prefs.scheduledNotificationTimes,
+      title: 'وقت الذكر',
+      body: 'لا تنسى ذكر الله ❤️',
+    );
+  }
 
   runApp(const ProviderScope(child: BlingAzkarApp()));
 }

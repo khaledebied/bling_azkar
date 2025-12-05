@@ -23,6 +23,7 @@ class UserPreferences with _$UserPreferences {
     @HiveField(13) double? selectedLocationLongitude,
     @HiveField(14) String? selectedLocationCountryCode,
     @HiveField(15) String? selectedLocationCountryName,
+    @HiveField(16) @Default([]) List<String> scheduledNotificationTimes, // Format: "HH:mm" (e.g., "08:00", "12:30")
   }) = _UserPreferences;
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
