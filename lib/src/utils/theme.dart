@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Color Palette - Rich Emerald/Teal + Gold Accent (More Attractive)
@@ -87,90 +86,104 @@ class AppTheme {
     colors: [Color(0xFF1A1A1A), Color(0xFF0F1419)],
   );
 
-  // English Text Styles (Poppins)
-  static TextStyle headlineLarge = GoogleFonts.poppins(
+  // English Text Styles (Poppins - Local Font)
+  static TextStyle headlineLarge = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 32,
     fontWeight: FontWeight.bold,
     height: 1.2,
     letterSpacing: -0.5,
   );
 
-  static TextStyle headlineMedium = GoogleFonts.poppins(
+  static TextStyle headlineMedium = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 24,
     fontWeight: FontWeight.bold,
     height: 1.3,
   );
 
-  static TextStyle titleLarge = GoogleFonts.poppins(
+  static TextStyle titleLarge = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 22,
     fontWeight: FontWeight.w600,
     height: 1.3,
   );
 
-  static TextStyle titleMedium = GoogleFonts.poppins(
+  static TextStyle titleMedium = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 18,
     fontWeight: FontWeight.w600,
     height: 1.4,
   );
 
-  static TextStyle bodyLarge = GoogleFonts.poppins(
+  static TextStyle bodyLarge = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 16,
     fontWeight: FontWeight.normal,
     height: 1.5,
   );
 
-  static TextStyle bodyMedium = GoogleFonts.poppins(
+  static TextStyle bodyMedium = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 14,
     fontWeight: FontWeight.normal,
     height: 1.5,
   );
 
-  static TextStyle bodySmall = GoogleFonts.poppins(
+  static TextStyle bodySmall = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 12,
     fontWeight: FontWeight.normal,
     height: 1.4,
   );
 
-  static TextStyle caption = GoogleFonts.poppins(
+  static TextStyle caption = const TextStyle(
+    fontFamily: 'Poppins',
     fontSize: 12,
     fontWeight: FontWeight.normal,
     height: 1.4,
     letterSpacing: 0.2,
   );
 
-  // Arabic Text Styles (Cairo)
-  static TextStyle arabicLarge = GoogleFonts.cairo(
+  // Arabic Text Styles (Noto Sans Arabic - Local Font)
+  static TextStyle arabicLarge = const TextStyle(
+    fontFamily: 'NotoSansArabic',
     fontSize: 24,
     fontWeight: FontWeight.bold,
     height: 1.8,
   );
 
-  static TextStyle arabicMedium = GoogleFonts.cairo(
+  static TextStyle arabicMedium = const TextStyle(
+    fontFamily: 'NotoSansArabic',
     fontSize: 18,
     fontWeight: FontWeight.w600,
     height: 1.8,
   );
 
-  static TextStyle arabicSmall = GoogleFonts.cairo(
+  static TextStyle arabicSmall = const TextStyle(
+    fontFamily: 'NotoSansArabic',
     fontSize: 14,
     fontWeight: FontWeight.normal,
     height: 1.8,
   );
 
-  // Quran/Dhikr Text Styles (Amiri - elegant)
-  static TextStyle quranLarge = GoogleFonts.amiri(
+  // Quran/Dhikr Text Styles (Amiri - Local Font)
+  static TextStyle quranLarge = const TextStyle(
+    fontFamily: 'Amiri',
     fontSize: 32,
     fontWeight: FontWeight.bold,
     height: 2.0,
   );
 
-  static TextStyle quranMedium = GoogleFonts.amiri(
+  static TextStyle quranMedium = const TextStyle(
+    fontFamily: 'Amiri',
     fontSize: 24,
     fontWeight: FontWeight.w600,
     height: 1.8,
   );
 
-  static TextStyle dhikrText = GoogleFonts.amiri(
+  static TextStyle dhikrText = const TextStyle(
+    fontFamily: 'Amiri',
     fontSize: 28,
     fontWeight: FontWeight.bold,
     height: 1.9,
@@ -225,12 +238,13 @@ class AppTheme {
       onSecondary: Colors.white,
     ),
     scaffoldBackgroundColor: backgroundColor,
-    fontFamily: GoogleFonts.poppins().fontFamily,
+    fontFamily: 'Poppins',
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.white,
       elevation: 0,
       iconTheme: const IconThemeData(color: textPrimary),
-      titleTextStyle: GoogleFonts.poppins(
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: textPrimary,
@@ -274,12 +288,13 @@ class AppTheme {
       onSecondary: Colors.white,
     ),
     scaffoldBackgroundColor: const Color(0xFF121212),
-    fontFamily: GoogleFonts.poppins().fontFamily,
+    fontFamily: 'Poppins',
     appBarTheme: AppBarTheme(
       backgroundColor: const Color(0xFF1E1E1E),
       elevation: 0,
       iconTheme: const IconThemeData(color: Colors.white),
-      titleTextStyle: GoogleFonts.poppins(
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: Colors.white,
