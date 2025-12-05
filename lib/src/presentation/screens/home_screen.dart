@@ -13,6 +13,7 @@ import '../providers/search_providers.dart';
 import '../providers/azkar_providers.dart';
 import '../../data/services/playlist_service.dart';
 import '../widgets/zikr_list_item.dart';
+import '../widgets/prayer_times_card.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
 import 'categories_list_screen.dart';
@@ -116,8 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             if (!isSearching) ...[
                               _buildSearchBar(ref),
                               const SizedBox(height: 16),
-                              _buildWelcomeBannerContent(),
-                              const SizedBox(height: 16),
+                              const PrayerTimesCard(),
                             ] else ...[
                               _buildSearchBar(ref),
                               const SizedBox(height: 16),
@@ -165,94 +165,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildWelcomeBannerContent() {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    final isDarkMode = context.isDarkMode;
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-        gradient: isDarkMode
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryGreen.withValues(alpha: 0.15),
-                  AppTheme.primaryTeal.withValues(alpha: 0.15),
-                ],
-              )
-            : LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryGreen.withValues(alpha: 0.1),
-                  AppTheme.primaryTeal.withValues(alpha: 0.1),
-                ],
-              ),
-        color: isDarkMode ? context.cardColor : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDarkMode
-              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-              : AppTheme.primaryGreen.withValues(alpha: 0.15),
-          width: 1,
-        ),
-            boxShadow: [
-              BoxShadow(
-            color: isDarkMode
-                ? Colors.black.withValues(alpha: 0.3)
-                : AppTheme.primaryGreen.withValues(alpha: 0.1),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                  l10n.dailyAzkar,
-                      style: AppTheme.titleLarge.copyWith(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                  l10n.keepHeartClose,
-                      style: AppTheme.bodyMedium.copyWith(
-                    color: context.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-                Icons.auto_awesome,
-              size: 32,
-                color: Colors.white,
-              ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSearchBar(WidgetRef ref) {
     final l10n = AppLocalizations.ofWithFallback(context);
