@@ -138,20 +138,20 @@ class AppTheme {
     letterSpacing: 0.2,
   );
 
-  // Arabic Text Styles (Cairo)
-  static TextStyle arabicLarge = GoogleFonts.cairo(
+  // Arabic Text Styles (Noto Sans Arabic)
+  static TextStyle arabicLarge = GoogleFonts.notoSansArabic(
     fontSize: 24,
     fontWeight: FontWeight.bold,
     height: 1.8,
   );
 
-  static TextStyle arabicMedium = GoogleFonts.cairo(
+  static TextStyle arabicMedium = GoogleFonts.notoSansArabic(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     height: 1.8,
   );
 
-  static TextStyle arabicSmall = GoogleFonts.cairo(
+  static TextStyle arabicSmall = GoogleFonts.notoSansArabic(
     fontSize: 14,
     fontWeight: FontWeight.normal,
     height: 1.8,
