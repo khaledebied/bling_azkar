@@ -18,6 +18,7 @@ import '../providers/prayer_times_providers.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
 import 'categories_list_screen.dart';
+import 'hisn_el_muslim_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -349,8 +350,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       data: (allCategories) {
         final categoriesList = allCategories.entries.toList();
-        final displayedCategories = categoriesList.take(4).toList();
-        final hasMoreCategories = categoriesList.length > 4;
+        final displayedCategories = categoriesList.take(3).toList(); // Reduced to 3 to make room for Hisn el Muslim
+        final hasMoreCategories = categoriesList.length > 3;
 
     return SliverToBoxAdapter(
       child: Column(
@@ -417,9 +418,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.0, // Square cards for better grid layout
                   ),
-                  itemCount: displayedCategories.length,
+                  itemCount: displayedCategories.length + 1, // +1 for Hisn el Muslim
               itemBuilder: (context, index) {
-                    final entry = displayedCategories[index];
+                    // First item is Hisn el Muslim
+                    if (index == 0) {
+                      return CategoryCard(
+                        key: const ValueKey('hisn_el_muslim'),
+                        title: 'Hisn el Muslim',
+                        titleAr: 'حصن المسلم',
+                        heroTag: 'category_hisn_el_muslim',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HisnElMuslimScreen(),
+                            ),
+                          );
+                        },
+                      );
+                    }
+                    
+                    // Other categories
+                    final entry = displayedCategories[index - 1];
                     final categoryKey = entry.key;
                     final categoryName = entry.value;
 

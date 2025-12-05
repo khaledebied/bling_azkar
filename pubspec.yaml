@@ -55,7 +55,7 @@ dependencies:
   geolocator: ^13.0.1
   
   # Prayer Times
-  muslim_data_flutter: ^1.0.0
+  muslim_data_flutter: ^1.4.1
   
   # Quran Library
   quran_library: ^2.3.1

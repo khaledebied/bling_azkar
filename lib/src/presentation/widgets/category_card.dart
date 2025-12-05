@@ -123,6 +123,13 @@ class _CategoryCardState extends State<CategoryCard>
       return '🌙'; // Moon from Muslim emojis database
     }
     
+    // Hisn el Muslim - using book/mosque from the database
+    if (lowerName.contains('hisn') || 
+        lowerName.contains('حصن') || 
+        lowerName.contains('مسلم')) {
+      return '📿'; // Prayer beads from Muslim emojis database
+    }
+    
     // Clothing categories - using headscarf from the database
     if (lowerName.contains('ثوب') || lowerName.contains('لبس')) {
       return '🧕'; // Headscarf from Muslim emojis database
