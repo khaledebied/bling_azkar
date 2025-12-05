@@ -17,6 +17,12 @@ class UserPreferences with _$UserPreferences {
     @HiveField(6) @Default(false) bool dndEnabled,
     @HiveField(7) @Default(1.0) double textScale,
     @HiveField(9) @Default('system') String themeMode, // 'light', 'dark', 'system'
+    @HiveField(10) int? selectedLocationId,
+    @HiveField(11) String? selectedLocationName,
+    @HiveField(12) double? selectedLocationLatitude,
+    @HiveField(13) double? selectedLocationLongitude,
+    @HiveField(14) String? selectedLocationCountryCode,
+    @HiveField(15) String? selectedLocationCountryName,
   }) = _UserPreferences;
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>

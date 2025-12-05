@@ -1,28 +1,51 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:muslim_data_flutter/muslim_data_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../data/services/storage_service.dart';
 
-/// Provider for MuslimRepository instance
-final muslimRepositoryProvider = Provider((ref) => MuslimRepository());
+/// Provider for StorageService instance
+final storageServiceProvider = Provider((ref) => StorageService());
 
-/// Provider for current location
-final locationProvider = FutureProvider.autoDispose<Location?>((ref) async {
+/// Provider for stored location from preferences
+final storedLocationProvider = Provider<Location?>((ref) {
+  final storage = ref.read(storageServiceProvider);
+  final prefs = storage.getPreferences();
+  
+  if (prefs.selectedLocationId != null &&
+      prefs.selectedLocationLatitude != null &&
+      prefs.selectedLocationLongitude != null) {
+    return Location(
+      id: prefs.selectedLocationId!,
+      name: prefs.selectedLocationName ?? 'Unknown',
+      latitude: prefs.selectedLocationLatitude!,
+      longitude: prefs.selectedLocationLongitude!,
+      countryCode: prefs.selectedLocationCountryCode ?? '',
+      countryName: prefs.selectedLocationCountryName ?? '',
+      hasFixedPrayerTime: false,
+    );
+  }
+  
+  return null;
+});
+
+/// Provider for GPS location (only if permission granted)
+final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
   try {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return _getDefaultLocation();
+      return null;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return _getDefaultLocation();
+        return null;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return _getDefaultLocation();
+      return null;
     }
 
     final position = await Geolocator.getCurrentPosition(
@@ -31,35 +54,53 @@ final locationProvider = FutureProvider.autoDispose<Location?>((ref) async {
       ),
     );
 
-    final repository = ref.read(muslimRepositoryProvider);
+    final repository = MuslimRepository();
     final location = await repository.reverseGeocoder(
       latitude: position.latitude,
       longitude: position.longitude,
     );
 
-    return location ?? _getDefaultLocation();
+    return location;
   } catch (e) {
-    return _getDefaultLocation();
+    return null;
   }
 });
 
-/// Default location (Makkah)
-Location _getDefaultLocation() {
-  return Location(
-    id: 1,
-    name: 'Makkah',
-    countryName: 'Saudi Arabia',
-    countryCode: 'SA',
-    latitude: 21.4225,
-    longitude: 39.8262,
-    hasFixedPrayerTime: false,
+/// Provider for current location (stored first, then GPS, then null)
+final locationProvider = FutureProvider.autoDispose<Location?>((ref) async {
+  // First check stored location
+  final storedLocation = ref.read(storedLocationProvider);
+  if (storedLocation != null) {
+    return storedLocation;
+  }
+  
+  // Then try GPS
+  final gpsLocation = await ref.watch(gpsLocationProvider.future);
+  if (gpsLocation != null) {
+    return gpsLocation;
+  }
+  
+  // No location available
+  return null;
+});
+
+/// Provider for location availability status
+final locationAvailableProvider = Provider<bool>((ref) {
+  final storedLocation = ref.read(storedLocationProvider);
+  if (storedLocation != null) return true;
+  
+  final gpsLocationAsync = ref.watch(gpsLocationProvider);
+  return gpsLocationAsync.when(
+    data: (location) => location != null,
+    loading: () => false,
+    error: (_, __) => false,
   );
-}
+});
 
 /// Provider for prayer times based on location
 final prayerTimesProvider = FutureProvider.autoDispose<PrayerTime?>((ref) async {
   final location = await ref.watch(locationProvider.future);
-  final repository = ref.read(muslimRepositoryProvider);
+  final repository = MuslimRepository();
   
   if (location == null) {
     return null;

@@ -5,6 +5,7 @@ import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../providers/prayer_times_providers.dart';
+import 'location_selection_dialog.dart';
 import 'dart:async';
 
 class PrayerTimesCard extends ConsumerStatefulWidget {
@@ -64,6 +65,14 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
     final isDarkMode = context.isDarkMode;
+    final locationAvailable = ref.watch(locationAvailableProvider);
+    final storedLocation = ref.read(storedLocationProvider);
+    
+    // If no location available, show selection prompt
+    if (!locationAvailable) {
+      return _buildLocationSelectionPrompt(context, l10n, isDarkMode);
+    }
+    
     final prayerTimesAsync = ref.watch(prayerTimesProvider);
     final nextPrayer = ref.watch(nextPrayerProvider);
 
@@ -141,13 +150,43 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          l10n.isArabic ? 'أوقات الصلاة' : 'Prayer Times',
-                          style: AppTheme.titleMedium.copyWith(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.isArabic ? 'أوقات الصلاة' : 'Prayer Times',
+                                style: AppTheme.titleMedium.copyWith(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (storedLocation != null)
+                              IconButton(
+                                icon: Icon(
+                                  Icons.edit_location_alt,
+                                  size: 20,
+                                  color: AppTheme.primaryGreen,
+                                ),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => const LocationSelectionDialog(),
+                                  );
+                                },
+                                tooltip: l10n.isArabic ? 'تغيير الموقع' : 'Change Location',
+                              ),
+                          ],
                         ),
+                        if (storedLocation != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            storedLocation.name,
+                            style: AppTheme.bodySmall.copyWith(
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ],
                         if (nextPrayer != null) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -405,6 +444,123 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
       }
       return '$minutes min';
     }
+  }
+
+  Widget _buildLocationSelectionPrompt(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isDarkMode,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: isDarkMode
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.15),
+                  AppTheme.primaryTeal.withValues(alpha: 0.15),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.08),
+                  AppTheme.primaryTeal.withValues(alpha: 0.08),
+                  Colors.white,
+                ],
+              ),
+        color: isDarkMode ? context.cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDarkMode
+              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+              : AppTheme.primaryGreen.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode
+                ? Colors.black.withValues(alpha: 0.3)
+                : AppTheme.primaryGreen.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.location_off,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.isArabic
+                ? 'اختر موقعك لعرض أوقات الصلاة'
+                : 'Select your location to view prayer times',
+            style: AppTheme.titleMedium.copyWith(
+              color: context.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.isArabic
+                ? 'يجب تحديد موقعك لعرض أوقات الصلاة بدقة'
+                : 'Please select your location to display accurate prayer times',
+            style: AppTheme.bodySmall.copyWith(
+              color: context.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const LocationSelectionDialog(),
+              );
+            },
+            icon: const Icon(Icons.location_on, color: Colors.white),
+            label: Text(
+              l10n.isArabic ? 'اختر الموقع' : 'Select Location',
+              style: AppTheme.bodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 8,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

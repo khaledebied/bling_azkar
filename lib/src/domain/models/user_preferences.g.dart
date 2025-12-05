@@ -25,6 +25,16 @@ _$UserPreferencesImpl _$$UserPreferencesImplFromJson(
       dndEnabled: json['dndEnabled'] as bool? ?? false,
       textScale: (json['textScale'] as num?)?.toDouble() ?? 1.0,
       themeMode: json['themeMode'] as String? ?? 'system',
+      selectedLocationId: (json['selectedLocationId'] as num?)?.toInt(),
+      selectedLocationName: json['selectedLocationName'] as String?,
+      selectedLocationLatitude:
+          (json['selectedLocationLatitude'] as num?)?.toDouble(),
+      selectedLocationLongitude:
+          (json['selectedLocationLongitude'] as num?)?.toDouble(),
+      selectedLocationCountryCode:
+          json['selectedLocationCountryCode'] as String?,
+      selectedLocationCountryName:
+          json['selectedLocationCountryName'] as String?,
     );
 
 Map<String, dynamic> _$$UserPreferencesImplToJson(
@@ -39,4 +49,10 @@ Map<String, dynamic> _$$UserPreferencesImplToJson(
       'dndEnabled': instance.dndEnabled,
       'textScale': instance.textScale,
       'themeMode': instance.themeMode,
+      'selectedLocationId': instance.selectedLocationId,
+      'selectedLocationName': instance.selectedLocationName,
+      'selectedLocationLatitude': instance.selectedLocationLatitude,
+      'selectedLocationLongitude': instance.selectedLocationLongitude,
+      'selectedLocationCountryCode': instance.selectedLocationCountryCode,
+      'selectedLocationCountryName': instance.selectedLocationCountryName,
     };

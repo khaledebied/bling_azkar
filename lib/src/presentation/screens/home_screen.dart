@@ -14,6 +14,7 @@ import '../providers/azkar_providers.dart';
 import '../../data/services/playlist_service.dart';
 import '../widgets/zikr_list_item.dart';
 import '../widgets/prayer_times_card.dart';
+import '../providers/prayer_times_providers.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
 import 'categories_list_screen.dart';
@@ -117,7 +118,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             if (!isSearching) ...[
                               _buildSearchBar(ref),
                               const SizedBox(height: 16),
-                              const PrayerTimesCard(),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final locationAvailable = ref.watch(locationAvailableProvider);
+                                  if (locationAvailable) {
+                                    return const PrayerTimesCard();
+                                  }
+                                  return const PrayerTimesCard(); // Will show selection prompt
+                                },
+                              ),
                             ] else ...[
                               _buildSearchBar(ref),
                               const SizedBox(height: 16),

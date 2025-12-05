@@ -37,7 +37,20 @@ mixin _$UserPreferences {
   @HiveField(7)
   double get textScale => throw _privateConstructorUsedError;
   @HiveField(9)
-  String get themeMode => throw _privateConstructorUsedError;
+  String get themeMode =>
+      throw _privateConstructorUsedError; // 'light', 'dark', 'system'
+  @HiveField(10)
+  int? get selectedLocationId => throw _privateConstructorUsedError;
+  @HiveField(11)
+  String? get selectedLocationName => throw _privateConstructorUsedError;
+  @HiveField(12)
+  double? get selectedLocationLatitude => throw _privateConstructorUsedError;
+  @HiveField(13)
+  double? get selectedLocationLongitude => throw _privateConstructorUsedError;
+  @HiveField(14)
+  String? get selectedLocationCountryCode => throw _privateConstructorUsedError;
+  @HiveField(15)
+  String? get selectedLocationCountryName => throw _privateConstructorUsedError;
 
   /// Serializes this UserPreferences to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -64,7 +77,13 @@ abstract class $UserPreferencesCopyWith<$Res> {
       @HiveField(5) DateTime? dndEndTime,
       @HiveField(6) bool dndEnabled,
       @HiveField(7) double textScale,
-      @HiveField(9) String themeMode});
+      @HiveField(9) String themeMode,
+      @HiveField(10) int? selectedLocationId,
+      @HiveField(11) String? selectedLocationName,
+      @HiveField(12) double? selectedLocationLatitude,
+      @HiveField(13) double? selectedLocationLongitude,
+      @HiveField(14) String? selectedLocationCountryCode,
+      @HiveField(15) String? selectedLocationCountryName});
 }
 
 /// @nodoc
@@ -91,6 +110,12 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
     Object? dndEnabled = null,
     Object? textScale = null,
     Object? themeMode = null,
+    Object? selectedLocationId = freezed,
+    Object? selectedLocationName = freezed,
+    Object? selectedLocationLatitude = freezed,
+    Object? selectedLocationLongitude = freezed,
+    Object? selectedLocationCountryCode = freezed,
+    Object? selectedLocationCountryName = freezed,
   }) {
     return _then(_value.copyWith(
       language: null == language
@@ -129,6 +154,30 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
           ? _value.themeMode
           : themeMode // ignore: cast_nullable_to_non_nullable
               as String,
+      selectedLocationId: freezed == selectedLocationId
+          ? _value.selectedLocationId
+          : selectedLocationId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      selectedLocationName: freezed == selectedLocationName
+          ? _value.selectedLocationName
+          : selectedLocationName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      selectedLocationLatitude: freezed == selectedLocationLatitude
+          ? _value.selectedLocationLatitude
+          : selectedLocationLatitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      selectedLocationLongitude: freezed == selectedLocationLongitude
+          ? _value.selectedLocationLongitude
+          : selectedLocationLongitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      selectedLocationCountryCode: freezed == selectedLocationCountryCode
+          ? _value.selectedLocationCountryCode
+          : selectedLocationCountryCode // ignore: cast_nullable_to_non_nullable
+              as String?,
+      selectedLocationCountryName: freezed == selectedLocationCountryName
+          ? _value.selectedLocationCountryName
+          : selectedLocationCountryName // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -150,7 +199,13 @@ abstract class _$$UserPreferencesImplCopyWith<$Res>
       @HiveField(5) DateTime? dndEndTime,
       @HiveField(6) bool dndEnabled,
       @HiveField(7) double textScale,
-      @HiveField(9) String themeMode});
+      @HiveField(9) String themeMode,
+      @HiveField(10) int? selectedLocationId,
+      @HiveField(11) String? selectedLocationName,
+      @HiveField(12) double? selectedLocationLatitude,
+      @HiveField(13) double? selectedLocationLongitude,
+      @HiveField(14) String? selectedLocationCountryCode,
+      @HiveField(15) String? selectedLocationCountryName});
 }
 
 /// @nodoc
@@ -175,6 +230,12 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
     Object? dndEnabled = null,
     Object? textScale = null,
     Object? themeMode = null,
+    Object? selectedLocationId = freezed,
+    Object? selectedLocationName = freezed,
+    Object? selectedLocationLatitude = freezed,
+    Object? selectedLocationLongitude = freezed,
+    Object? selectedLocationCountryCode = freezed,
+    Object? selectedLocationCountryName = freezed,
   }) {
     return _then(_$UserPreferencesImpl(
       language: null == language
@@ -213,6 +274,30 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
           ? _value.themeMode
           : themeMode // ignore: cast_nullable_to_non_nullable
               as String,
+      selectedLocationId: freezed == selectedLocationId
+          ? _value.selectedLocationId
+          : selectedLocationId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      selectedLocationName: freezed == selectedLocationName
+          ? _value.selectedLocationName
+          : selectedLocationName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      selectedLocationLatitude: freezed == selectedLocationLatitude
+          ? _value.selectedLocationLatitude
+          : selectedLocationLatitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      selectedLocationLongitude: freezed == selectedLocationLongitude
+          ? _value.selectedLocationLongitude
+          : selectedLocationLongitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      selectedLocationCountryCode: freezed == selectedLocationCountryCode
+          ? _value.selectedLocationCountryCode
+          : selectedLocationCountryCode // ignore: cast_nullable_to_non_nullable
+              as String?,
+      selectedLocationCountryName: freezed == selectedLocationCountryName
+          ? _value.selectedLocationCountryName
+          : selectedLocationCountryName // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -229,7 +314,13 @@ class _$UserPreferencesImpl implements _UserPreferences {
       @HiveField(5) this.dndEndTime,
       @HiveField(6) this.dndEnabled = false,
       @HiveField(7) this.textScale = 1.0,
-      @HiveField(9) this.themeMode = 'system'})
+      @HiveField(9) this.themeMode = 'system',
+      @HiveField(10) this.selectedLocationId,
+      @HiveField(11) this.selectedLocationName,
+      @HiveField(12) this.selectedLocationLatitude,
+      @HiveField(13) this.selectedLocationLongitude,
+      @HiveField(14) this.selectedLocationCountryCode,
+      @HiveField(15) this.selectedLocationCountryName})
       : _favoriteZikrIds = favoriteZikrIds;
 
   factory _$UserPreferencesImpl.fromJson(Map<String, dynamic> json) =>
@@ -275,10 +366,29 @@ class _$UserPreferencesImpl implements _UserPreferences {
   @JsonKey()
   @HiveField(9)
   final String themeMode;
+// 'light', 'dark', 'system'
+  @override
+  @HiveField(10)
+  final int? selectedLocationId;
+  @override
+  @HiveField(11)
+  final String? selectedLocationName;
+  @override
+  @HiveField(12)
+  final double? selectedLocationLatitude;
+  @override
+  @HiveField(13)
+  final double? selectedLocationLongitude;
+  @override
+  @HiveField(14)
+  final String? selectedLocationCountryCode;
+  @override
+  @HiveField(15)
+  final String? selectedLocationCountryName;
 
   @override
   String toString() {
-    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode)';
+    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName)';
   }
 
   @override
@@ -303,7 +413,25 @@ class _$UserPreferencesImpl implements _UserPreferences {
             (identical(other.textScale, textScale) ||
                 other.textScale == textScale) &&
             (identical(other.themeMode, themeMode) ||
-                other.themeMode == themeMode));
+                other.themeMode == themeMode) &&
+            (identical(other.selectedLocationId, selectedLocationId) ||
+                other.selectedLocationId == selectedLocationId) &&
+            (identical(other.selectedLocationName, selectedLocationName) ||
+                other.selectedLocationName == selectedLocationName) &&
+            (identical(
+                    other.selectedLocationLatitude, selectedLocationLatitude) ||
+                other.selectedLocationLatitude == selectedLocationLatitude) &&
+            (identical(other.selectedLocationLongitude,
+                    selectedLocationLongitude) ||
+                other.selectedLocationLongitude == selectedLocationLongitude) &&
+            (identical(other.selectedLocationCountryCode,
+                    selectedLocationCountryCode) ||
+                other.selectedLocationCountryCode ==
+                    selectedLocationCountryCode) &&
+            (identical(other.selectedLocationCountryName,
+                    selectedLocationCountryName) ||
+                other.selectedLocationCountryName ==
+                    selectedLocationCountryName));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -318,7 +446,13 @@ class _$UserPreferencesImpl implements _UserPreferences {
       dndEndTime,
       dndEnabled,
       textScale,
-      themeMode);
+      themeMode,
+      selectedLocationId,
+      selectedLocationName,
+      selectedLocationLatitude,
+      selectedLocationLongitude,
+      selectedLocationCountryCode,
+      selectedLocationCountryName);
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
@@ -339,15 +473,22 @@ class _$UserPreferencesImpl implements _UserPreferences {
 
 abstract class _UserPreferences implements UserPreferences {
   const factory _UserPreferences(
-      {@HiveField(0) final String language,
-      @HiveField(1) final String selectedSheikhId,
-      @HiveField(2) final bool notificationsEnabled,
-      @HiveField(3) final List<String> favoriteZikrIds,
-      @HiveField(4) final DateTime? dndStartTime,
-      @HiveField(5) final DateTime? dndEndTime,
-      @HiveField(6) final bool dndEnabled,
-      @HiveField(7) final double textScale,
-      @HiveField(9) final String themeMode}) = _$UserPreferencesImpl;
+          {@HiveField(0) final String language,
+          @HiveField(1) final String selectedSheikhId,
+          @HiveField(2) final bool notificationsEnabled,
+          @HiveField(3) final List<String> favoriteZikrIds,
+          @HiveField(4) final DateTime? dndStartTime,
+          @HiveField(5) final DateTime? dndEndTime,
+          @HiveField(6) final bool dndEnabled,
+          @HiveField(7) final double textScale,
+          @HiveField(9) final String themeMode,
+          @HiveField(10) final int? selectedLocationId,
+          @HiveField(11) final String? selectedLocationName,
+          @HiveField(12) final double? selectedLocationLatitude,
+          @HiveField(13) final double? selectedLocationLongitude,
+          @HiveField(14) final String? selectedLocationCountryCode,
+          @HiveField(15) final String? selectedLocationCountryName}) =
+      _$UserPreferencesImpl;
 
   factory _UserPreferences.fromJson(Map<String, dynamic> json) =
       _$UserPreferencesImpl.fromJson;
@@ -378,7 +519,25 @@ abstract class _UserPreferences implements UserPreferences {
   double get textScale;
   @override
   @HiveField(9)
-  String get themeMode;
+  String get themeMode; // 'light', 'dark', 'system'
+  @override
+  @HiveField(10)
+  int? get selectedLocationId;
+  @override
+  @HiveField(11)
+  String? get selectedLocationName;
+  @override
+  @HiveField(12)
+  double? get selectedLocationLatitude;
+  @override
+  @HiveField(13)
+  double? get selectedLocationLongitude;
+  @override
+  @HiveField(14)
+  String? get selectedLocationCountryCode;
+  @override
+  @HiveField(15)
+  String? get selectedLocationCountryName;
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
