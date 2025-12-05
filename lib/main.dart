@@ -1,11 +1,10 @@
-import 'package:bling_azkar/src/data/services/notification_service.dart';
-import 'package:bling_azkar/src/data/services/storage_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:quran_library/quran_library.dart';
+import 'src/data/services/notification_service.dart';
+import 'src/data/services/storage_service.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
 import 'src/utils/app_state_provider.dart';
