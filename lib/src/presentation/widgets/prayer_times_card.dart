@@ -237,7 +237,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     ];
 
     return SizedBox(
-      height: 140,
+      height: 150,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: prayers.length,
@@ -265,7 +265,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
             child: Container(
               width: 100,
               margin: const EdgeInsets.symmetric(horizontal: 6),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               decoration: BoxDecoration(
                 gradient: isNext
                     ? AppTheme.primaryGradient
@@ -308,12 +308,13 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                 ],
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Prayer Emoji Icon
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: isNext
                           ? Colors.white.withValues(alpha: 0.2)
@@ -325,11 +326,11 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                     child: Center(
                       child: Text(
                         _getPrayerEmoji(prayer),
-                        style: const TextStyle(fontSize: 28),
+                        style: const TextStyle(fontSize: 26),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Prayer Name
                   Text(
                     prayerName,
@@ -338,13 +339,13 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                           ? Colors.white
                           : context.textPrimary,
                       fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
-                      fontSize: 12,
+                      fontSize: 11,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   // Prayer Time
                   Text(
                     _formatTime(prayerTime),
@@ -355,25 +356,25 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                               ? AppTheme.primaryGreen
                               : AppTheme.primaryGreen),
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 15,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   // Next Prayer Indicator
                   if (isNext) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         l10n.isArabic ? 'التالي' : 'Next',
                         style: AppTheme.caption.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 10,
+                          fontSize: 9,
                         ),
                       ),
                     ),
@@ -389,7 +390,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
 
   Widget _buildLoadingSkeleton(bool isDarkMode) {
     return SizedBox(
-      height: 140,
+      height: 150,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: 5,
