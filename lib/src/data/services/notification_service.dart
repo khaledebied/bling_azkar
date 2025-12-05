@@ -320,6 +320,20 @@ class NotificationService {
       return;
     }
 
+    // Verify permissions before scheduling
+    final hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      debugPrint('❌ Notification permission not granted, cannot schedule notifications');
+      return;
+    }
+
+    // Check exact alarm permission (required for exact scheduling on Android 12+)
+    final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
+    if (exactAlarmStatus.isDenied) {
+      debugPrint('⚠️ Exact alarm permission not granted - notifications may not work reliably');
+      debugPrint('⚠️ Please grant exact alarm permission in device settings for reliable notifications');
+    }
+
     const androidDetails = AndroidNotificationDetails(
       'scheduled_zikr_reminders',
       'Scheduled Zikr Reminders',
@@ -353,74 +367,72 @@ class NotificationService {
     int notificationId = 2000; // Start from 2000 to avoid conflicts with periodic reminders
     int scheduledCount = 0;
 
-    // Schedule notifications for the next 30 days
-    for (int day = 0; day < 30; day++) {
-      for (final timeStr in times) {
-        try {
-          final timeParts = timeStr.split(':');
-          if (timeParts.length != 2) {
-            debugPrint('⚠️ Invalid time format: $timeStr (expected HH:mm)');
-            continue;
-          }
-
-          final hour = int.tryParse(timeParts[0]);
-          final minute = int.tryParse(timeParts[1]);
-
-          if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-            debugPrint('⚠️ Invalid time values: $timeStr');
-            continue;
-          }
-
-          // Calculate the scheduled date
-          final scheduledDate = tz.TZDateTime(
-            tz.local,
-            now.year,
-            now.month,
-            now.day,
-            hour,
-            minute,
-          ).add(Duration(days: day));
-
-          // If the time has passed today, schedule for tomorrow
-          if (day == 0 && scheduledDate.isBefore(now)) {
-            final tomorrowDate = scheduledDate.add(const Duration(days: 1));
-            await _scheduleSingleNotification(
-              notificationId,
-              title,
-              body,
-              tomorrowDate,
-              details,
-            );
-            scheduledCount++;
-            notificationId++;
-          } else if (scheduledDate.isAfter(now)) {
-            await _scheduleSingleNotification(
-              notificationId,
-              title,
-              body,
-              scheduledDate,
-              details,
-            );
-            scheduledCount++;
-            notificationId++;
-          }
-
-          // Prevent ID overflow
-          if (notificationId > 4000) {
-            notificationId = 2000;
-          }
-        } catch (e) {
-          debugPrint('Error scheduling notification for time $timeStr: $e');
+    // Schedule one notification per time (matchDateTimeComponents will handle daily repetition)
+    for (final timeStr in times) {
+      try {
+        final timeParts = timeStr.split(':');
+        if (timeParts.length != 2) {
+          debugPrint('⚠️ Invalid time format: $timeStr (expected HH:mm)');
+          continue;
         }
+
+        final hour = int.tryParse(timeParts[0]);
+        final minute = int.tryParse(timeParts[1]);
+
+        if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+          debugPrint('⚠️ Invalid time values: $timeStr');
+          continue;
+        }
+
+        // Calculate the scheduled date for today
+        final scheduledDate = tz.TZDateTime(
+          tz.local,
+          now.year,
+          now.month,
+          now.day,
+          hour,
+          minute,
+        );
+
+        // If the time has passed today, schedule for tomorrow
+        final targetDate = scheduledDate.isBefore(now) 
+            ? scheduledDate.add(const Duration(days: 1))
+            : scheduledDate;
+
+        debugPrint('📅 Scheduling notification for $timeStr at ${targetDate.toString()}');
+
+        await _scheduleSingleNotification(
+          notificationId,
+          title,
+          body,
+          targetDate,
+          details,
+        );
+        
+        scheduledCount++;
+        notificationId++;
+
+        // Prevent ID overflow
+        if (notificationId > 4000) {
+          notificationId = 2000;
+        }
+      } catch (e) {
+        debugPrint('❌ Error scheduling notification for time $timeStr: $e');
       }
     }
 
-    debugPrint('✅ Successfully scheduled $scheduledCount daily notifications at ${times.length} time(s)');
+    debugPrint('✅ Successfully scheduled $scheduledCount daily notification(s) at ${times.length} time(s)');
+    debugPrint('📝 Scheduled times: ${times.join(", ")}');
     
     // Verify scheduled notifications
     final pending = await _notifications.pendingNotificationRequests();
-    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).length;
-    debugPrint('📋 Total scheduled notifications pending: $scheduledPending');
+    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
+    debugPrint('📋 Total scheduled notifications pending: ${scheduledPending.length}');
+    
+    // Log details of pending notifications for debugging
+    for (final notification in scheduledPending.take(5)) {
+      debugPrint('   - ID: ${notification.id}, Title: ${notification.title}');
+    }
   }
 
   /// Schedule a single notification
@@ -468,14 +480,33 @@ class NotificationService {
     }
 
     final pending = await _notifications.pendingNotificationRequests();
-    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).length;
+    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
     
-    // If we have less than expected notifications (times.length * 7 days minimum), reschedule
-    final expectedMinimum = times.length * 7;
-    if (scheduledPending < expectedMinimum) {
-      debugPrint('⚠️ Low scheduled notification count ($scheduledPending), rescheduling...');
+    // With matchDateTimeComponents, we should have exactly one notification per time
+    if (scheduledPending.length < times.length) {
+      debugPrint('⚠️ Low scheduled notification count (${scheduledPending.length}/${times.length}), rescheduling...');
       await scheduleDailyNotifications(times: times);
     }
+  }
+
+  /// Debug method to list all pending scheduled notifications
+  Future<void> debugListScheduledNotifications() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    final pending = await _notifications.pendingNotificationRequests();
+    final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
+    
+    debugPrint('🔍 Debug: Found ${scheduledPending.length} scheduled notifications:');
+    for (final notification in scheduledPending) {
+      debugPrint('   - ID: ${notification.id}, Title: "${notification.title}", Body: "${notification.body}"');
+    }
+    
+    // Check permissions
+    final notificationPermission = await Permission.notification.status;
+    final exactAlarmPermission = await Permission.scheduleExactAlarm.status;
+    debugPrint('🔐 Permissions - Notification: $notificationPermission, Exact Alarm: $exactAlarmPermission');
   }
 }
 
