@@ -139,10 +139,9 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.mosque,
-                      color: Colors.white,
-                      size: 24,
+                    child: const Text(
+                      '🕌',
+                      style: TextStyle(fontSize: 24),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -204,7 +203,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               // Prayer Times List
               prayerTimesAsync.when(
                 loading: () => _buildLoadingSkeleton(isDarkMode),
@@ -237,112 +236,177 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
       ('isha', prayerTimes.isha),
     ];
 
-    return Column(
-      children: prayers.asMap().entries.map((entry) {
-        final index = entry.key;
-        final prayerEntry = entry.value;
-        final prayer = prayerEntry.$1;
-        final prayerTime = prayerEntry.$2;
-        final isNext = nextPrayer?.prayer == prayer;
-        final prayerName = _getPrayerName(prayer, l10n.isArabic);
+    return SizedBox(
+      height: 140,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: prayers.length,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        itemBuilder: (context, index) {
+          final prayerEntry = prayers[index];
+          final prayer = prayerEntry.$1;
+          final prayerTime = prayerEntry.$2;
+          final isNext = nextPrayer?.prayer == prayer;
+          final prayerName = _getPrayerName(prayer, l10n.isArabic);
 
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 300 + (index * 100)),
-          curve: Curves.easeOut,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 10 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: isNext
-                  ? AppTheme.primaryGreen.withValues(alpha: isDarkMode ? 0.2 : 0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-              border: isNext
-                  ? Border.all(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                      width: 1.5,
-                    )
-                  : null,
-            ),
-            child: Row(
-              children: [
-                // Prayer Icon
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: isNext
-                        ? AppTheme.primaryGradient
-                        : LinearGradient(
-                            colors: [
-                              AppTheme.primaryGreen.withValues(alpha: 0.1),
-                              AppTheme.primaryTeal.withValues(alpha: 0.1),
-                            ],
-                          ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    _getPrayerIcon(prayer),
-                    color: isNext
-                        ? Colors.white
-                        : AppTheme.primaryGreen,
-                    size: 20,
-                  ),
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 300 + (index * 100)),
+            curve: Curves.easeOut,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.scale(
+                  scale: 0.9 + (0.1 * value),
+                  child: child,
                 ),
-                const SizedBox(width: 16),
-                // Prayer Name
-                Expanded(
-                  child: Text(
-                    prayerName,
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: context.textPrimary,
-                      fontWeight: isNext ? FontWeight.bold : FontWeight.w500,
+              );
+            },
+            child: Container(
+              width: 100,
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: isNext
+                    ? AppTheme.primaryGradient
+                    : (isDarkMode
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.primaryGreen.withValues(alpha: 0.15),
+                              AppTheme.primaryTeal.withValues(alpha: 0.15),
+                            ],
+                          )
+                        : LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white,
+                              AppTheme.primaryGreen.withValues(alpha: 0.05),
+                            ],
+                          )),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isNext
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.4)
+                      : (isDarkMode
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                          : AppTheme.primaryGreen.withValues(alpha: 0.15)),
+                  width: isNext ? 2 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isNext
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+                        : (isDarkMode
+                            ? Colors.black.withValues(alpha: 0.2)
+                            : AppTheme.primaryGreen.withValues(alpha: 0.08)),
+                    blurRadius: isNext ? 12 : 8,
+                    offset: Offset(0, isNext ? 4 : 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Prayer Emoji Icon
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isNext
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : (isDarkMode
+                              ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                              : AppTheme.primaryGreen.withValues(alpha: 0.08)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _getPrayerEmoji(prayer),
+                        style: const TextStyle(fontSize: 28),
+                      ),
                     ),
                   ),
-                ),
-                // Prayer Time
-                Text(
-                  _formatTime(prayerTime),
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: isNext
-                        ? AppTheme.primaryGreen
-                        : context.textPrimary,
-                    fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
-                    fontSize: 16,
+                  const SizedBox(height: 10),
+                  // Prayer Name
+                  Text(
+                    prayerName,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: isNext
+                          ? Colors.white
+                          : context.textPrimary,
+                      fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  // Prayer Time
+                  Text(
+                    _formatTime(prayerTime),
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: isNext
+                          ? Colors.white
+                          : (isDarkMode
+                              ? AppTheme.primaryGreen
+                              : AppTheme.primaryGreen),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  // Next Prayer Indicator
+                  if (isNext) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        l10n.isArabic ? 'التالي' : 'Next',
+                        style: AppTheme.caption.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildLoadingSkeleton(bool isDarkMode) {
-    return Column(
-      children: List.generate(5, (index) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          height: 60,
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? Colors.grey.shade800.withValues(alpha: 0.3)
-                : Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(16),
-          ),
-        );
-      }),
+    return SizedBox(
+      height: 140,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 5,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        itemBuilder: (context, index) {
+          return Container(
+            width: 100,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? Colors.grey.shade800.withValues(alpha: 0.3)
+                  : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -406,20 +470,20 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     }
   }
 
-  IconData _getPrayerIcon(String prayer) {
+  String _getPrayerEmoji(String prayer) {
     switch (prayer) {
       case 'fajr':
-        return Icons.wb_twilight;
+        return '🌅'; // Sunrise
       case 'dhuhr':
-        return Icons.wb_sunny;
+        return '☀️'; // Sun
       case 'asr':
-        return Icons.wb_twilight_outlined;
+        return '🌇'; // Sunset
       case 'maghrib':
-        return Icons.wb_twilight;
+        return '🌆'; // Dusk
       case 'isha':
-        return Icons.nightlight_round;
+        return '🌙'; // Crescent Moon
       default:
-        return Icons.access_time;
+        return '🕌'; // Mosque
     }
   }
 
@@ -506,10 +570,9 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.location_off,
-              color: Colors.white,
-              size: 32,
+            child: const Text(
+              '📍',
+              style: TextStyle(fontSize: 32),
             ),
           ),
           const SizedBox(height: 16),
