@@ -144,17 +144,20 @@ class _ZikrListItemState extends State<ZikrListItem>
       return;
     }
 
-    // Check if audio service is ready
+    // Initialize audio service if not ready (lazy initialization)
     if (!_audioService.isReady) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Audio service not ready. Please try again.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+      final initialized = await _audioService.initialize();
+      if (!initialized) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Audio service could not be initialized. Please try again.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
       }
-      return;
     }
 
     try {

@@ -6,7 +6,6 @@ import 'package:quran_library/quran_library.dart';
 import 'src/data/services/notification_service.dart';
 import 'src/data/services/storage_service.dart';
 import 'src/data/services/version_check_service.dart';
-import 'src/data/services/audio_player_service.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
 import 'src/utils/app_state_provider.dart';
@@ -21,17 +20,9 @@ void main() async {
   // This is needed to read preferences immediately
   await StorageService().initialize();
 
-  // Initialize AudioService ONCE before app starts
-  // This must be done before runApp() to ensure it's ready for all screens
-  try {
-    await initializeAudioService();
-    debugPrint('✅ AudioService initialized');
-  } catch (e) {
-    debugPrint('⚠️ Error initializing AudioService: $e');
-    // Continue anyway - audio features may not work
-  }
-
   // Start app immediately - heavy initializations will happen in background
+  // Note: AudioService is initialized lazily on first use to avoid conflicts
+  // with quran_library which also initializes AudioService
   runApp(const ProviderScope(child: BlingAzkarApp()));
   
   // Defer heavy initializations to background after app starts

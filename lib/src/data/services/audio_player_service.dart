@@ -6,35 +6,114 @@ import 'package:audio_service/audio_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'background_audio_handler.dart';
 
-/// Global audio handler - set once during app initialization
+/// Global audio handler - set once during first use
 BackgroundAudioHandler? _globalAudioHandler;
+bool _initializationAttempted = false;
 
-/// Initialize audio service - call this ONCE in main.dart
-Future<BackgroundAudioHandler> initializeAudioService() async {
+/// Initialize audio service - can be called multiple times safely
+/// Returns true if initialization succeeded or was already done
+Future<bool> initializeAudioService() async {
+  // Already have a handler
   if (_globalAudioHandler != null) {
-    return _globalAudioHandler!;
+    return true;
   }
 
-  // Initialize audio session for both Android and iOS
-  final session = await AudioSession.instance;
-  await session.configure(const AudioSessionConfiguration.music());
+  // Already tried and failed
+  if (_initializationAttempted && _globalAudioHandler == null) {
+    // Check if AudioService is running (maybe initialized by another package like quran_library)
+    if (AudioService.running) {
+      debugPrint('AudioService is running but we don\'t have a handler - creating one');
+      return await _tryCreateHandler();
+    }
+    return false;
+  }
 
-  // Initialize audio service for background playback
-  _globalAudioHandler = await AudioService.init(
-    builder: () => BackgroundAudioHandler(),
-    config: AudioServiceConfig(
-      androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
-      androidNotificationChannelName: 'Bling Azkar Audio',
-      androidNotificationChannelDescription: 'Audio playback controls',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-      androidShowNotificationBadge: true,
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidResumeOnClick: true,
-    ),
-  );
+  _initializationAttempted = true;
 
-  return _globalAudioHandler!;
+  try {
+    // Check if AudioService is already running (e.g., from quran_library)
+    if (AudioService.running) {
+      debugPrint('AudioService already running, creating our handler');
+      return await _tryCreateHandler();
+    }
+
+    // Initialize audio session for both Android and iOS
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+
+    // Initialize audio service for background playback
+    _globalAudioHandler = await AudioService.init(
+      builder: () => BackgroundAudioHandler(),
+      config: AudioServiceConfig(
+        androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
+        androidNotificationChannelName: 'Bling Azkar Audio',
+        androidNotificationChannelDescription: 'Audio playback controls',
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
+        androidShowNotificationBadge: true,
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidResumeOnClick: true,
+      ),
+    );
+
+    debugPrint('✅ AudioService initialized successfully');
+    return true;
+  } catch (e) {
+    debugPrint('Error initializing AudioService: $e');
+    
+    // If AudioService is running despite error, try to create handler
+    if (AudioService.running) {
+      debugPrint('AudioService is running, trying to create handler anyway');
+      return await _tryCreateHandler();
+    }
+    
+    return false;
+  }
+}
+
+/// Try to create a handler when AudioService is already running
+Future<bool> _tryCreateHandler() async {
+  try {
+    // Configure audio session
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+    
+    // Try to init - if AudioService is already running, this might work
+    // or it might throw, in which case we'll create a standalone player
+    try {
+      _globalAudioHandler = await AudioService.init(
+        builder: () => BackgroundAudioHandler(),
+        config: AudioServiceConfig(
+          androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
+          androidNotificationChannelName: 'Bling Azkar Audio',
+          androidNotificationChannelDescription: 'Audio playback controls',
+          androidNotificationOngoing: true,
+          androidStopForegroundOnPause: true,
+          androidShowNotificationBadge: true,
+          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidResumeOnClick: true,
+        ),
+      );
+      debugPrint('✅ Got AudioService handler');
+      return true;
+    } catch (e) {
+      // AudioService.init failed - create standalone handler without AudioService
+      debugPrint('Cannot get AudioService handler, using standalone player: $e');
+      _globalAudioHandler = BackgroundAudioHandler();
+      return true;
+    }
+  } catch (e) {
+    debugPrint('Error in _tryCreateHandler: $e');
+    // Last resort: create standalone handler
+    try {
+      _globalAudioHandler = BackgroundAudioHandler();
+      debugPrint('✅ Created standalone BackgroundAudioHandler');
+      return true;
+    } catch (e2) {
+      debugPrint('Failed to create standalone handler: $e2');
+      return false;
+    }
+  }
 }
 
 class AudioPlayerService {
@@ -42,7 +121,7 @@ class AudioPlayerService {
   factory AudioPlayerService() => _instance;
   AudioPlayerService._internal();
 
-  /// Get the background audio handler (initialized in main.dart)
+  /// Get the background audio handler
   BackgroundAudioHandler? get audioHandler => _globalAudioHandler;
   
   /// Get the underlying AudioPlayer for direct access if needed
@@ -51,20 +130,10 @@ class AudioPlayerService {
   /// Check if audio service is ready
   bool get isReady => _globalAudioHandler != null;
 
-  /// Initialize - ensures the global handler is available
-  /// This is a no-op if already initialized in main.dart
-  Future<void> initialize() async {
-    if (_globalAudioHandler != null) return;
-    
-    try {
-      await initializeAudioService();
-    } catch (e) {
-      debugPrint('Error initializing audio service: $e');
-      // If it's already initialized error, that's fine
-      if (!e.toString().contains('_cacheManager == null')) {
-        rethrow;
-      }
-    }
+  /// Initialize - ensures the handler is available
+  Future<bool> initialize() async {
+    if (_globalAudioHandler != null) return true;
+    return await initializeAudioService();
   }
 
   /// Clears the just_audio cache directory if it's corrupted
@@ -125,10 +194,9 @@ class AudioPlayerService {
     }
 
     // Ensure initialized
-    await initialize();
-
-    if (_globalAudioHandler == null) {
-      throw StateError('Audio handler not initialized. Call initializeAudioService() in main.dart');
+    final initialized = await initialize();
+    if (!initialized || _globalAudioHandler == null) {
+      throw StateError('Audio service could not be initialized');
     }
 
     try {
@@ -253,6 +321,5 @@ class AudioPlayerService {
 
   Future<void> dispose() async {
     // Don't dispose the global handler - it lasts for app lifecycle
-    // Only reset if app is truly shutting down
   }
 }
