@@ -370,73 +370,79 @@ class _ZikrListItemState extends State<ZikrListItem>
   Widget _buildPlayButton() {
     final isDarkMode = context.isDarkMode;
     
-    return GestureDetector(
-      onTap: _handlePlayPause,
-      behavior: HitTestBehavior.opaque, // Makes entire circle tappable
-      child: ScaleTransition(
-        scale: _playScaleAnimation,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: _isPlaying && _isCurrentAudio
-                  ? [
-                      AppTheme.primaryTeal,
-                      AppTheme.primaryGreen,
-                    ]
-                  : [
-                      AppTheme.primaryGreen,
-                      AppTheme.primaryTeal,
-                    ],
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: (_isPlaying && _isCurrentAudio
-                        ? AppTheme.primaryTeal
-                        : AppTheme.primaryGreen)
-                    .withValues(alpha: isDarkMode ? 0.5 : 0.4),
-                blurRadius: isDarkMode ? 15 : 12,
-                offset: const Offset(0, 4),
-                spreadRadius: 0,
+    // Use Material + InkWell for better tap handling with nested gestures
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _handlePlayPause,
+        customBorder: const CircleBorder(),
+        splashColor: Colors.white.withValues(alpha: 0.3),
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        child: ScaleTransition(
+          scale: _playScaleAnimation,
+          child: Container(
+            width: 44, // Slightly larger for easier tapping
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _isPlaying && _isCurrentAudio
+                    ? [
+                        AppTheme.primaryTeal,
+                        AppTheme.primaryGreen,
+                      ]
+                    : [
+                        AppTheme.primaryGreen,
+                        AppTheme.primaryTeal,
+                      ],
               ),
-            ],
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Pulsing ring when playing
-              if (_isPlaying && _isCurrentAudio)
-                ScaleTransition(
-                  scale: _pulseAnimation,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        width: 2,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: (_isPlaying && _isCurrentAudio
+                          ? AppTheme.primaryTeal
+                          : AppTheme.primaryGreen)
+                      .withValues(alpha: isDarkMode ? 0.5 : 0.4),
+                  blurRadius: isDarkMode ? 15 : 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Pulsing ring when playing
+                if (_isPlaying && _isCurrentAudio)
+                  ScaleTransition(
+                    scale: _pulseAnimation,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
+                // Play/Pause icon
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    _isPlaying && _isCurrentAudio
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    key: ValueKey(_isPlaying && _isCurrentAudio),
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
-              // Play/Pause icon
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  _isPlaying && _isCurrentAudio
-                      ? Icons.pause
-                      : Icons.play_arrow,
-                  key: ValueKey(_isPlaying && _isCurrentAudio),
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
