@@ -1,7 +1,8 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
@@ -20,8 +21,11 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Initialize timezone
-    tz.initializeTimeZones();
+    // Initialize timezone database
+    tz_data.initializeTimeZones();
+    
+    // Set local timezone based on device
+    await _setLocalTimezone();
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
@@ -42,6 +46,81 @@ class NotificationService {
     );
 
     _isInitialized = true;
+    debugPrint('✅ NotificationService initialized with timezone: ${tz.local.name}');
+  }
+
+  /// Set local timezone based on device's timezone
+  Future<void> _setLocalTimezone() async {
+    try {
+      // Get the device's timezone offset
+      final now = DateTime.now();
+      final timeZoneOffset = now.timeZoneOffset;
+      
+      // Try to find a matching timezone
+      String timezoneName = _getTimezoneNameFromOffset(timeZoneOffset);
+      
+      try {
+        tz.setLocalLocation(tz.getLocation(timezoneName));
+        debugPrint('📍 Timezone set to: $timezoneName (offset: ${timeZoneOffset.inHours}h)');
+      } catch (e) {
+        // Fallback to UTC if timezone not found
+        debugPrint('⚠️ Could not set timezone $timezoneName, using UTC offset calculation');
+        // Use a generic timezone based on offset
+        final offsetHours = timeZoneOffset.inHours;
+        final fallbackTimezone = _getFallbackTimezone(offsetHours);
+        try {
+          tz.setLocalLocation(tz.getLocation(fallbackTimezone));
+          debugPrint('📍 Timezone fallback to: $fallbackTimezone');
+        } catch (e2) {
+          // Last resort: use UTC
+          tz.setLocalLocation(tz.UTC);
+          debugPrint('⚠️ Using UTC as fallback timezone');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error setting timezone: $e');
+      tz.setLocalLocation(tz.UTC);
+    }
+  }
+
+  /// Get timezone name from offset
+  String _getTimezoneNameFromOffset(Duration offset) {
+    final hours = offset.inHours;
+    final minutes = offset.inMinutes % 60;
+    
+    // Common timezone mappings
+    final timezoneMap = {
+      3: 'Asia/Riyadh',      // Saudi Arabia, Kuwait, etc.
+      4: 'Asia/Dubai',       // UAE, Oman
+      2: 'Africa/Cairo',     // Egypt
+      1: 'Europe/Paris',     // Central Europe
+      0: 'Europe/London',    // UK
+      -5: 'America/New_York', // US Eastern
+      -8: 'America/Los_Angeles', // US Pacific
+      5: 'Asia/Karachi',     // Pakistan
+      330: 'Asia/Kolkata',   // India (5:30 - using minutes)
+      8: 'Asia/Singapore',   // Singapore, Malaysia
+      9: 'Asia/Tokyo',       // Japan
+      -3: 'America/Sao_Paulo', // Brazil
+    };
+    
+    // Check for special cases with minutes (like India 5:30)
+    final totalMinutes = offset.inMinutes;
+    if (totalMinutes == 330) return 'Asia/Kolkata';
+    if (totalMinutes == 345) return 'Asia/Kathmandu'; // Nepal 5:45
+    if (totalMinutes == 210) return 'Asia/Tehran'; // Iran 3:30
+    
+    return timezoneMap[hours] ?? 'Etc/GMT${hours >= 0 ? '-' : '+'}${hours.abs()}';
+  }
+
+  /// Get fallback timezone based on offset
+  String _getFallbackTimezone(int offsetHours) {
+    // Etc/GMT uses inverted signs (Etc/GMT-5 is UTC+5)
+    if (offsetHours >= 0) {
+      return 'Etc/GMT-$offsetHours';
+    } else {
+      return 'Etc/GMT+${offsetHours.abs()}';
+    }
   }
 
   void _onNotificationTapped(NotificationResponse response) {
@@ -69,10 +148,12 @@ class NotificationService {
     final notificationStatus = await Permission.notification.request();
     
     // For Android 12+ - request exact alarm permission (required for exact scheduling)
-    if (await Permission.scheduleExactAlarm.isDenied) {
-      final exactAlarmStatus = await Permission.scheduleExactAlarm.request();
-      if (!exactAlarmStatus.isGranted) {
-        debugPrint('⚠️ Exact alarm permission denied - notifications may not work reliably');
+    if (Platform.isAndroid) {
+      if (await Permission.scheduleExactAlarm.isDenied) {
+        final exactAlarmStatus = await Permission.scheduleExactAlarm.request();
+        if (!exactAlarmStatus.isGranted) {
+          debugPrint('⚠️ Exact alarm permission denied - notifications may not work reliably');
+        }
       }
     }
     
@@ -105,9 +186,6 @@ class NotificationService {
         debugPrint('Notifications already scheduled (${pendingNotifications.length} pending)');
       }
     } catch (e) {
-      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
-      // when notifications are scheduled with matchDateTimeComponents
-      // Reschedule to be safe
       debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
       await _cancelAllNotifications();
       await _scheduleMultipleNotifications(
@@ -136,7 +214,6 @@ class NotificationService {
       playSound: true,
       ongoing: false,
       channelShowBadge: true,
-      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -178,19 +255,14 @@ class NotificationService {
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
-          payload: 'zikr_reminder', // Payload to identify zikr reminder notifications
+          payload: 'zikr_reminder',
           );
           notificationCount++;
           notificationId++;
           
-          // Prevent ID overflow (Android typically supports up to 5000)
+          // Prevent ID overflow
           if (notificationId > 5000) {
             notificationId = 1000;
-          }
-          
-          // Log progress every 10 notifications
-          if (notificationCount % 10 == 0) {
-            debugPrint('Scheduled $notificationCount/$totalNotifications notifications...');
           }
         } catch (e) {
           debugPrint('Error scheduling notification $notificationId: $e');
@@ -198,23 +270,7 @@ class NotificationService {
       }
     }
 
-    debugPrint('✅ Successfully scheduled $notificationCount notifications every $intervalMinutes minutes for the next $hoursAhead hours');
-    
-    // Verify scheduled notifications (wrapped in try-catch due to known plugin issue)
-    try {
-      final pending = await _notifications.pendingNotificationRequests();
-      debugPrint('📋 Total pending notifications: ${pending.length}');
-    } catch (e) {
-      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
-      // when notifications are scheduled with matchDateTimeComponents
-      // This doesn't affect the actual scheduling, just the verification
-      // The notifications are still scheduled correctly, we just can't verify them
-      // Suppress this warning as it's expected behavior
-      if (kDebugMode) {
-        // Only show in debug mode, and make it less alarming
-        debugPrint('ℹ️ Note: Cannot verify scheduled notifications (known plugin limitation - notifications still work correctly)');
-      }
-    }
+    debugPrint('✅ Successfully scheduled $notificationCount notifications every $intervalMinutes minutes');
   }
 
   // Reschedule notifications when app comes to foreground
@@ -234,9 +290,6 @@ class NotificationService {
         debugPrint('✅ Notifications are up to date (${pendingNotifications.length} pending)');
       }
     } catch (e) {
-      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
-      // when notifications are scheduled with matchDateTimeComponents
-      // Reschedule to be safe
       debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
       await startPeriodicReminders();
     }
@@ -270,7 +323,6 @@ class NotificationService {
       channelDescription: 'Test notifications',
       importance: Importance.high,
       priority: Priority.high,
-      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -308,7 +360,6 @@ class NotificationService {
       channelDescription: 'Test notifications',
       importance: Importance.high,
       priority: Priority.high,
-      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -363,13 +414,6 @@ class NotificationService {
       return;
     }
 
-    // Check exact alarm permission (required for exact scheduling on Android 12+)
-    final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
-    if (exactAlarmStatus.isDenied) {
-      debugPrint('⚠️ Exact alarm permission not granted - notifications may not work reliably');
-      debugPrint('⚠️ Please grant exact alarm permission in device settings for reliable notifications');
-    }
-
     const androidDetails = AndroidNotificationDetails(
       'scheduled_zikr_reminders',
       'Scheduled Zikr Reminders',
@@ -381,7 +425,6 @@ class NotificationService {
       playSound: true,
       ongoing: false,
       channelShowBadge: true,
-      // Removed icon specification - Android will use app icon by default
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -403,7 +446,10 @@ class NotificationService {
     int notificationId = 2000; // Start from 2000 to avoid conflicts with periodic reminders
     int scheduledCount = 0;
 
-    // Schedule one notification per time (matchDateTimeComponents will handle daily repetition)
+    debugPrint('📅 Current local time: ${now.toString()}');
+    debugPrint('📅 Timezone: ${tz.local.name}');
+
+    // Schedule notifications for each time
     for (final timeStr in times) {
       try {
         final timeParts = timeStr.split(':');
@@ -420,8 +466,8 @@ class NotificationService {
           continue;
         }
 
-        // Calculate the scheduled date for today
-        final scheduledDate = tz.TZDateTime(
+        // Calculate the next occurrence of this time
+        var scheduledDate = tz.TZDateTime(
           tz.local,
           now.year,
           now.month,
@@ -430,19 +476,27 @@ class NotificationService {
           minute,
         );
 
-        // If the time has passed today, schedule for tomorrow
-        final targetDate = scheduledDate.isBefore(now) 
-            ? scheduledDate.add(const Duration(days: 1))
-            : scheduledDate;
+        // If the time has already passed today, schedule for tomorrow
+        if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
+          scheduledDate = scheduledDate.add(const Duration(days: 1));
+        }
 
-        debugPrint('📅 Scheduling notification for $timeStr at ${targetDate.toString()}');
+        debugPrint('📅 Scheduling notification for $timeStr');
+        debugPrint('   → Scheduled time: ${scheduledDate.toString()}');
+        debugPrint('   → Current time: ${now.toString()}');
+        debugPrint('   → Time until notification: ${scheduledDate.difference(now).inMinutes} minutes');
 
-        await _scheduleSingleNotification(
+        await _notifications.zonedSchedule(
           notificationId,
           title,
           body,
-          targetDate,
+          scheduledDate,
           details,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          payload: 'scheduled_zikr_reminder',
+          matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at this time
         );
         
         scheduledCount++;
@@ -457,56 +511,27 @@ class NotificationService {
       }
     }
 
-    debugPrint('✅ Successfully scheduled $scheduledCount daily notification(s) at ${times.length} time(s)');
+    debugPrint('✅ Successfully scheduled $scheduledCount daily notification(s)');
     debugPrint('📝 Scheduled times: ${times.join(", ")}');
     
-    // Verify scheduled notifications (wrapped in try-catch due to known plugin issue)
+    // Verify scheduled notifications
+    await _debugPendingNotifications();
+  }
+
+  /// Debug method to list pending notifications
+  Future<void> _debugPendingNotifications() async {
     try {
       final pending = await _notifications.pendingNotificationRequests();
       final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
       debugPrint('📋 Total scheduled notifications pending: ${scheduledPending.length}');
       
-      // Log details of pending notifications for debugging
-      for (final notification in scheduledPending.take(5)) {
+      for (final notification in scheduledPending.take(10)) {
         debugPrint('   - ID: ${notification.id}, Title: ${notification.title}');
       }
     } catch (e) {
-      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
-      // when notifications are scheduled with matchDateTimeComponents
-      // This doesn't affect the actual scheduling, just the verification
-      // The notifications are still scheduled correctly, we just can't verify them
-      // Suppress this warning as it's expected behavior
       if (kDebugMode) {
-        // Only show in debug mode, and make it less alarming
-        debugPrint('ℹ️ Note: Cannot verify scheduled notifications (known plugin limitation - notifications still work correctly)');
+        debugPrint('ℹ️ Note: Cannot verify scheduled notifications (plugin limitation)');
       }
-    }
-  }
-
-  /// Schedule a single notification
-  Future<void> _scheduleSingleNotification(
-    int id,
-    String title,
-    String body,
-    tz.TZDateTime scheduledDate,
-    NotificationDetails details,
-  ) async {
-    try {
-      await _notifications.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduledDate,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'scheduled_zikr_reminder',
-        matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at this time
-      );
-    } catch (e) {
-      debugPrint('Error scheduling notification $id: $e');
-      rethrow;
     }
   }
 
@@ -521,9 +546,6 @@ class NotificationService {
       }
       debugPrint('Cancelled scheduled notifications');
     } catch (e) {
-      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
-      // when notifications are scheduled with matchDateTimeComponents
-      // Cancel all notifications in the ID range as a fallback
       debugPrint('⚠️ Could not get pending notifications, cancelling by ID range: $e');
       for (int id = 2000; id < 5000; id++) {
         try {
@@ -558,9 +580,6 @@ class NotificationService {
         debugPrint('✅ Scheduled notifications are up to date (${scheduledPending.length} notifications)');
       }
     } catch (e) {
-      // Known issue: pendingNotificationRequests can fail with "Missing type parameter" 
-      // when notifications are scheduled with matchDateTimeComponents
-      // Reschedule as a precaution
       debugPrint('⚠️ Could not verify pending notifications, rescheduling to be safe: $e');
       await scheduleDailyNotifications(times: times);
     }
@@ -572,6 +591,10 @@ class NotificationService {
       await initialize();
     }
 
+    final now = tz.TZDateTime.now(tz.local);
+    debugPrint('🕐 Current time: ${now.toString()}');
+    debugPrint('🌍 Timezone: ${tz.local.name}');
+
     try {
       final pending = await _notifications.pendingNotificationRequests();
       final scheduledPending = pending.where((n) => n.id >= 2000 && n.id < 5000).toList();
@@ -582,13 +605,15 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('❌ Could not list scheduled notifications: $e');
-      debugPrint('   This is a known issue with the plugin when using matchDateTimeComponents');
     }
     
     // Check permissions
     final notificationPermission = await Permission.notification.status;
-    final exactAlarmPermission = await Permission.scheduleExactAlarm.status;
-    debugPrint('🔐 Permissions - Notification: $notificationPermission, Exact Alarm: $exactAlarmPermission');
+    debugPrint('🔐 Notification permission: $notificationPermission');
+    
+    if (Platform.isAndroid) {
+      final exactAlarmPermission = await Permission.scheduleExactAlarm.status;
+      debugPrint('🔐 Exact alarm permission: $exactAlarmPermission');
+    }
   }
 }
-
