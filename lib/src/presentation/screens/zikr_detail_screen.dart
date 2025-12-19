@@ -43,10 +43,11 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = context.isDarkMode;
     
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -64,7 +65,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
               end: Alignment.bottomCenter,
               colors: isDarkMode
                   ? [
-                      Colors.black.withValues(alpha: 0.4),
+                      Colors.black.withValues(alpha: 0.6),
                       Colors.transparent,
                     ]
                   : [
@@ -77,9 +78,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: isDarkMode
-              ? const Color(0xFF0F1419)
-              : const Color(0xFFF5F5F5),
+          color: context.backgroundColor,
         ),
         child: SafeArea(
           top: true,
@@ -147,27 +146,50 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
             ),
           );
         },
-        icon: const Icon(Icons.play_arrow),
-        label: const Text('Play Full Audio'),
+        backgroundColor: AppTheme.primaryGreen,
+        icon: const Icon(Icons.play_arrow, color: Colors.white),
+        label: Text(
+          'Play Full Audio',
+          style: AppTheme.bodyMedium.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
 
 
   Widget _buildArabicTextSection() {
+    final isDarkMode = context.isDarkMode;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: isDarkMode
+            ? Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 1,
+              )
+            : null,
+        boxShadow: isDarkMode
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -187,10 +209,10 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Arabic Text',
-                style: TextStyle(
-                  fontSize: 18,
+                style: AppTheme.titleMedium.copyWith(
+                  color: context.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -214,13 +236,22 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
       return const SizedBox.shrink();
     }
 
+    final isDarkMode = context.isDarkMode;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.teal.shade50,
+        color: isDarkMode
+            ? AppTheme.primaryTeal.withValues(alpha: 0.15)
+            : AppTheme.primaryTeal.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.primaryTeal.withOpacity(0.3)),
+        border: Border.all(
+          color: AppTheme.primaryTeal.withValues(
+            alpha: isDarkMode ? 0.4 : 0.3,
+          ),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -240,10 +271,10 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Translation',
-                style: TextStyle(
-                  fontSize: 18,
+                style: AppTheme.titleMedium.copyWith(
+                  color: context.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -312,17 +343,19 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
   }
 
   Widget _buildAudioSection() {
+    final isDarkMode = context.isDarkMode;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Text(
               'Audio Preview',
-              style: TextStyle(
-                fontSize: 18,
+              style: AppTheme.titleMedium.copyWith(
+                color: context.textPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -331,15 +364,29 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                border: isDarkMode
+                    ? Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      )
+                    : null,
+                boxShadow: isDarkMode
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
               ),
               child: ListTile(
                 leading: Container(
@@ -354,11 +401,24 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     size: 20,
                   ),
                 ),
-                title: const Text('Audio Recitation'),
-                subtitle: const Text('Tap to play'),
+                title: Text(
+                  'Audio Recitation',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  'Tap to play',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: context.textSecondary,
+                  ),
+                ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.play_circle_outline),
-                  color: AppTheme.primaryGreen,
+                  icon: Icon(
+                    Icons.play_circle_outline,
+                    color: AppTheme.primaryGreen,
+                  ),
                   onPressed: () async {
                     try {
                       await _audioService.playAudio(
