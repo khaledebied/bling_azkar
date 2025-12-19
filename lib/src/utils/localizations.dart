@@ -348,6 +348,7 @@ class AppLocalizations {
     'totalItems': 'total items',
     'audio': 'audio',
     'audios': 'audios',
+    'errorOpeningStore': 'Error opening store',
   };
 
   // Arabic strings
@@ -502,6 +503,7 @@ class AppLocalizations {
     'totalItems': 'إجمالي العناصر',
     'audio': 'صوت',
     'audios': 'أصوات',
+    'errorOpeningStore': 'خطأ في فتح المتجر',
   };
 }
 

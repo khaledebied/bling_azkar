@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:muslim_data_flutter/muslim_data_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../providers/prayer_times_providers.dart';
-import 'location_selection_dialog.dart';
 import 'dart:async';
 
 class PrayerTimesCard extends ConsumerStatefulWidget {
@@ -67,10 +68,23 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     final isDarkMode = context.isDarkMode;
     final locationAvailable = ref.watch(locationAvailableProvider);
     final storedLocation = ref.read(storedLocationProvider);
+    final permissionStatusAsync = ref.watch(locationPermissionStatusProvider);
     
-    // If no location available, show selection prompt
+    // If no location available, check permission status
     if (!locationAvailable) {
-      return _buildLocationSelectionPrompt(context, l10n, isDarkMode);
+      return permissionStatusAsync.when(
+        data: (status) {
+          if (status == LocationPermissionStatus.granted) {
+            // Permission granted but location not loaded yet, show loading
+            return _buildLoadingLocationPrompt(context, l10n, isDarkMode);
+          } else {
+            // Permission denied, show permission request UI
+            return _buildLocationPermissionPrompt(context, l10n, isDarkMode, status);
+          }
+        },
+        loading: () => _buildLoadingLocationPrompt(context, l10n, isDarkMode),
+        error: (_, __) => _buildLocationPermissionPrompt(context, l10n, isDarkMode, LocationPermissionStatus.denied),
+      );
     }
     
     final prayerTimesAsync = ref.watch(prayerTimesProvider);
@@ -163,17 +177,18 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                             if (storedLocation != null)
                               IconButton(
                                 icon: Icon(
-                                  Icons.edit_location_alt,
+                                  Icons.refresh,
                                   size: 20,
                                   color: AppTheme.primaryGreen,
                                 ),
                                 onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => const LocationSelectionDialog(),
-                                  );
+                                  // Refresh location by invalidating providers
+                                  ref.invalidate(gpsLocationProvider);
+                                  ref.invalidate(locationProvider);
+                                  ref.invalidate(prayerTimesProvider);
+                                  ref.invalidate(locationPermissionStatusProvider);
                                 },
-                                tooltip: l10n.isArabic ? 'تغيير الموقع' : 'Change Location',
+                                tooltip: l10n.isArabic ? 'تحديث الموقع' : 'Refresh Location',
                               ),
                           ],
                         ),
@@ -511,11 +526,80 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     }
   }
 
-  Widget _buildLocationSelectionPrompt(
+  Widget _buildLoadingLocationPrompt(
     BuildContext context,
     AppLocalizations l10n,
     bool isDarkMode,
   ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: isDarkMode
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.15),
+                  AppTheme.primaryTeal.withValues(alpha: 0.15),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withValues(alpha: 0.08),
+                  AppTheme.primaryTeal.withValues(alpha: 0.08),
+                  Colors.white,
+                ],
+              ),
+        color: isDarkMode ? context.cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDarkMode
+              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+              : AppTheme.primaryGreen.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode
+                ? Colors.black.withValues(alpha: 0.3)
+                : AppTheme.primaryGreen.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.isArabic
+                ? 'جاري تحديد موقعك...'
+                : 'Getting your location...',
+            style: AppTheme.bodyMedium.copyWith(
+              color: context.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationPermissionPrompt(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isDarkMode,
+    LocationPermissionStatus status,
+  ) {
+    final isDeniedForever = status == LocationPermissionStatus.deniedForever;
+    final isServiceDisabled = status == LocationPermissionStatus.serviceDisabled;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(24),
@@ -571,16 +655,29 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                 ),
               ],
             ),
-            child: const Text(
-              '📍',
-              style: TextStyle(fontSize: 32),
+            child: Icon(
+              isServiceDisabled
+                  ? Icons.location_disabled
+                  : isDeniedForever
+                      ? Icons.location_off
+                      : Icons.location_on,
+              color: Colors.white,
+              size: 32,
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.isArabic
-                ? 'اختر موقعك لعرض أوقات الصلاة'
-                : 'Select your location to view prayer times',
+            isServiceDisabled
+                ? (l10n.isArabic
+                    ? 'تفعيل خدمات الموقع'
+                    : 'Enable Location Services')
+                : isDeniedForever
+                    ? (l10n.isArabic
+                        ? 'تم رفض إذن الموقع'
+                        : 'Location Permission Denied')
+                    : (l10n.isArabic
+                        ? 'السماح بالوصول إلى الموقع'
+                        : 'Allow Location Access'),
             style: AppTheme.titleMedium.copyWith(
               color: context.textPrimary,
               fontWeight: FontWeight.bold,
@@ -589,38 +686,121 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.isArabic
-                ? 'يجب تحديد موقعك لعرض أوقات الصلاة بدقة'
-                : 'Please select your location to display accurate prayer times',
+            isServiceDisabled
+                ? (l10n.isArabic
+                    ? 'يرجى تفعيل خدمات الموقع من إعدادات الجهاز لعرض أوقات الصلاة'
+                    : 'Please enable location services from device settings to view prayer times')
+                : isDeniedForever
+                    ? (l10n.isArabic
+                        ? 'يرجى السماح بالوصول إلى الموقع من إعدادات التطبيق لعرض أوقات الصلاة'
+                        : 'Please allow location access from app settings to view prayer times')
+                    : (l10n.isArabic
+                        ? 'نحتاج إلى إذن الموقع لعرض أوقات الصلاة بدقة بناءً على موقعك الحالي'
+                        : 'We need location permission to show accurate prayer times based on your current location'),
             style: AppTheme.bodySmall.copyWith(
               color: context.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const LocationSelectionDialog(),
-              );
-            },
-            icon: const Icon(Icons.location_on, color: Colors.white),
-            label: Text(
-              l10n.isArabic ? 'اختر الموقع' : 'Select Location',
-              style: AppTheme.bodyMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!isDeniedForever && !isServiceDisabled) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      // Request permission
+                      ref.invalidate(gpsLocationProvider);
+                      ref.invalidate(locationProvider);
+                      ref.invalidate(locationPermissionStatusProvider);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(
+                        color: isDarkMode
+                            ? Colors.grey.shade700
+                            : Colors.grey.shade300,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.isArabic ? 'لاحقاً' : 'Later',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: context.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                flex: isDeniedForever || isServiceDisabled ? 1 : 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        if (isServiceDisabled) {
+                          // Open location settings
+                          await Geolocator.openLocationSettings();
+                        } else if (isDeniedForever) {
+                          // Open app settings
+                          await openAppSettings();
+                        } else {
+                          // Request permission
+                          ref.invalidate(gpsLocationProvider);
+                          ref.invalidate(locationProvider);
+                          ref.invalidate(locationPermissionStatusProvider);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isServiceDisabled || isDeniedForever
+                                  ? Icons.settings
+                                  : Icons.location_on,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isServiceDisabled || isDeniedForever
+                                  ? (l10n.isArabic ? 'فتح الإعدادات' : 'Open Settings')
+                                  : (l10n.isArabic ? 'السماح' : 'Allow'),
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 8,
-            ),
+            ],
           ),
         ],
       ),

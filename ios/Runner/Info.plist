@@ -55,7 +55,13 @@
 		<array>
 			<string>audio</string>
 		</array>
-		<key>UIStatusBarHidden</key>
-		<false/>
-	</dict>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>itms-apps</string>
+		<string>itms</string>
+		<string>https</string>
+	</array>
+</dict>
 </plist>

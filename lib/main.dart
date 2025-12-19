@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:quran_library/quran_library.dart';
 import 'src/data/services/notification_service.dart';
 import 'src/data/services/storage_service.dart';
+import 'src/data/services/version_check_service.dart';
 import 'src/utils/theme.dart';
 import 'src/utils/localizations.dart';
 import 'src/utils/app_state_provider.dart';
@@ -85,6 +86,19 @@ void _initializeServicesInBackground() async {
       debugPrint('⚠️ Error initializing QuranLibrary: $e');
       // QuranLibrary will try to initialize when first accessed if this fails
     }
+    
+    // Check for app updates in background (non-blocking)
+    // Wait a bit to ensure app is fully loaded
+    Future.delayed(const Duration(seconds: 2), () {
+      if (navigatorKey.currentContext != null) {
+        VersionCheckService().checkForUpdate(
+          navigatorKey.currentContext!,
+          forceUpdate: false,
+        ).catchError((e) {
+          debugPrint('Error checking for updates: $e');
+        });
+      }
+    });
   } catch (e) {
     debugPrint('Error in background initialization: $e');
   }

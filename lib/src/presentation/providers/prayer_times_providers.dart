@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:muslim_data_flutter/muslim_data_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../data/services/storage_service.dart';
 
 /// Provider for StorageService instance
@@ -29,6 +30,7 @@ final storedLocationProvider = Provider<Location?>((ref) {
 });
 
 /// Provider for GPS location (only if permission granted)
+/// This provider automatically requests permission if needed
 final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
   try {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -37,6 +39,8 @@ final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
+    
+    // If permission is denied, request it
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
@@ -44,23 +48,44 @@ final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
       }
     }
 
+    // If permission is denied forever, return null
     if (permission == LocationPermission.deniedForever) {
       return null;
     }
 
-    final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.medium,
-      ),
-    );
+    // Permission granted, get current position
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      );
 
-    final repository = MuslimRepository();
-    final location = await repository.reverseGeocoder(
-      latitude: position.latitude,
-      longitude: position.longitude,
-    );
+      final repository = MuslimRepository();
+      final location = await repository.reverseGeocoder(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
 
-    return location;
+      // Save location to preferences for future use
+      if (location != null) {
+        final storage = ref.read(storageServiceProvider);
+        final prefs = storage.getPreferences();
+        final updatedPrefs = prefs.copyWith(
+          selectedLocationId: location.id,
+          selectedLocationName: location.name,
+          selectedLocationLatitude: location.latitude,
+          selectedLocationLongitude: location.longitude,
+          selectedLocationCountryCode: location.countryCode,
+          selectedLocationCountryName: location.countryName,
+        );
+        await storage.savePreferences(updatedPrefs);
+      }
+
+      return location;
+    }
+
+    return null;
   } catch (e) {
     return null;
   }
@@ -83,6 +108,40 @@ final locationProvider = FutureProvider.autoDispose<Location?>((ref) async {
   // No location available
   return null;
 });
+
+/// Provider for location permission status
+final locationPermissionStatusProvider = FutureProvider.autoDispose<LocationPermissionStatus>((ref) async {
+  // Check if location services are enabled
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    return LocationPermissionStatus.serviceDisabled;
+  }
+
+  // Check permission status
+  LocationPermission permission = await Geolocator.checkPermission();
+  
+  if (permission == LocationPermission.denied) {
+    return LocationPermissionStatus.denied;
+  }
+  
+  if (permission == LocationPermission.deniedForever) {
+    return LocationPermissionStatus.deniedForever;
+  }
+  
+  if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+    return LocationPermissionStatus.granted;
+  }
+  
+  return LocationPermissionStatus.denied;
+});
+
+/// Location permission status enum
+enum LocationPermissionStatus {
+  granted,
+  denied,
+  deniedForever,
+  serviceDisabled,
+}
 
 /// Provider for location availability status
 final locationAvailableProvider = Provider<bool>((ref) {

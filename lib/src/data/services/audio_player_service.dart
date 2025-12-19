@@ -1,18 +1,25 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:path_provider/path_provider.dart';
+import 'background_audio_handler.dart';
 
 class AudioPlayerService {
   static final AudioPlayerService _instance = AudioPlayerService._internal();
   factory AudioPlayerService() => _instance;
   AudioPlayerService._internal();
 
-  final AudioPlayer _player = AudioPlayer();
+  BackgroundAudioHandler? _audioHandler;
   bool _initialized = false;
   Future<void>? _initFuture;
 
-  AudioPlayer get player => _player;
+  /// Get the background audio handler
+  BackgroundAudioHandler? get audioHandler => _audioHandler;
+  
+  /// Get the underlying AudioPlayer for direct access if needed
+  AudioPlayer? get player => _audioHandler?.player;
 
   /// Lazy initialization - only initializes when first needed
   Future<void> initialize() async {
@@ -30,8 +37,48 @@ class AudioPlayerService {
   Future<void> _doInitialize() async {
     if (_initialized) return;
     
+    // Initialize audio session for both Android and iOS
+    // This is critical for iOS background audio playback
     final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
+    await session.configure(
+      const AudioSessionConfiguration.music(
+        avAudioSessionCategoryOptions: [
+          // Allow audio to continue when screen is locked
+          AudioSessionCategoryOption.allowBluetooth,
+          AudioSessionCategoryOption.allowBluetoothA2DP,
+          AudioSessionCategoryOption.defaultToSpeaker,
+        ],
+        avAudioSessionMode: AudioSessionMode.defaultMode,
+        avAudioSessionRouteSharingPolicy: AudioSessionRouteSharingPolicy.defaultPolicy,
+        avAudioSessionSetActiveOptions: [],
+        androidAudioAttributes: AndroidAudioAttributes(
+          contentType: AndroidAudioContentType.music,
+          flags: [],
+          usage: AndroidAudioUsage.media,
+        ),
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+        androidWillPauseWhenDucked: false,
+      ),
+    );
+
+    // Initialize audio service for background playback
+    // Works on both Android and iOS
+    _audioHandler = await AudioService.init(
+      builder: () => BackgroundAudioHandler(),
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
+        androidNotificationChannelName: 'Bling Azkar Audio',
+        androidNotificationChannelDescription: 'Audio playback controls',
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: false,
+        androidShowNotificationBadge: true,
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidEnableQueue: false,
+        androidResumeOnClick: true,
+        // iOS-specific: Enable remote command center controls
+        iosShowNotificationControls: true,
+      ),
+    );
 
     _initialized = true;
   }
@@ -92,7 +139,12 @@ class AudioPlayerService {
     }
   }
 
-  Future<void> playAudio(String audioPath, {bool isLocal = true}) async {
+  Future<void> playAudio(
+    String audioPath, {
+    bool isLocal = true,
+    String? title,
+    String? artist,
+  }) async {
     if (audioPath.isEmpty) {
       throw ArgumentError('Audio path cannot be empty');
     }
@@ -100,13 +152,38 @@ class AudioPlayerService {
     // Lazy initialize if not already done
     await initialize();
 
+    if (_audioHandler == null) {
+      throw StateError('Audio handler not initialized');
+    }
+
     try {
+      // Load audio
       if (isLocal) {
-        await _player.setAsset(audioPath);
+        await _audioHandler!.loadAsset(audioPath);
       } else {
-        await _player.setUrl(audioPath);
+        await _audioHandler!.loadUrl(audioPath);
       }
-      await _player.play();
+
+      // Set media item for notification (iOS lock screen & Control Center)
+      // Get duration if available from player
+      Duration? duration;
+      try {
+        // Wait a bit for duration to load
+        await Future.delayed(const Duration(milliseconds: 100));
+        duration = _audioHandler!.player.duration;
+      } catch (e) {
+        debugPrint('Could not get duration: $e');
+      }
+
+      await _audioHandler!.setMediaItem(
+        id: audioPath,
+        title: title ?? 'Bling Azkar',
+        artist: artist ?? 'Islamic Remembrance',
+        duration: duration,
+      );
+
+      // Play audio (this activates iOS background audio session)
+      await _audioHandler!.play();
     } catch (e) {
       // Check if it's a cache directory error
       final errorString = e.toString();
@@ -119,11 +196,16 @@ class AudioPlayerService {
         // Retry after clearing cache
         try {
           if (isLocal) {
-            await _player.setAsset(audioPath);
+            await _audioHandler!.loadAsset(audioPath);
           } else {
-            await _player.setUrl(audioPath);
+            await _audioHandler!.loadUrl(audioPath);
           }
-          await _player.play();
+          await _audioHandler!.setMediaItem(
+            id: audioPath,
+            title: title ?? 'Bling Azkar',
+            artist: artist ?? 'Islamic Remembrance',
+          );
+          await _audioHandler!.play();
           print('Audio playback successful after cache clear');
         } catch (retryError) {
           print('Error playing audio after cache clear: $retryError');
@@ -137,38 +219,73 @@ class AudioPlayerService {
   }
 
   Future<void> pause() async {
-    await _player.pause();
+    if (_audioHandler != null) {
+      await _audioHandler!.pause();
+    }
   }
 
   Future<void> resume() async {
-    await _player.play();
+    if (_audioHandler != null) {
+      await _audioHandler!.play();
+    }
   }
 
   Future<void> stop() async {
-    await _player.stop();
+    if (_audioHandler != null) {
+      await _audioHandler!.stop();
+    }
   }
 
   Future<void> seek(Duration position) async {
-    await _player.seek(position);
+    if (_audioHandler != null) {
+      await _audioHandler!.seek(position);
+    }
   }
 
   Future<void> setLoopMode(LoopMode mode) async {
-    await _player.setLoopMode(mode);
+    if (_audioHandler?.player != null) {
+      await _audioHandler!.player.setLoopMode(mode);
+    }
   }
 
-  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<PlayerState> get playerStateStream {
+    if (_audioHandler?.player != null) {
+      return _audioHandler!.player.playerStateStream;
+    }
+    return const Stream<PlayerState>.empty();
+  }
 
-  Stream<Duration?> get durationStream => _player.durationStream;
+  Stream<Duration?> get durationStream {
+    if (_audioHandler?.player != null) {
+      return _audioHandler!.player.durationStream;
+    }
+    return const Stream<Duration?>.empty();
+  }
 
-  Stream<Duration> get positionStream => _player.positionStream;
+  Stream<Duration> get positionStream {
+    if (_audioHandler?.player != null) {
+      return _audioHandler!.player.positionStream;
+    }
+    return const Stream<Duration>.empty();
+  }
 
-  bool get isPlaying => _player.playing;
+  bool get isPlaying {
+    return _audioHandler?.player.playing ?? false;
+  }
 
-  Duration? get duration => _player.duration;
+  Duration? get duration {
+    return _audioHandler?.player.duration;
+  }
 
-  Duration get position => _player.position;
+  Duration get position {
+    return _audioHandler?.player.position ?? Duration.zero;
+  }
 
   Future<void> dispose() async {
-    await _player.dispose();
+    if (_audioHandler != null) {
+      await _audioHandler!.dispose();
+      _audioHandler = null;
+    }
+    _initialized = false;
   }
 }

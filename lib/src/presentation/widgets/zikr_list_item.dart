@@ -138,7 +138,12 @@ class _ZikrListItemState extends State<ZikrListItem>
         }
         
         // Play this audio
-        await _audioService.playAudio(_currentAudioPath!, isLocal: true);
+        await _audioService.playAudio(
+          _currentAudioPath!,
+          isLocal: true,
+          title: widget.zikr.title.ar,
+          artist: 'Bling Azkar',
+        );
         _currentlyPlayingPath = _currentAudioPath;
       }
     } catch (e) {

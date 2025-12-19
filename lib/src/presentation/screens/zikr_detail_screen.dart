@@ -364,6 +364,8 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                       await _audioService.playAudio(
                         audio.fullFileUrl,
                         isLocal: true,
+                        title: widget.zikr.title.ar,
+                        artist: 'Bling Azkar',
                       );
                     } catch (e) {
                       if (mounted) {

@@ -145,6 +145,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
         await audioService.playAudio(
           audioPath,
           isLocal: true,
+          title: widget.zikr.title.ar,
+          artist: 'Bling Azkar',
         );
       }
     } catch (e) {
