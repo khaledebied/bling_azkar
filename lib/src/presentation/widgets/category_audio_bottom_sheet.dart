@@ -117,11 +117,17 @@ class _CategoryAudioBottomSheetState extends ConsumerState<CategoryAudioBottomSh
     });
 
     if (_isPlayingAll && _playlistState == PlaylistState.playing) {
+      // Pause if currently playing
       await _playlistService.pause();
     } else if (_isPlayingAll && _playlistState == PlaylistState.paused) {
+      // Resume if paused
       await _playlistService.resume();
     } else {
+      // Stop any current playback and start fresh from beginning
+      await _playlistService.stop();
+      // Load playlist in order (will be sorted by ID)
       await _playlistService.loadPlaylist(azkar);
+      // Start playing from the first item
       await _playlistService.play();
     }
   }

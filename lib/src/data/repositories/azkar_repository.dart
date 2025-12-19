@@ -62,7 +62,16 @@ class AzkarRepository {
 
   Future<List<Zikr>> getAzkarByCategory(String category) async {
     final azkar = await loadAzkar();
-    return azkar.where((z) => z.category == category).toList();
+    // Filter by category and sort by ID to maintain consistent order
+    final categoryAzkar = azkar.where((z) => z.category == category).toList();
+    // Sort by ID to ensure consistent order (IDs contain category and number)
+    categoryAzkar.sort((a, b) {
+      // Extract numeric part from ID (format: categoryKey_id)
+      final aIdNum = int.tryParse(a.id.split('_').last) ?? 0;
+      final bIdNum = int.tryParse(b.id.split('_').last) ?? 0;
+      return aIdNum.compareTo(bIdNum);
+    });
+    return categoryAzkar;
   }
 
   Future<Zikr?> getZikrById(String id) async {

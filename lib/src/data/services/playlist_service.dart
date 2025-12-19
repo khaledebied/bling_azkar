@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 import '../../domain/models/zikr.dart';
@@ -90,14 +91,25 @@ class PlaylistService {
 
     _playlist = [];
 
-    for (var zikr in azkar) {
+    // Ensure azkar are in order by sorting by ID
+    final sortedAzkar = List<Zikr>.from(azkar);
+    sortedAzkar.sort((a, b) {
+      // Extract numeric part from ID (format: categoryKey_id)
+      final aIdNum = int.tryParse(a.id.split('_').last) ?? 0;
+      final bIdNum = int.tryParse(b.id.split('_').last) ?? 0;
+      return aIdNum.compareTo(bIdNum);
+    });
+
+    // Build playlist in strict sequential order
+    for (int zikrIndex = 0; zikrIndex < sortedAzkar.length; zikrIndex++) {
+      final zikr = sortedAzkar[zikrIndex];
       if (zikr.audio.isNotEmpty) {
         final audioInfo = zikr.audio.first;
         final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
         final count = zikr.defaultCount;
-        final zikrIndex = azkar.indexOf(zikr);
 
         // Create multiple playlist items based on the count
+        // Each repetition is added sequentially to maintain order
         for (int repetition = 1; repetition <= count; repetition++) {
           _playlist.add(PlaylistItem(
             zikr: zikr,
@@ -113,14 +125,20 @@ class PlaylistService {
     _currentIndex = -1;
     _updateState(PlaylistState.idle);
     _currentItemController.add(null);
+    
+    debugPrint('Playlist loaded: ${_playlist.length} items in order');
+    for (int i = 0; i < _playlist.length; i++) {
+      debugPrint('  [$i] ${_playlist[i].zikr.id} - Repetition ${_playlist[i].repetition}/${_playlist[i].totalRepetitions}');
+    }
   }
 
   Future<void> play() async {
     if (_playlist.isEmpty) return;
 
-    if (_currentIndex < 0) {
-      _currentIndex = 0;
-    }
+    // Always start from the beginning when play() is called
+    // This ensures consistent queue order
+    _currentIndex = 0;
+    debugPrint('Starting playlist from beginning (index 0)');
 
     await _playCurrentItem();
   }
@@ -135,11 +153,13 @@ class PlaylistService {
     _currentItemController.add(item);
     _updateState(PlaylistState.playing);
 
+    debugPrint('Playing item ${_currentIndex + 1}/${_playlist.length}: ${item.zikr.id} (Repetition ${item.repetition}/${item.totalRepetitions})');
+
     try {
       await _player.setAsset(item.audioPath);
       await _player.play();
     } catch (e) {
-      print('Error playing audio: $e');
+      debugPrint('Error playing audio: $e');
       _updateState(PlaylistState.error);
       // Try to continue with next item
       _currentIndex++;
@@ -153,13 +173,17 @@ class PlaylistService {
   }
 
   void _onTrackCompleted() {
+    debugPrint('Track ${_currentIndex + 1} completed, moving to next...');
     _currentIndex++;
     if (_currentIndex < _playlist.length) {
-      // Small delay before playing next track
+      // Small delay before playing next track to ensure smooth transition
       Future.delayed(const Duration(milliseconds: 300), () {
-        _playCurrentItem();
+        if (_state != PlaylistState.completed) {
+          _playCurrentItem();
+        }
       });
     } else {
+      debugPrint('Playlist completed! All ${_playlist.length} items played.');
       _updateState(PlaylistState.completed);
       _currentItemController.add(null);
     }
