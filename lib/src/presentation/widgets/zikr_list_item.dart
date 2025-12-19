@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
@@ -79,6 +80,18 @@ class _ZikrListItemState extends State<ZikrListItem>
       _currentAudioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
     }
 
+    // Initialize audio service and listen to player state
+    _initializeAudioListener();
+  }
+
+  Future<void> _initializeAudioListener() async {
+    // Initialize audio service first to ensure streams are available
+    try {
+      await _audioService.initialize();
+    } catch (e) {
+      debugPrint('Error initializing audio service: $e');
+    }
+
     // Listen to audio player state
     _playerStateSubscription = _audioService.playerStateStream.listen((state) {
       if (mounted && _currentAudioPath != null) {
@@ -119,9 +132,22 @@ class _ZikrListItemState extends State<ZikrListItem>
   }
 
   Future<void> _handlePlayPause() async {
-    if (widget.zikr.audio.isEmpty || _currentAudioPath == null) return;
+    if (widget.zikr.audio.isEmpty || _currentAudioPath == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No audio available for this zikr'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
 
     try {
+      // Ensure audio service is initialized
+      await _audioService.initialize();
+      
       // Animate button press
       _playController.forward().then((_) {
         _playController.reverse();
@@ -147,11 +173,13 @@ class _ZikrListItemState extends State<ZikrListItem>
         _currentlyPlayingPath = _currentAudioPath;
       }
     } catch (e) {
+      debugPrint('Error in _handlePlayPause: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error playing audio: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
