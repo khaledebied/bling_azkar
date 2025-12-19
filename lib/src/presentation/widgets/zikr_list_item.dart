@@ -372,6 +372,7 @@ class _ZikrListItemState extends State<ZikrListItem>
     
     return GestureDetector(
       onTap: _handlePlayPause,
+      behavior: HitTestBehavior.opaque, // Makes entire circle tappable
       child: ScaleTransition(
         scale: _playScaleAnimation,
         child: Container(
