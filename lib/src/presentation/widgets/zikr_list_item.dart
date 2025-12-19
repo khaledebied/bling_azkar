@@ -84,12 +84,12 @@ class _ZikrListItemState extends State<ZikrListItem>
     _initializeAudioListener();
   }
 
-  Future<void> _initializeAudioListener() async {
-    // Initialize audio service first to ensure streams are available
-    try {
-      await _audioService.initialize();
-    } catch (e) {
-      debugPrint('Error initializing audio service: $e');
+  void _initializeAudioListener() {
+    // AudioService is already initialized in main.dart
+    // Just listen to player state if available
+    if (!_audioService.isReady) {
+      debugPrint('AudioService not ready yet, will retry on first play');
+      return;
     }
 
     // Listen to audio player state
@@ -144,9 +144,24 @@ class _ZikrListItemState extends State<ZikrListItem>
       return;
     }
 
+    // Check if audio service is ready
+    if (!_audioService.isReady) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Audio service not ready. Please try again.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     try {
-      // Ensure audio service is initialized
-      await _audioService.initialize();
+      // Set up listener if not already done
+      if (_playerStateSubscription == null) {
+        _initializeAudioListener();
+      }
       
       // Animate button press
       _playController.forward().then((_) {
