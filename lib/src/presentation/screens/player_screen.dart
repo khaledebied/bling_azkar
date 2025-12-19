@@ -200,24 +200,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.white.withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.more_vert,
-                color: isDarkMode ? Colors.white : AppTheme.primaryGreen,
-              ),
-            ),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
