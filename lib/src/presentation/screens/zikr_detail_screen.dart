@@ -3,8 +3,6 @@ import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/direction_icons.dart';
-import '../../data/services/audio_player_service.dart';
-import 'player_screen.dart';
 
 class ZikrDetailScreen extends StatefulWidget {
   final Zikr zikr;
@@ -19,7 +17,6 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  final _audioService = AudioPlayerService();
 
   @override
   void initState() {
@@ -54,10 +51,24 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
         leading: IconButton(
           icon: Icon(
             DirectionIcons.backArrow(context),
-            color: Colors.white,
+            color: isDarkMode 
+                ? Colors.white.withValues(alpha: 0.9) 
+                : Colors.black54,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        title: Text(
+          widget.zikr.title.ar,
+          style: AppTheme.titleMedium.copyWith(
+            color: isDarkMode 
+                ? Colors.white.withValues(alpha: 0.9) 
+                : Colors.black54,
+            fontWeight: FontWeight.bold,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -65,7 +76,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
               end: Alignment.bottomCenter,
               colors: isDarkMode
                   ? [
-                      Colors.black.withValues(alpha: 0.6),
+                      Colors.black.withValues(alpha: 0.4),
                       Colors.transparent,
                     ]
                   : [
@@ -93,7 +104,7 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                     decoration: BoxDecoration(
                       gradient: AppTheme.primaryGradient,
                     ),
-                    padding: const EdgeInsets.fromLTRB(24, 80, 24, 40),
+                    padding: const EdgeInsets.fromLTRB(24, 100, 24, 40),
                     child: Column(
                       children: [
                         Text(
@@ -127,32 +138,12 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                       RepaintBoundary(child: _buildArabicTextSection()),
                       RepaintBoundary(child: _buildTranslationSection()),
                       RepaintBoundary(child: _buildRepetitionSection()),
-                      RepaintBoundary(child: _buildAudioSection()),
                       const SizedBox(height: 100),
                     ],
                   ),
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PlayerScreen(zikr: widget.zikr),
-            ),
-          );
-        },
-        backgroundColor: AppTheme.primaryGreen,
-        icon: const Icon(Icons.play_arrow, color: Colors.white),
-        label: Text(
-          'Play Full Audio',
-          style: AppTheme.bodyMedium.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -337,111 +328,6 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAudioSection() {
-    final isDarkMode = context.isDarkMode;
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Text(
-              'Audio Preview',
-              style: AppTheme.titleMedium.copyWith(
-                color: context.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ...widget.zikr.audio.map((audio) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: context.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: isDarkMode
-                    ? Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        width: 1,
-                      )
-                    : null,
-                boxShadow: isDarkMode
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-              ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.headphones,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  'Audio Recitation',
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  'Tap to play',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: context.textSecondary,
-                  ),
-                ),
-                trailing: IconButton(
-                  icon: Icon(
-                    Icons.play_circle_outline,
-                    color: AppTheme.primaryGreen,
-                  ),
-                  onPressed: () async {
-                    try {
-                      await _audioService.playAudio(
-                        audio.fullFileUrl,
-                        isLocal: true,
-                        title: widget.zikr.title.ar,
-                        artist: 'Bling Azkar',
-                      );
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error playing audio: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
-            );
-          }).toList(),
         ],
       ),
     );
