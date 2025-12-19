@@ -73,3 +73,18 @@
     public static *** v(...);
     public static *** i(...);
 }
+
+# Google Play Core (optional - used by Flutter for deferred components)
+# Suppress warnings if Play Core is not included (deferred components are optional)
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
+
+# Keep Play Core classes if they exist (for apps that use deferred components)
+-keep class com.google.android.play.core.splitcompat.** { *; }
+-keep class com.google.android.play.core.splitinstall.** { *; }
+-keep class com.google.android.play.core.tasks.** { *; }
+
+# Flutter deferred components (optional feature)
+-keep class io.flutter.embedding.engine.deferredcomponents.** { *; }
+-keep class io.flutter.embedding.android.FlutterPlayStoreSplitApplication { *; }

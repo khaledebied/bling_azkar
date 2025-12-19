@@ -52,4 +52,9 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
+    // Google Play Core (for Flutter deferred components support)
+    // Required to prevent R8 errors about missing classes
+    // R8 needs these classes at build time even if not used at runtime
+    implementation("com.google.android.play:core:1.10.3")
 }
