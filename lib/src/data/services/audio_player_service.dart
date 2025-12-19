@@ -14,6 +14,7 @@ class AudioPlayerService {
   BackgroundAudioHandler? _audioHandler;
   bool _initialized = false;
   Future<void>? _initFuture;
+  bool _isInitializing = false;
 
   /// Get the background audio handler
   BackgroundAudioHandler? get audioHandler => _audioHandler;
@@ -26,39 +27,78 @@ class AudioPlayerService {
     if (_initialized) return;
     
     // If already initializing, wait for that
-    if (_initFuture != null) {
+    if (_isInitializing && _initFuture != null) {
       return _initFuture!;
     }
 
+    // Set flag to prevent concurrent initialization
+    _isInitializing = true;
     _initFuture = _doInitialize();
-    await _initFuture;
+    
+    try {
+      await _initFuture;
+    } finally {
+      _isInitializing = false;
+    }
   }
   
   Future<void> _doInitialize() async {
-    if (_initialized) return;
+    if (_initialized && _audioHandler != null) return;
     
-    // Initialize audio session for both Android and iOS
-    // This is critical for iOS background audio playback
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
+    try {
+      // Initialize audio session for both Android and iOS
+      // This is critical for iOS background audio playback
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
 
-    // Initialize audio service for background playback
-    // Works on both Android and iOS
-    _audioHandler = await AudioService.init(
-      builder: () => BackgroundAudioHandler(),
-      config: AudioServiceConfig(
-        androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
-        androidNotificationChannelName: 'Bling Azkar Audio',
-        androidNotificationChannelDescription: 'Audio playback controls',
-        androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true, // Must be true when androidNotificationOngoing is true
-        androidShowNotificationBadge: true,
-        androidNotificationIcon: 'mipmap/ic_launcher',
-        androidResumeOnClick: true,
-      ),
-    );
+      // Initialize audio service for background playback
+      // Works on both Android and iOS
+      // Note: AudioService.init() can only be called once per app lifecycle
+      // If already initialized, it should return the existing handler
+      _audioHandler = await AudioService.init(
+        builder: () => BackgroundAudioHandler(),
+        config: AudioServiceConfig(
+          androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
+          androidNotificationChannelName: 'Bling Azkar Audio',
+          androidNotificationChannelDescription: 'Audio playback controls',
+          androidNotificationOngoing: true,
+          androidStopForegroundOnPause: true, // Must be true when androidNotificationOngoing is true
+          androidShowNotificationBadge: true,
+          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidResumeOnClick: true,
+        ),
+      );
 
-    _initialized = true;
+      _initialized = true;
+    } catch (e) {
+      // If AudioService is already initialized (cache manager assertion error), handle gracefully
+      final errorString = e.toString();
+      if (errorString.contains('_cacheManager == null') || 
+          errorString.contains('already initialized') ||
+          AudioService.running) {
+        debugPrint('AudioService already initialized (error: $e)');
+        // AudioService is running but we hit an assertion error
+        // Try to get the handler by calling init() again with a try-catch
+        // This is a workaround for the audio_service package limitation
+        try {
+          // Wait a bit and try to get handler
+          await Future.delayed(const Duration(milliseconds: 100));
+          // If AudioService is running, we can't get the handler directly
+          // But we'll mark as initialized and let playAudio handle it
+          _initialized = true;
+          debugPrint('Marked as initialized - handler will be obtained on first play');
+          return;
+        } catch (retryError) {
+          debugPrint('Error retrying initialization: $retryError');
+        }
+      }
+      
+      debugPrint('Error in _doInitialize: $e');
+      // Reset flags so initialization can be retried
+      _initFuture = null;
+      _isInitializing = false;
+      rethrow;
+    }
   }
 
   /// Clears the just_audio cache directory if it's corrupted
@@ -129,6 +169,32 @@ class AudioPlayerService {
 
     // Lazy initialize if not already done
     await initialize();
+
+    // If handler is null but AudioService is running, try to get it
+    if (_audioHandler == null && AudioService.running) {
+      try {
+        // Try to initialize again to get the handler
+        // This should return the existing handler if AudioService is already running
+        _audioHandler = await AudioService.init(
+          builder: () => BackgroundAudioHandler(),
+          config: AudioServiceConfig(
+            androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
+            androidNotificationChannelName: 'Bling Azkar Audio',
+            androidNotificationChannelDescription: 'Audio playback controls',
+            androidNotificationOngoing: true,
+            androidStopForegroundOnPause: true,
+            androidShowNotificationBadge: true,
+            androidNotificationIcon: 'mipmap/ic_launcher',
+            androidResumeOnClick: true,
+          ),
+        );
+      } catch (e) {
+        // If it fails, AudioService is already initialized but we can't get the handler
+        // This is a limitation of the audio_service package
+        debugPrint('Cannot get AudioService handler: $e');
+        throw StateError('Audio handler not available - AudioService is already running');
+      }
+    }
 
     if (_audioHandler == null) {
       throw StateError('Audio handler not initialized');
