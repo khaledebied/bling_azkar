@@ -51,7 +51,7 @@ class AudioPlayerService {
         androidNotificationChannelName: 'Bling Azkar Audio',
         androidNotificationChannelDescription: 'Audio playback controls',
         androidNotificationOngoing: true,
-        androidStopForegroundOnPause: false,
+        androidStopForegroundOnPause: true, // Must be true when androidNotificationOngoing is true
         androidShowNotificationBadge: true,
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidResumeOnClick: true,
