@@ -56,6 +56,7 @@ class AppLocalizations {
   String get noAzkarInCategory => _get('noAzkarInCategory');
   String get clearFilter => _get('clearFilter');
   String get errorLoadingAzkar => _get('errorLoadingAzkar');
+  String get errorOpeningStore => _get('errorOpeningStore');
   String get noFavoritesYet => _get('noFavoritesYet');
   String get addFavoritesHint => _get('addFavoritesHint');
   String get recentAzkarWillAppearHere => _get('recentAzkarWillAppearHere');

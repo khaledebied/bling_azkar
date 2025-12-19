@@ -40,32 +40,13 @@ class AudioPlayerService {
     // Initialize audio session for both Android and iOS
     // This is critical for iOS background audio playback
     final session = await AudioSession.instance;
-    await session.configure(
-      const AudioSessionConfiguration.music(
-        avAudioSessionCategoryOptions: [
-          // Allow audio to continue when screen is locked
-          AudioSessionCategoryOption.allowBluetooth,
-          AudioSessionCategoryOption.allowBluetoothA2DP,
-          AudioSessionCategoryOption.defaultToSpeaker,
-        ],
-        avAudioSessionMode: AudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy: AudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: [],
-        androidAudioAttributes: AndroidAudioAttributes(
-          contentType: AndroidAudioContentType.music,
-          flags: [],
-          usage: AndroidAudioUsage.media,
-        ),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-        androidWillPauseWhenDucked: false,
-      ),
-    );
+    await session.configure(const AudioSessionConfiguration.music());
 
     // Initialize audio service for background playback
     // Works on both Android and iOS
     _audioHandler = await AudioService.init(
       builder: () => BackgroundAudioHandler(),
-      config: const AudioServiceConfig(
+      config: AudioServiceConfig(
         androidNotificationChannelId: 'com.blingazkar.bling_azkar.audio',
         androidNotificationChannelName: 'Bling Azkar Audio',
         androidNotificationChannelDescription: 'Audio playback controls',
@@ -73,10 +54,7 @@ class AudioPlayerService {
         androidStopForegroundOnPause: false,
         androidShowNotificationBadge: true,
         androidNotificationIcon: 'mipmap/ic_launcher',
-        androidEnableQueue: false,
         androidResumeOnClick: true,
-        // iOS-specific: Enable remote command center controls
-        iosShowNotificationControls: true,
       ),
     );
 

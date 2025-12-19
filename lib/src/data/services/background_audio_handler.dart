@@ -235,6 +235,5 @@ class BackgroundAudioHandler extends BaseAudioHandler
   @override
   Future<void> dispose() async {
     await _player.dispose();
-    await super.dispose();
   }
 }
