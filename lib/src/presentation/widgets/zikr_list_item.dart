@@ -172,14 +172,29 @@ class _ZikrListItemState extends State<ZikrListItem>
       });
       
       if (_isPlaying && _isCurrentAudio) {
-        // Pause current audio
-        await _audioService.pause();
+        // Pause current audio - update UI immediately
         _currentlyPlayingPath = null;
+        _isPlaying = false;
+        _isCurrentAudio = false;
+        _pulseController.stop();
+        _pulseController.reset();
+        if (mounted) setState(() {});
+        
+        await _audioService.pause();
       } else {
         // Stop any currently playing audio
         if (_currentlyPlayingPath != null && _currentlyPlayingPath != _currentAudioPath) {
           await _audioService.stop();
         }
+        
+        // Set path BEFORE playing so stream listener can match it
+        _currentlyPlayingPath = _currentAudioPath;
+        
+        // Update UI immediately - show playing state
+        _isPlaying = true;
+        _isCurrentAudio = true;
+        _pulseController.repeat(reverse: true);
+        if (mounted) setState(() {});
         
         // Play this audio
         await _audioService.playAudio(
@@ -188,10 +203,17 @@ class _ZikrListItemState extends State<ZikrListItem>
           title: widget.zikr.title.ar,
           artist: 'Bling Azkar',
         );
-        _currentlyPlayingPath = _currentAudioPath;
       }
     } catch (e) {
       debugPrint('Error in _handlePlayPause: $e');
+      // Reset state on error
+      _isPlaying = false;
+      _isCurrentAudio = false;
+      _currentlyPlayingPath = null;
+      _pulseController.stop();
+      _pulseController.reset();
+      if (mounted) setState(() {});
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
