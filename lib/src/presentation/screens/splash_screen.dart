@@ -440,19 +440,6 @@ class _SplashScreenState extends State<SplashScreen>
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        // Subtitle
-        Text(
-          'Bling Azkar',
-          style: AppTheme.bodyMedium.copyWith(
-            color: isDarkMode
-                ? Colors.white.withOpacity(0.7)
-                : AppTheme.textSecondary,
-            fontSize: 16,
-            letterSpacing: 1.5,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
       ],
     );
   }
