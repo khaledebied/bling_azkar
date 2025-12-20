@@ -40,6 +40,8 @@ _$UserPreferencesImpl _$$UserPreferencesImplFromJson(
                   ?.map((e) => e as String)
                   .toList() ??
               const [],
+      prayerTimeNotificationsEnabled:
+          json['prayerTimeNotificationsEnabled'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$UserPreferencesImplToJson(
@@ -61,4 +63,5 @@ Map<String, dynamic> _$$UserPreferencesImplToJson(
       'selectedLocationCountryCode': instance.selectedLocationCountryCode,
       'selectedLocationCountryName': instance.selectedLocationCountryName,
       'scheduledNotificationTimes': instance.scheduledNotificationTimes,
+      'prayerTimeNotificationsEnabled': instance.prayerTimeNotificationsEnabled,
     };

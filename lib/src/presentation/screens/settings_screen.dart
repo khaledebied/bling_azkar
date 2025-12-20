@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:muslim_data_flutter/muslim_data_flutter.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
@@ -109,6 +110,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
               Icons.notifications_active,
             ),
             _buildRemindersCard(l10n),
+            const SizedBox(height: 16),
+            
+            // Prayer Time Notifications
+            _buildPrayerTimeNotificationsCard(l10n),
             const SizedBox(height: 24),
 
             // Appearance Section
@@ -360,6 +365,166 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         ],
       ),
     );
+  }
+
+  Widget _buildPrayerTimeNotificationsCard(AppLocalizations l10n) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: context.isDarkMode 
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey.shade200,
+        ),
+      ),
+      child: SwitchListTile(
+        title: Text(
+          l10n.isArabic ? 'إشعارات أوقات الصلاة' : 'Prayer Time Notifications',
+          style: AppTheme.bodyMedium.copyWith(
+            color: context.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          l10n.isArabic 
+              ? 'إشعار عند حلول وقت كل صلاة'
+              : 'Get notified at each prayer time',
+          style: AppTheme.bodySmall.copyWith(
+            color: context.textSecondary,
+          ),
+        ),
+        secondary: Icon(
+          Icons.mosque_outlined,
+          color: _prefs.prayerTimeNotificationsEnabled 
+              ? AppTheme.primaryGreen 
+              : context.textSecondary,
+        ),
+        value: _prefs.prayerTimeNotificationsEnabled,
+        onChanged: (value) async {
+          final notificationService = NotificationService();
+          
+          if (value) {
+            // Request permissions first
+            final hasPermission = await notificationService.requestPermissions();
+            if (hasPermission) {
+              // Enable prayer time notifications
+              final updatedPrefs = _prefs.copyWith(prayerTimeNotificationsEnabled: true);
+              _updatePreferences(updatedPrefs);
+              
+              // Schedule prayer time notifications
+              await _schedulePrayerTimeNotifications();
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.isArabic 
+                          ? 'تم تفعيل إشعارات أوقات الصلاة'
+                          : 'Prayer time notifications enabled',
+                    ),
+                    backgroundColor: AppTheme.primaryGreen,
+                  ),
+                );
+              }
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.pleaseEnableNotificationsDevice,
+                    ),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            }
+          } else {
+            // Disable prayer time notifications
+            await notificationService.cancelPrayerTimeNotifications();
+            final updatedPrefs = _prefs.copyWith(prayerTimeNotificationsEnabled: false);
+            _updatePreferences(updatedPrefs);
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    l10n.isArabic 
+                        ? 'تم إلغاء إشعارات أوقات الصلاة'
+                        : 'Prayer time notifications disabled',
+                  ),
+                  backgroundColor: Colors.grey,
+                ),
+              );
+            }
+          }
+        },
+        activeColor: AppTheme.primaryGreen,
+      ),
+    );
+  }
+
+  Future<void> _schedulePrayerTimeNotifications() async {
+    try {
+      // Get prayer times from storage
+      final storage = StorageService();
+      final prefs = storage.getPreferences();
+      
+      // Check if we have a location
+      if (prefs.selectedLocationLatitude == null || prefs.selectedLocationLongitude == null) {
+        debugPrint('No location set, cannot schedule prayer time notifications');
+        return;
+      }
+      
+      // Get prayer times using MuslimRepository
+      final repository = MuslimRepository();
+      final location = Location(
+        id: prefs.selectedLocationId ?? 0,
+        name: prefs.selectedLocationName ?? 'Unknown',
+        latitude: prefs.selectedLocationLatitude!,
+        longitude: prefs.selectedLocationLongitude!,
+        countryCode: prefs.selectedLocationCountryCode ?? '',
+        countryName: prefs.selectedLocationCountryName ?? '',
+        hasFixedPrayerTime: false,
+      );
+      
+      final prayerAttribute = PrayerAttribute(
+        calculationMethod: CalculationMethod.mwl,
+        asrMethod: AsrMethod.shafii,
+        higherLatitudeMethod: HigherLatitudeMethod.midNight,
+        offset: [0, 0, 0, 0, 0, 0],
+      );
+      
+      final prayerTime = await repository.getPrayerTimes(
+        location: location,
+        date: DateTime.now(),
+        attribute: prayerAttribute,
+      );
+      
+      if (prayerTime == null) {
+        debugPrint('Could not get prayer times');
+        return;
+      }
+      
+      // Create prayer times map
+      final prayerTimes = {
+        'fajr': prayerTime.fajr,
+        'dhuhr': prayerTime.dhuhr,
+        'asr': prayerTime.asr,
+        'maghrib': prayerTime.maghrib,
+        'isha': prayerTime.isha,
+      };
+      
+      // Schedule notifications
+      final notificationService = NotificationService();
+      await notificationService.schedulePrayerTimeNotifications(
+        prayerTimes: prayerTimes,
+        isArabic: prefs.language == 'ar',
+      );
+    } catch (e) {
+      debugPrint('Error scheduling prayer time notifications: $e');
+    }
   }
 
   void _showAddScheduledTimeDialog(AppLocalizations l10n) async {

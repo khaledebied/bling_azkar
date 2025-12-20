@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:quran_library/quran_library.dart';
+import 'package:muslim_data_flutter/muslim_data_flutter.dart';
 import 'src/data/services/notification_service.dart';
 import 'src/data/services/storage_service.dart';
 import 'src/data/services/version_check_service.dart';
@@ -255,6 +256,64 @@ class _BlingAzkarAppState extends State<BlingAzkarApp> with WidgetsBindingObserv
           debugPrint('Error rescheduling daily notifications: $e');
         });
       }
+      
+      // Reschedule prayer time notifications if enabled
+      if (prefs.prayerTimeNotificationsEnabled) {
+        _reschedulePrayerTimeNotifications(prefs);
+      }
+    }
+  }
+  
+  Future<void> _reschedulePrayerTimeNotifications(prefs) async {
+    try {
+      // Check if we have a location
+      if (prefs.selectedLocationLatitude == null || prefs.selectedLocationLongitude == null) {
+        return;
+      }
+      
+      // Get prayer times using MuslimRepository
+      final repository = MuslimRepository();
+      final location = Location(
+        id: prefs.selectedLocationId ?? 0,
+        name: prefs.selectedLocationName ?? 'Unknown',
+        latitude: prefs.selectedLocationLatitude!,
+        longitude: prefs.selectedLocationLongitude!,
+        countryCode: prefs.selectedLocationCountryCode ?? '',
+        countryName: prefs.selectedLocationCountryName ?? '',
+        hasFixedPrayerTime: false,
+      );
+      
+      final prayerAttribute = PrayerAttribute(
+        calculationMethod: CalculationMethod.mwl,
+        asrMethod: AsrMethod.shafii,
+        higherLatitudeMethod: HigherLatitudeMethod.midNight,
+        offset: [0, 0, 0, 0, 0, 0],
+      );
+      
+      final prayerTime = await repository.getPrayerTimes(
+        location: location,
+        date: DateTime.now(),
+        attribute: prayerAttribute,
+      );
+      
+      if (prayerTime == null) return;
+      
+      // Create prayer times map
+      final prayerTimes = {
+        'fajr': prayerTime.fajr,
+        'dhuhr': prayerTime.dhuhr,
+        'asr': prayerTime.asr,
+        'maghrib': prayerTime.maghrib,
+        'isha': prayerTime.isha,
+      };
+      
+      // Reschedule notifications
+      await _notificationService.reschedulePrayerTimeNotificationsIfNeeded(
+        prayerTimes: prayerTimes,
+        isArabic: prefs.language == 'ar',
+      );
+    } catch (e) {
+      debugPrint('Error rescheduling prayer time notifications: $e');
     }
   }
 

@@ -53,7 +53,9 @@ mixin _$UserPreferences {
   String? get selectedLocationCountryName => throw _privateConstructorUsedError;
   @HiveField(16)
   List<String> get scheduledNotificationTimes =>
-      throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // Format: "HH:mm" (e.g., "08:00", "12:30")
+  @HiveField(17)
+  bool get prayerTimeNotificationsEnabled => throw _privateConstructorUsedError;
 
   /// Serializes this UserPreferences to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -87,7 +89,8 @@ abstract class $UserPreferencesCopyWith<$Res> {
       @HiveField(13) double? selectedLocationLongitude,
       @HiveField(14) String? selectedLocationCountryCode,
       @HiveField(15) String? selectedLocationCountryName,
-      @HiveField(16) List<String> scheduledNotificationTimes});
+      @HiveField(16) List<String> scheduledNotificationTimes,
+      @HiveField(17) bool prayerTimeNotificationsEnabled});
 }
 
 /// @nodoc
@@ -121,6 +124,7 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
     Object? selectedLocationCountryCode = freezed,
     Object? selectedLocationCountryName = freezed,
     Object? scheduledNotificationTimes = null,
+    Object? prayerTimeNotificationsEnabled = null,
   }) {
     return _then(_value.copyWith(
       language: null == language
@@ -187,6 +191,10 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
           ? _value.scheduledNotificationTimes
           : scheduledNotificationTimes // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      prayerTimeNotificationsEnabled: null == prayerTimeNotificationsEnabled
+          ? _value.prayerTimeNotificationsEnabled
+          : prayerTimeNotificationsEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -215,7 +223,8 @@ abstract class _$$UserPreferencesImplCopyWith<$Res>
       @HiveField(13) double? selectedLocationLongitude,
       @HiveField(14) String? selectedLocationCountryCode,
       @HiveField(15) String? selectedLocationCountryName,
-      @HiveField(16) List<String> scheduledNotificationTimes});
+      @HiveField(16) List<String> scheduledNotificationTimes,
+      @HiveField(17) bool prayerTimeNotificationsEnabled});
 }
 
 /// @nodoc
@@ -247,6 +256,7 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
     Object? selectedLocationCountryCode = freezed,
     Object? selectedLocationCountryName = freezed,
     Object? scheduledNotificationTimes = null,
+    Object? prayerTimeNotificationsEnabled = null,
   }) {
     return _then(_$UserPreferencesImpl(
       language: null == language
@@ -313,6 +323,10 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
           ? _value._scheduledNotificationTimes
           : scheduledNotificationTimes // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      prayerTimeNotificationsEnabled: null == prayerTimeNotificationsEnabled
+          ? _value.prayerTimeNotificationsEnabled
+          : prayerTimeNotificationsEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -336,7 +350,8 @@ class _$UserPreferencesImpl implements _UserPreferences {
       @HiveField(13) this.selectedLocationLongitude,
       @HiveField(14) this.selectedLocationCountryCode,
       @HiveField(15) this.selectedLocationCountryName,
-      @HiveField(16) final List<String> scheduledNotificationTimes = const []})
+      @HiveField(16) final List<String> scheduledNotificationTimes = const [],
+      @HiveField(17) this.prayerTimeNotificationsEnabled = false})
       : _favoriteZikrIds = favoriteZikrIds,
         _scheduledNotificationTimes = scheduledNotificationTimes;
 
@@ -413,9 +428,15 @@ class _$UserPreferencesImpl implements _UserPreferences {
     return EqualUnmodifiableListView(_scheduledNotificationTimes);
   }
 
+// Format: "HH:mm" (e.g., "08:00", "12:30")
+  @override
+  @JsonKey()
+  @HiveField(17)
+  final bool prayerTimeNotificationsEnabled;
+
   @override
   String toString() {
-    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName, scheduledNotificationTimes: $scheduledNotificationTimes)';
+    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName, scheduledNotificationTimes: $scheduledNotificationTimes, prayerTimeNotificationsEnabled: $prayerTimeNotificationsEnabled)';
   }
 
   @override
@@ -445,8 +466,7 @@ class _$UserPreferencesImpl implements _UserPreferences {
                 other.selectedLocationId == selectedLocationId) &&
             (identical(other.selectedLocationName, selectedLocationName) ||
                 other.selectedLocationName == selectedLocationName) &&
-            (identical(
-                    other.selectedLocationLatitude, selectedLocationLatitude) ||
+            (identical(other.selectedLocationLatitude, selectedLocationLatitude) ||
                 other.selectedLocationLatitude == selectedLocationLatitude) &&
             (identical(other.selectedLocationLongitude,
                     selectedLocationLongitude) ||
@@ -461,7 +481,11 @@ class _$UserPreferencesImpl implements _UserPreferences {
                     selectedLocationCountryName) &&
             const DeepCollectionEquality().equals(
                 other._scheduledNotificationTimes,
-                _scheduledNotificationTimes));
+                _scheduledNotificationTimes) &&
+            (identical(other.prayerTimeNotificationsEnabled,
+                    prayerTimeNotificationsEnabled) ||
+                other.prayerTimeNotificationsEnabled ==
+                    prayerTimeNotificationsEnabled));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -483,7 +507,8 @@ class _$UserPreferencesImpl implements _UserPreferences {
       selectedLocationLongitude,
       selectedLocationCountryCode,
       selectedLocationCountryName,
-      const DeepCollectionEquality().hash(_scheduledNotificationTimes));
+      const DeepCollectionEquality().hash(_scheduledNotificationTimes),
+      prayerTimeNotificationsEnabled);
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
@@ -519,7 +544,8 @@ abstract class _UserPreferences implements UserPreferences {
           @HiveField(13) final double? selectedLocationLongitude,
           @HiveField(14) final String? selectedLocationCountryCode,
           @HiveField(15) final String? selectedLocationCountryName,
-          @HiveField(16) final List<String> scheduledNotificationTimes}) =
+          @HiveField(16) final List<String> scheduledNotificationTimes,
+          @HiveField(17) final bool prayerTimeNotificationsEnabled}) =
       _$UserPreferencesImpl;
 
   factory _UserPreferences.fromJson(Map<String, dynamic> json) =
@@ -572,7 +598,11 @@ abstract class _UserPreferences implements UserPreferences {
   String? get selectedLocationCountryName;
   @override
   @HiveField(16)
-  List<String> get scheduledNotificationTimes;
+  List<String>
+      get scheduledNotificationTimes; // Format: "HH:mm" (e.g., "08:00", "12:30")
+  @override
+  @HiveField(17)
+  bool get prayerTimeNotificationsEnabled;
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.

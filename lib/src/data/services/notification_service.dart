@@ -698,4 +698,192 @@ class NotificationService {
   Future<void> cancelTestNotification() async {
     await _notifications.cancel(9999);
   }
+
+  /// Schedule prayer time notifications
+  /// prayerTimes: Map of prayer name to DateTime (e.g., {'fajr': DateTime, 'dhuhr': DateTime, ...})
+  /// isArabic: Whether to use Arabic language for notifications
+  Future<void> schedulePrayerTimeNotifications({
+    required Map<String, DateTime> prayerTimes,
+    required bool isArabic,
+  }) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    if (prayerTimes.isEmpty) {
+      debugPrint('No prayer times provided');
+      return;
+    }
+
+    // Verify permissions before scheduling
+    final hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      debugPrint('❌ Notification permission not granted for prayer times');
+      return;
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'prayer_time_reminders',
+      'Prayer Time Reminders',
+      channelDescription: 'Notifications for prayer times',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      ongoing: false,
+      channelShowBadge: true,
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    // Cancel existing prayer notifications first
+    await cancelPrayerTimeNotifications();
+
+    final now = tz.TZDateTime.now(tz.local);
+    int notificationId = 5000; // Start from 5000 for prayer notifications
+    int scheduledCount = 0;
+
+    // Prayer name translations
+    final prayerNamesAr = {
+      'fajr': 'الفجر',
+      'dhuhr': 'الظهر',
+      'asr': 'العصر',
+      'maghrib': 'المغرب',
+      'isha': 'العشاء',
+    };
+
+    final prayerNamesEn = {
+      'fajr': 'Fajr',
+      'dhuhr': 'Dhuhr',
+      'asr': 'Asr',
+      'maghrib': 'Maghrib',
+      'isha': 'Isha',
+    };
+
+    debugPrint('📿 Scheduling prayer time notifications...');
+    debugPrint('   Current time: ${now.toString()}');
+
+    for (final entry in prayerTimes.entries) {
+      final prayerKey = entry.key;
+      final prayerDateTime = entry.value;
+
+      try {
+        // Convert to TZDateTime
+        var scheduledDate = tz.TZDateTime(
+          tz.local,
+          prayerDateTime.year,
+          prayerDateTime.month,
+          prayerDateTime.day,
+          prayerDateTime.hour,
+          prayerDateTime.minute,
+          0,
+        );
+
+        // If the time has already passed today, schedule for tomorrow
+        if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
+          scheduledDate = scheduledDate.add(const Duration(days: 1));
+        }
+
+        final prayerNameAr = prayerNamesAr[prayerKey] ?? prayerKey;
+        final prayerNameEn = prayerNamesEn[prayerKey] ?? prayerKey;
+
+        final title = isArabic ? 'حان وقت صلاة $prayerNameAr' : '$prayerNameEn Prayer Time';
+        final body = isArabic 
+            ? 'حان الآن موعد صلاة $prayerNameAr 🕌'
+            : 'It\'s time for $prayerNameEn prayer 🕌';
+
+        final minutesUntil = scheduledDate.difference(now).inMinutes;
+        debugPrint('   📿 $prayerKey: ${scheduledDate.toString()} (in ${minutesUntil}m)');
+
+        await _notifications.zonedSchedule(
+          notificationId,
+          title,
+          body,
+          scheduledDate,
+          details,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          payload: 'prayer_time_$prayerKey',
+          matchDateTimeComponents: DateTimeComponents.time, // Repeat daily
+        );
+
+        scheduledCount++;
+        notificationId++;
+      } catch (e) {
+        debugPrint('❌ Error scheduling $prayerKey notification: $e');
+      }
+    }
+
+    debugPrint('✅ Scheduled $scheduledCount prayer time notifications');
+  }
+
+  /// Cancel only prayer time notifications (IDs 5000-5999)
+  Future<void> cancelPrayerTimeNotifications() async {
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      for (final notification in pending) {
+        if (notification.id >= 5000 && notification.id < 6000) {
+          await _notifications.cancel(notification.id);
+        }
+      }
+      debugPrint('Cancelled prayer time notifications');
+    } catch (e) {
+      debugPrint('⚠️ Could not get pending notifications, cancelling by ID range: $e');
+      for (int id = 5000; id < 6000; id++) {
+        try {
+          await _notifications.cancel(id);
+        } catch (_) {
+          // Ignore individual cancel errors
+        }
+      }
+    }
+  }
+
+  /// Reschedule prayer time notifications if needed
+  Future<void> reschedulePrayerTimeNotificationsIfNeeded({
+    required Map<String, DateTime> prayerTimes,
+    required bool isArabic,
+  }) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    if (prayerTimes.isEmpty) {
+      return;
+    }
+
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      final prayerPending = pending.where((n) => n.id >= 5000 && n.id < 6000).toList();
+      
+      // We should have 5 notifications (one per prayer)
+      if (prayerPending.length < 5) {
+        debugPrint('⚠️ Low prayer notification count (${prayerPending.length}/5), rescheduling...');
+        await schedulePrayerTimeNotifications(
+          prayerTimes: prayerTimes,
+          isArabic: isArabic,
+        );
+      } else {
+        debugPrint('✅ Prayer time notifications are up to date');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Could not verify prayer notifications, rescheduling: $e');
+      await schedulePrayerTimeNotifications(
+        prayerTimes: prayerTimes,
+        isArabic: isArabic,
+      );
+    }
+  }
 }
