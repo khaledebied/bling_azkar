@@ -356,6 +356,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
               ),
               onTap: () => _showAddScheduledTimeDialog(l10n),
             ),
+            Divider(
+              height: 1,
+              color: context.isDarkMode 
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade100,
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.notifications_active_outlined,
+                color: Colors.orange,
+              ),
+              title: Text(
+                l10n.isArabic ? 'اختبار الإشعارات' : 'Test Notification',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                l10n.isArabic 
+                    ? 'إرسال إشعار تجريبي بعد دقيقة واحدة' 
+                    : 'Send a test notification in 1 minute',
+                style: AppTheme.bodySmall.copyWith(
+                  color: context.textSecondary,
+                ),
+              ),
+              onTap: () => _testNotification(l10n),
+            ),
           ],
         ],
       ),
@@ -525,6 +553,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         title: l10n.isArabic ? 'وقت الذكر' : 'Time for Zikr',
         body: l10n.isArabic ? 'لا تنسى ذكر الله ❤️' : 'Don\'t forget to remember Allah ❤️',
       );
+    }
+  }
+
+  Future<void> _testNotification(AppLocalizations l10n) async {
+    final notificationService = NotificationService();
+    
+    try {
+      final scheduledTime = await notificationService.scheduleTestNotificationIn1Minute();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.isArabic 
+                  ? 'سيصل إشعار تجريبي في الساعة $scheduledTime' 
+                  : 'Test notification scheduled for $scheduledTime',
+            ),
+            backgroundColor: AppTheme.primaryGreen,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.isArabic 
+                  ? 'فشل في جدولة الإشعار: ${e.toString()}' 
+                  : 'Failed to schedule notification: ${e.toString()}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

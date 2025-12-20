@@ -467,6 +467,7 @@ class NotificationService {
         }
 
         // Calculate the next occurrence of this time
+        // First, create the time for today
         var scheduledDate = tz.TZDateTime(
           tz.local,
           now.year,
@@ -474,18 +475,33 @@ class NotificationService {
           now.day,
           hour,
           minute,
+          0, // seconds
         );
 
         // If the time has already passed today, schedule for tomorrow
+        // This ensures the FIRST notification fires at the correct time
         if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
           scheduledDate = scheduledDate.add(const Duration(days: 1));
+          debugPrint('📅 Time $timeStr has passed today, scheduling for tomorrow');
+        } else {
+          debugPrint('📅 Time $timeStr has NOT passed yet, scheduling for today');
         }
 
-        debugPrint('📅 Scheduling notification for $timeStr');
-        debugPrint('   → Scheduled time: ${scheduledDate.toString()}');
-        debugPrint('   → Current time: ${now.toString()}');
-        debugPrint('   → Time until notification: ${scheduledDate.difference(now).inMinutes} minutes');
+        final minutesUntil = scheduledDate.difference(now).inMinutes;
+        final hoursUntil = minutesUntil ~/ 60;
+        final remainingMinutes = minutesUntil % 60;
 
+        debugPrint('📅 Scheduling daily notification for $timeStr');
+        debugPrint('   → First notification: ${scheduledDate.toString()}');
+        debugPrint('   → Current time: ${now.toString()}');
+        debugPrint('   → Time until first notification: ${hoursUntil}h ${remainingMinutes}m');
+        debugPrint('   → Will repeat daily at $timeStr');
+
+        // Schedule the notification with daily repetition
+        // matchDateTimeComponents: DateTimeComponents.time means:
+        // - The notification will fire at the specified hour:minute every day
+        // - The first notification fires at scheduledDate
+        // - Subsequent notifications fire daily at the same time
         await _notifications.zonedSchedule(
           notificationId,
           title,
@@ -615,5 +631,71 @@ class NotificationService {
       final exactAlarmPermission = await Permission.scheduleExactAlarm.status;
       debugPrint('🔐 Exact alarm permission: $exactAlarmPermission');
     }
+  }
+
+  /// Schedule a test notification in 1 minute to verify notifications are working
+  /// Returns the scheduled time as a string for display
+  Future<String> scheduleTestNotificationIn1Minute() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    // Verify permissions
+    final hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      throw Exception('Notification permission not granted');
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'test_scheduled',
+      'Test Scheduled Notifications',
+      channelDescription: 'Test for scheduled notifications',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    final now = tz.TZDateTime.now(tz.local);
+    final scheduledDate = now.add(const Duration(minutes: 1));
+
+    debugPrint('🧪 Scheduling test notification');
+    debugPrint('   → Current time: ${now.toString()}');
+    debugPrint('   → Scheduled for: ${scheduledDate.toString()}');
+
+    await _notifications.zonedSchedule(
+      9999, // Unique ID for test notification
+      '🧪 Test Notification',
+      'If you see this, notifications are working correctly!',
+      scheduledDate,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'test_notification',
+    );
+
+    final timeStr = '${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}';
+    debugPrint('✅ Test notification scheduled for $timeStr');
+    
+    return timeStr;
+  }
+
+  /// Cancel test notification
+  Future<void> cancelTestNotification() async {
+    await _notifications.cancel(9999);
   }
 }
