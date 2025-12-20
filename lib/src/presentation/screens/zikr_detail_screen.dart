@@ -40,112 +40,46 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = context.isDarkMode;
-    
     return Scaffold(
-      extendBodyBehindAppBar: true,
       backgroundColor: context.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: context.backgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             DirectionIcons.backArrow(context),
-            color: isDarkMode 
-                ? Colors.white.withValues(alpha: 0.9) 
-                : Colors.black54,
+            color: context.textPrimary,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.zikr.title.ar,
           style: AppTheme.titleMedium.copyWith(
-            color: isDarkMode 
-                ? Colors.white.withValues(alpha: 0.9) 
-                : Colors.black54,
+            color: context.textPrimary,
             fontWeight: FontWeight.bold,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDarkMode
-                  ? [
-                      Colors.black.withValues(alpha: 0.4),
-                      Colors.transparent,
-                    ]
-                  : [
-                      AppTheme.primaryGreen.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
+      ),
+      body: CustomScrollView(
+        cacheExtent: 500,
+        slivers: [
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  RepaintBoundary(child: _buildArabicTextSection()),
+                  RepaintBoundary(child: _buildTranslationSection()),
+                  RepaintBoundary(child: _buildRepetitionSection()),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          color: context.backgroundColor,
-        ),
-        child: SafeArea(
-          top: true,
-          child: CustomScrollView(
-            // Performance optimization: increase cache extent
-            cacheExtent: 500,
-            slivers: [
-              SliverToBoxAdapter(
-                child: Hero(
-                  tag: 'zikr_${widget.zikr.id}',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                    ),
-                    padding: const EdgeInsets.fromLTRB(24, 100, 24, 40),
-                    child: Column(
-                      children: [
-                        Text(
-                          widget.zikr.title.ar,
-                          style: AppTheme.arabicLarge.copyWith(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.zikr.title.en,
-                          style: AppTheme.titleMedium.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Column(
-                    children: [
-                      RepaintBoundary(child: _buildArabicTextSection()),
-                      RepaintBoundary(child: _buildTranslationSection()),
-                      RepaintBoundary(child: _buildRepetitionSection()),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
