@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:quran_library/quran_library.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/direction_icons.dart';
+import '../../data/services/showcase_service.dart';
+import '../widgets/custom_showcase_tooltip.dart';
+import '../providers/ui_providers.dart';
 
-class QuranScreen extends StatefulWidget {
+class QuranScreen extends ConsumerStatefulWidget {
   const QuranScreen({super.key});
 
   @override
-  State<QuranScreen> createState() => _QuranScreenState();
+  ConsumerState<QuranScreen> createState() => _QuranScreenState();
 }
 
-class _QuranScreenState extends State<QuranScreen>
+class _QuranScreenState extends ConsumerState<QuranScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -22,11 +27,39 @@ class _QuranScreenState extends State<QuranScreen>
   bool _hasError = false;
   String _errorMessage = '';
 
+  // Showcase Keys
+  final GlobalKey _titleKey = GlobalKey();
+  final GlobalKey _contentKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _checkInitialization();
+    
+    // Check immediately if we are already on tab 3 (for hot reload or initial state)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(currentTabProvider) == 3) {
+        _checkAndStartShowcase();
+      }
+    });
+  }
+  
+  Future<void> _checkAndStartShowcase() async {
+    // Small delay to ensure UI is ready
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    final showcaseService = ref.read(showcaseServiceProvider);
+    
+    // Only show content showcase if tab showcase is already seen
+    final hasSeenTab = await showcaseService.hasSeenQuranTabShowcase();
+    if (hasSeenTab) {
+      final hasSeenContent = await showcaseService.hasSeenQuranContentShowcase();
+      if (!hasSeenContent) {
+        ShowCaseWidget.of(context).startShowCase([_titleKey, _contentKey]);
+      }
+    }
   }
 
   void _initializeAnimations() {
@@ -82,6 +115,13 @@ class _QuranScreenState extends State<QuranScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Listen to tab changes to trigger showcase
+    ref.listen(currentTabProvider, (previous, next) {
+      if (next == 3) {
+        _checkAndStartShowcase();
+      }
+    });
+
     // Safe MediaQuery access
     final mediaQuery = MediaQuery.of(context);
     final screenWidth = mediaQuery.size.width;
@@ -106,11 +146,27 @@ class _QuranScreenState extends State<QuranScreen>
           backgroundColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: Text(
-            l10n.quranKareem,
-            style: AppTheme.titleMedium.copyWith(
-              color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
-              fontWeight: FontWeight.bold,
+          title: Showcase.withWidget(
+            key: _titleKey,
+            targetBorderRadius: BorderRadius.circular(12),
+            container: SizedBox(
+              width: 300,
+              height: 160,
+              child: CustomShowcaseTooltip(
+                title: l10n.showcaseQuranTitle,
+                description: l10n.showcaseQuranTab,
+                icon: Icons.menu_book_rounded,
+                onNext: () {
+                  ShowCaseWidget.of(context).next();
+                },
+              ),
+            ),
+            child: Text(
+              l10n.quranKareem,
+              style: AppTheme.titleMedium.copyWith(
+                color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           centerTitle: true,
@@ -164,34 +220,53 @@ class _QuranScreenState extends State<QuranScreen>
     double screenHeight,
   ) {
     try {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: isDarkMode
-            ? const Color(0xFF0F1419)
-            : const Color(0xFFF5F5F5),
-        child: QuranLibraryScreen(
-          parentContext: context,
-          isDark: isDarkMode,
-          showAyahBookmarkedIcon: true,
-          appLanguageCode: isArabic ? 'ar' : 'en',
-          ayahIconColor: AppTheme.primaryGreen,
-          backgroundColor: isDarkMode
+      final l10n = AppLocalizations.ofWithFallback(context);
+      return Showcase.withWidget(
+        key: _contentKey,
+        targetBorderRadius: BorderRadius.circular(20),
+        container: SizedBox(
+          width: 300,
+          height: 180,
+          child: CustomShowcaseTooltip(
+            title: l10n.quranKareem,
+            description: l10n.showcaseQuranFeatures,
+            isLastStep: true,
+            icon: Icons.search_rounded,
+            onNext: () {
+              ref.read(showcaseServiceProvider).markQuranContentShowcaseAsSeen();
+              ShowCaseWidget.of(context).dismiss();
+            },
+          ),
+        ),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: isDarkMode
               ? const Color(0xFF0F1419)
               : const Color(0xFFF5F5F5),
-          textColor: isDarkMode
-              ? Colors.white.withValues(alpha: 0.95)
-              : Colors.black87,
-          isFontsLocal: false,
-          // Custom styling for better UI/UX - full screen
-          tafsirStyle: TafsirStyle.defaults(
+          child: QuranLibraryScreen(
+            parentContext: context,
             isDark: isDarkMode,
-            context: context,
-          ).copyWith(
-            widthOfBottomSheet: screenWidth * 0.95,
-            heightOfBottomSheet: screenHeight * 0.85,
-            changeTafsirDialogHeight: screenHeight * 0.85,
-            changeTafsirDialogWidth: screenWidth * 0.9,
+            showAyahBookmarkedIcon: true,
+            appLanguageCode: isArabic ? 'ar' : 'en',
+            ayahIconColor: AppTheme.primaryGreen,
+            backgroundColor: isDarkMode
+                ? const Color(0xFF0F1419)
+                : const Color(0xFFF5F5F5),
+            textColor: isDarkMode
+                ? Colors.white.withValues(alpha: 0.95)
+                : Colors.black87,
+            isFontsLocal: false,
+            // Custom styling for better UI/UX - full screen
+            tafsirStyle: TafsirStyle.defaults(
+              isDark: isDarkMode,
+              context: context,
+            ).copyWith(
+              widthOfBottomSheet: screenWidth * 0.95,
+              heightOfBottomSheet: screenHeight * 0.85,
+              changeTafsirDialogHeight: screenHeight * 0.85,
+              changeTafsirDialogWidth: screenWidth * 0.9,
+            ),
           ),
         ),
       );

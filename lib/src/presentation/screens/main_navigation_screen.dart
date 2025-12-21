@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
+import '../../data/services/showcase_service.dart';
+import '../widgets/custom_showcase_tooltip.dart';
 import 'home_screen.dart';
 import 'tasbih_list_screen.dart';
 import 'favorites_screen.dart';
 import 'quran_screen.dart';
+import '../providers/ui_providers.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  ConsumerState<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen>
+class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
   late List<Widget> _screens;
   late List<AnimationController> _animationControllers;
   late List<Animation<double>> _fadeAnimations;
+  
+  // Showcase Keys
+  final GlobalKey _quranTabKey = GlobalKey();
 
   @override
   void initState() {
@@ -49,6 +57,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
     // Start animation for first tab
     _animationControllers[0].forward();
+    
+    // Check for showcase
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndStartShowcase();
+    });
+  }
+  
+  Future<void> _checkAndStartShowcase() async {
+    final showcaseService = ref.read(showcaseServiceProvider);
+    final hasSeen = await showcaseService.hasSeenQuranTabShowcase();
+    
+    if (!hasSeen && mounted) {
+      ShowCaseWidget.of(context).startShowCase([_quranTabKey]);
+    }
   }
 
   @override
@@ -59,8 +81,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     super.dispose();
   }
 
+
+
   void _onTabTapped(int index) {
     if (_currentIndex == index) return;
+
+    // Update provider
+    ref.read(currentTabProvider.notifier).state = index;
+
+    // If tapping Quran tab, check if we need to mark showcase as seen (if it wasn't shown automatically)
+    if (index == 3) {
+      // Logic to show Quran specific showcase is handled in QuranScreen via provider listener
+    }
 
     setState(() {
       // Fade out current tab
@@ -73,6 +105,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
   @override
   Widget build(BuildContext context) {
+    return ShowCaseWidget(
+      onComplete: (index, key) {
+        if (key == _quranTabKey) {
+          ref.read(showcaseServiceProvider).markQuranTabShowcaseAsSeen();
+          // Navigate to Quran tab
+          _onTabTapped(3);
+          // We can optionally start another showcase flow inside Quran Screen here
+          // But QuranScreen will handle its own showcase via the same service check
+        }
+      },
+      builder: (context) => _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
 
@@ -90,7 +137,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 );
               }).toList(),
             ),
-            bottomNavigationBar: _buildBottomNavigationBar(),
+            bottomNavigationBar: _buildBottomNavigationBar(context),
             // Ensure SnackBar has proper margins
             resizeToAvoidBottomInset: false,
           ),
@@ -99,13 +146,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     );
   }
 
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
-    final isDarkMode = context.isDarkMode;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Container(
       decoration: BoxDecoration(
-        color: context.cardColor,
+        color: Theme.of(context).cardColor,
         border: isDarkMode
             ? Border(
                 top: BorderSide(
@@ -148,6 +195,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 icon: Icons.menu_book_rounded,
                 label: l10n.quranKareem,
                 index: 3,
+                showcaseKey: _quranTabKey,
+                showcaseTitle: l10n.showcaseQuranTitle,
+                showcaseDesc: l10n.showcaseQuranTab,
               ),
             ],
           ),
@@ -160,63 +210,89 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     required IconData icon,
     required String label,
     required int index,
+    GlobalKey? showcaseKey,
+    String? showcaseTitle,
+    String? showcaseDesc,
   }) {
     final isSelected = _currentIndex == index;
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _onTabTapped(index),
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            gradient: isSelected ? AppTheme.primaryGradient : null,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedContainer(
+    Widget content = GestureDetector(
+      onTap: () => _onTabTapped(index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          gradient: isSelected ? AppTheme.primaryGradient : null,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Flexible(
+              child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
+                style: AppTheme.caption.copyWith(
+                  color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: isSelected ? 11 : 10,
                 ),
-                child: Icon(
-                  icon,
-                  color: isSelected ? Colors.white : context.textSecondary,
-                  size: 22,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 2),
-              Flexible(
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 300),
-                  style: AppTheme.caption.copyWith(
-                    color: isSelected ? Colors.white : context.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: isSelected ? 11 : 10,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+
+    if (showcaseKey != null && showcaseTitle != null && showcaseDesc != null) {
+      return Expanded(
+        child: Showcase.withWidget(
+          key: showcaseKey,
+          targetPadding: const EdgeInsets.all(4),
+          targetBorderRadius: BorderRadius.circular(16),
+          container: SizedBox(
+            width: 300,
+            height: 200,
+            child: CustomShowcaseTooltip(
+              title: showcaseTitle,
+              description: showcaseDesc,
+              icon: icon,
+              onNext: () {
+                ShowCaseWidget.of(context).next();
+              },
+            ),
+          ),
+          child: content,
+        ),
+      );
+    }
+
+    return Expanded(child: content);
   }
 }
 

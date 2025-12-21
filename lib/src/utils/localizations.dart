@@ -140,6 +140,14 @@ class AppLocalizations {
   String get privacyPolicyContent => _get('privacyPolicyContent');
   String get rateAppMessage => _get('rateAppMessage');
 
+  // Showcase
+  String get showcaseQuranTab => _get('showcaseQuranTab');
+  String get showcaseQuranTitle => _get('showcaseQuranTitle');
+  String get showcaseQuranFeatures => _get('showcaseQuranFeatures');
+  String get showcaseNext => _get('showcaseNext');
+  String get showcaseFinish => _get('showcaseFinish');
+  String get showcaseSkip => _get('showcaseSkip');
+
   // Tab Names
   String get azkar => _get('azkar');
   String get tasbih => _get('tasbih');
@@ -383,6 +391,14 @@ If you have any questions or suggestions about our Privacy Policy, do not hesita
     'audio': 'audio',
     'audios': 'audios',
     'errorOpeningStore': 'Error opening store',
+    
+    // Showcase
+    'showcaseQuranTab': 'Tap here to read the Holy Quran',
+    'showcaseQuranTitle': 'The Holy Quran at your fingertips',
+    'showcaseQuranFeatures': 'Browse Surahs, search ayahs, bookmark verses, and access Tafsir',
+    'showcaseNext': 'Next',
+    'showcaseFinish': 'Got it!',
+    'showcaseSkip': 'Skip',
   };
 
   // Arabic strings
@@ -565,6 +581,14 @@ If you have any questions or suggestions about our Privacy Policy, do not hesita
     'audio': 'صوت',
     'audios': 'أصوات',
     'errorOpeningStore': 'خطأ في فتح المتجر',
+
+    // Showcase
+    'showcaseQuranTab': 'اضغط هنا لقراءة القرآن الكريم',
+    'showcaseQuranTitle': 'القرآن الكريم بين يديك',
+    'showcaseQuranFeatures': 'تصفح السور، ابحث عن الآيات، احفظ العلامات، واقرأ التفسير',
+    'showcaseNext': 'التالي',
+    'showcaseFinish': 'فهمت!',
+    'showcaseSkip': 'تخطي',
   };
 }
 

@@ -8,6 +8,7 @@ import '../../utils/direction_icons.dart';
 import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
 import '../../data/services/notification_service.dart';
+import '../../data/services/showcase_service.dart';
 import '../../domain/models/user_preferences.dart';
 import 'privacy_policy_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -807,6 +808,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
             trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
             onTap: () {
               _showClearCacheDialog(l10n);
+            },
+          ),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
+          ListTile(
+            leading: const Icon(Icons.restart_alt, color: Colors.blue),
+            title: Text(l10n.isArabic ? 'إعادة ضبط العرض التوضيحي' : 'Reset Onboarding'),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
+            onTap: () async {
+              await ref.read(showcaseServiceProvider).resetAllShowcases();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.isArabic ? 'تم إعادة ضبط العرض التوضيحي' : 'Onboarding reset'),
+                    backgroundColor: AppTheme.primaryGreen,
+                  ),
+                );
+              }
             },
           ),
           Divider(
