@@ -96,7 +96,10 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
         scale: _scaleAnimation,
         child: Container(
           margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.only(
+            top: 20,
+            bottom: 20,
+          ),
           decoration: BoxDecoration(
             gradient: isDarkMode
                 ? LinearGradient(
@@ -138,85 +141,90 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        '🕌',
+                        style: TextStyle(fontSize: 24),
+                      ),
                     ),
-                    child: const Text(
-                      '🕌',
-                      style: TextStyle(fontSize: 24),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                l10n.isArabic ? 'أوقات الصلاة' : 'Prayer Times',
-                                style: AppTheme.titleMedium.copyWith(
-                                  color: context.textPrimary,
-                                  fontWeight: FontWeight.bold,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  l10n.isArabic ? 'أوقات الصلاة' : 'Prayer Times',
+                                  style: AppTheme.titleMedium.copyWith(
+                                    color: context.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                              ),
+                              if (storedLocation != null)
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.refresh,
+                                    size: 20,
+                                    color: AppTheme.primaryGreen,
+                                  ),
+                                  onPressed: () {
+                                    // Refresh location by invalidating providers
+                                    ref.invalidate(gpsLocationProvider);
+                                    ref.invalidate(locationProvider);
+                                    ref.invalidate(prayerTimesProvider);
+                                    ref.invalidate(locationPermissionStatusProvider);
+                                  },
+                                  tooltip: l10n.isArabic ? 'تحديث الموقع' : 'Refresh Location',
+                                ),
+                            ],
+                          ),
+                          if (storedLocation != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              storedLocation.name,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: context.textSecondary,
                               ),
                             ),
-                            if (storedLocation != null)
-                              IconButton(
-                                icon: Icon(
-                                  Icons.refresh,
-                                  size: 20,
-                                  color: AppTheme.primaryGreen,
-                                ),
-                                onPressed: () {
-                                  // Refresh location by invalidating providers
-                                  ref.invalidate(gpsLocationProvider);
-                                  ref.invalidate(locationProvider);
-                                  ref.invalidate(prayerTimesProvider);
-                                  ref.invalidate(locationPermissionStatusProvider);
-                                },
-                                tooltip: l10n.isArabic ? 'تحديث الموقع' : 'Refresh Location',
-                              ),
                           ],
-                        ),
-                        if (storedLocation != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            storedLocation.name,
-                            style: AppTheme.bodySmall.copyWith(
-                              color: context.textSecondary,
+                          if (nextPrayer != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.isArabic
+                                  ? '${nextPrayer.prayerNameAr} ${_formatTimeUntil(nextPrayer.timeUntil, l10n.isArabic)}'
+                                  : '${nextPrayer.prayerName} in ${_formatTimeUntil(nextPrayer.timeUntil, false)}',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
-                        if (nextPrayer != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.isArabic
-                                ? '${nextPrayer.prayerNameAr} ${_formatTimeUntil(nextPrayer.timeUntil, l10n.isArabic)}'
-                                : '${nextPrayer.prayerName} in ${_formatTimeUntil(nextPrayer.timeUntil, false)}',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.primaryGreen,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               // Prayer Times List

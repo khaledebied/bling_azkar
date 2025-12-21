@@ -317,7 +317,6 @@ class AppLocalizations {
 **Effective Date:** December 22, 2025
 
 **1. Introduction**
-**1. Introduction**
 Welcome to **Noor**! Your privacy is our priority. We designed Noor to be a safe, spiritual companion that respects your personal space. This policy outlines how we protect the little data needed to provide you with an optimal experience.
 
 **2. Information We Collect**
@@ -499,7 +498,6 @@ If you have any questions or suggestions about our Privacy Policy, do not hesita
 
 **تاريخ السريان:** 22 ديسمبر 2025
 
-**1. مقدمة**
 **1. مقدمة**
 أهلاً بك في **نور**! خصوصيتك تهمنا وهي أولويتنا القصوى. صُمم تطبيق نور ليكون رفيقك الروحاني الآمن الذي يحترم خصوصيتك بالكامل. توضح هذه السياسة كيف نحمي البيانات القليلة اللازمة لنقدم لك أفضل تجربة ممكنة.
 
