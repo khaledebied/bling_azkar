@@ -8,12 +8,59 @@ import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import 'tasbih_detail_screen.dart';
 
+import '../../data/services/showcase_service.dart';
+import '../widgets/custom_showcase_tooltip.dart';
+import 'package:showcaseview/showcaseview.dart';
+import '../providers/ui_providers.dart';
+
 /// Main listing screen showing all 10 Tasbih types in a grid
-class TasbihListScreen extends ConsumerWidget {
+class TasbihListScreen extends ConsumerStatefulWidget {
   const TasbihListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TasbihListScreen> createState() => _TasbihListScreenState();
+}
+
+class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
+  // Showcase Keys
+  final GlobalKey _tasbihKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Listen for tab changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(currentTabProvider) == 1) { // 1 is Tasbih Tab
+        _checkAndStartShowcase();
+      }
+    });
+  }
+
+  Future<void> _checkAndStartShowcase() async {
+    // Small delay to ensure UI is ready
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    final showcaseService = ref.read(showcaseServiceProvider);
+    final hasSeen = await showcaseService.hasSeenTasbihShowcase();
+    
+    if (!hasSeen) {
+       if (mounted) {
+        ShowCaseWidget.of(context).startShowCase([_tasbihKey]);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Listen to tab changes to trigger showcase
+    ref.listen(currentTabProvider, (previous, next) {
+      if (next == 1) {
+        _checkAndStartShowcase();
+      }
+    });
+
     final l10n = AppLocalizations.ofWithFallback(context);
     final tasbihTypes = ref.watch(tasbihTypesProvider);
     final sharedPrefsAsync = ref.watch(sharedPreferencesProvider);
@@ -28,11 +75,11 @@ class TasbihListScreen extends ConsumerWidget {
           child: Text('${l10n.errorInitializing}: $error'),
         ),
       ),
-      data: (_) => _buildContent(context, ref, tasbihTypes),
+      data: (_) => _buildContent(context, tasbihTypes),
     );
   }
   
-  Widget _buildContent(BuildContext context, WidgetRef ref, List<TasbihType> tasbihTypes) {
+  Widget _buildContent(BuildContext context, List<TasbihType> tasbihTypes) {
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -84,11 +131,30 @@ class TasbihListScreen extends ConsumerWidget {
               itemCount: tasbihTypes.length,
               itemBuilder: (context, index) {
                 final type = tasbihTypes[index];
-                return TasbihTypeCard(
+                final card = TasbihTypeCard(
                   type: type,
                   index: index,
                   isArabic: isArabic,
                 );
+
+                if (index == 0) {
+                  return Showcase.withWidget(
+                    key: _tasbihKey,
+                    targetBorderRadius: BorderRadius.circular(20),
+                    container: CustomShowcaseTooltip(
+                      title: l10n.showcaseTasbihTitle,
+                      description: l10n.showcaseTasbihDesc,
+                      icon: Icons.touch_app_rounded,
+                      isLastStep: true,
+                      onNext: () {
+                         ref.read(showcaseServiceProvider).markTasbihShowcaseAsSeen();
+                         ShowCaseWidget.of(context).dismiss();
+                      },
+                    ),
+                    child: card,
+                  );
+                }
+                return card;
               },
             ),
           ),

@@ -257,16 +257,6 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
                 ? Colors.white.withValues(alpha: 0.95)
                 : Colors.black87,
             isFontsLocal: false,
-            // Custom styling for better UI/UX - full screen
-            tafsirStyle: TafsirStyle.defaults(
-              isDark: isDarkMode,
-              context: context,
-            ).copyWith(
-              widthOfBottomSheet: screenWidth * 0.95,
-              heightOfBottomSheet: screenHeight * 0.85,
-              changeTafsirDialogHeight: screenHeight * 0.85,
-              changeTafsirDialogWidth: screenWidth * 0.9,
-            ),
           ),
         ),
       );

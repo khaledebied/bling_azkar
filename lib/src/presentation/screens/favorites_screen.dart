@@ -11,6 +11,10 @@ import '../widgets/zikr_list_item.dart';
 import '../widgets/floating_playlist_player.dart';
 import 'zikr_detail_screen.dart';
 import 'player_screen.dart';
+import '../../data/services/showcase_service.dart';
+import '../widgets/custom_showcase_tooltip.dart';
+import 'package:showcaseview/showcaseview.dart';
+import '../providers/ui_providers.dart';
 
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
@@ -23,6 +27,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   final _playlistService = PlaylistService();
   bool _isPlayingAll = false;
   PlaylistState _playlistState = PlaylistState.idle;
+  
+  // Showcase Keys
+  final GlobalKey _favoritesKey = GlobalKey();
 
   @override
   void initState() {
@@ -37,6 +44,28 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         });
       }
     });
+
+    // Listen for tab changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(currentTabProvider) == 2) { // 2 is Favorites Tab
+        _checkAndStartShowcase();
+      }
+    });
+  }
+
+  Future<void> _checkAndStartShowcase() async {
+    // Small delay to ensure UI is ready
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    final showcaseService = ref.read(showcaseServiceProvider);
+    final hasSeen = await showcaseService.hasSeenFavoritesShowcase();
+    
+    if (!hasSeen) {
+       if (mounted) {
+        ShowCaseWidget.of(context).startShowCase([_favoritesKey]);
+      }
+    }
   }
 
   Future<void> _playAllFavorites(List<Zikr> favorites) async {
@@ -60,6 +89,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to tab changes to trigger showcase
+    ref.listen(currentTabProvider, (previous, next) {
+      if (next == 2) {
+        _checkAndStartShowcase();
+      }
+    });
+
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
     final isDarkMode = context.isDarkMode;
@@ -251,7 +287,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildPlayAllButton(favorites),
+                _buildPlayAllButton(favorites, l10n),
               ],
             ),
           ),
@@ -298,11 +334,23 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     );
   }
 
-  Widget _buildPlayAllButton(List<Zikr> favorites) {
-    final l10n = AppLocalizations.ofWithFallback(context);
+  Widget _buildPlayAllButton(List<Zikr> favorites, AppLocalizations l10n) {
     final totalItems = favorites.fold<int>(0, (sum, z) => sum + z.defaultCount);
     
-    return Container(
+    return Showcase.withWidget(
+      key: _favoritesKey,
+      targetBorderRadius: BorderRadius.circular(16),
+      container: CustomShowcaseTooltip(
+        title: l10n.showcaseFavoritesTitle,
+        description: l10n.showcaseFavoritesDesc,
+        icon: Icons.playlist_play_rounded,
+        isLastStep: true,
+        onNext: () {
+            ref.read(showcaseServiceProvider).markFavoritesShowcaseAsSeen();
+            ShowCaseWidget.of(context).dismiss();
+        },
+      ),
+      child: Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -379,6 +427,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

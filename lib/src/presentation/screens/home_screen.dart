@@ -18,6 +18,9 @@ import '../providers/prayer_times_providers.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
 import 'categories_list_screen.dart';
+import '../../data/services/showcase_service.dart';
+import '../widgets/custom_showcase_tooltip.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,11 +33,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _playlistService = PlaylistService();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  
+  // Showcase Keys
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _categoriesKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _playlistService.initialize();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndStartShowcase();
+    });
+  }
+
+  Future<void> _checkAndStartShowcase() async {
+    // Delay slightly to allow UI to settle
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    final showcaseService = ref.read(showcaseServiceProvider);
+    final hasSeen = await showcaseService.hasSeenHomeShowcase();
+    
+    if (!hasSeen) {
+      if (mounted) {
+        ShowCaseWidget.of(context).startShowCase([_searchKey, _categoriesKey]);
+      }
+    }
   }
 
   @override
@@ -238,82 +264,95 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
             ),
-            child: TextField(
-              controller: _searchController,
-              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-              style: AppTheme.bodyMedium.copyWith(
-                color: isDarkMode ? Colors.white : AppTheme.textPrimary,
-                fontSize: 15,
+            ),
+            child: Showcase.withWidget(
+              key: _searchKey,
+              targetBorderRadius: BorderRadius.circular(20),
+              container: CustomShowcaseTooltip(
+                title: l10n.showcaseHomeSearchTitle,
+                description: l10n.showcaseHomeSearchDesc,
+                icon: Icons.search_rounded,
+                onNext: () {
+                   ShowCaseWidget.of(context).next();
+                },
               ),
-              onChanged: (value) {
-                ref.read(searchQueryProvider.notifier).state = value;
-                ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
-              },
-              decoration: InputDecoration(
-                hintText: isArabic ? 'ابحث عن الأذكار...' : 'Search azkar...',
-                hintStyle: AppTheme.bodyMedium.copyWith(
-                  color: isDarkMode 
-                      ? Colors.white.withValues(alpha: 0.4)
-                      : Colors.grey.shade400,
+              child: TextField(
+                controller: _searchController,
+                textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: isDarkMode ? Colors.white : AppTheme.textPrimary,
                   fontSize: 15,
                 ),
-                prefixIcon: isArabic ? null : AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  child: Icon(
-                    Icons.search_rounded,
-                    color: isSearching 
-                        ? AppTheme.primaryGreen
-                        : (isDarkMode 
-                            ? Colors.white.withValues(alpha: 0.6)
-                            : Colors.grey.shade600),
-                    size: 22,
+                onChanged: (value) {
+                  ref.read(searchQueryProvider.notifier).state = value;
+                  ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
+                },
+                decoration: InputDecoration(
+                  hintText: isArabic ? 'ابحث عن الأذكار...' : 'Search azkar...',
+                  hintStyle: AppTheme.bodyMedium.copyWith(
+                    color: isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.4)
+                        : Colors.grey.shade400,
+                    fontSize: 15,
                   ),
-                ),
-                suffixIcon: isArabic 
-                    ? AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.search_rounded,
-                          color: isSearching 
-                              ? AppTheme.primaryGreen
-                              : (isDarkMode 
-                                  ? Colors.white.withValues(alpha: 0.6)
-                                  : Colors.grey.shade600),
-                          size: 22,
-                        ),
-                      )
-                    : (isSearching
-                        ? TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 300),
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: Transform.rotate(
-                                  angle: value * 3.14159 / 2,
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.clear_rounded,
-                                      color: isDarkMode 
-                                          ? Colors.white.withValues(alpha: 0.7)
-                                          : Colors.grey.shade600,
-                                      size: 20,
+                  prefixIcon: isArabic ? null : AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: isSearching 
+                          ? AppTheme.primaryGreen
+                          : (isDarkMode 
+                              ? Colors.white.withValues(alpha: 0.6)
+                              : Colors.grey.shade600),
+                      size: 22,
+                    ),
+                  ),
+                  suffixIcon: isArabic 
+                      ? AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          child: Icon(
+                            Icons.search_rounded,
+                            color: isSearching 
+                                ? AppTheme.primaryGreen
+                                : (isDarkMode 
+                                    ? Colors.white.withValues(alpha: 0.6)
+                                    : Colors.grey.shade600),
+                            size: 22,
+                          ),
+                        )
+                      : (isSearching
+                          ? TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: const Duration(milliseconds: 300),
+                              builder: (context, value, child) {
+                                return Transform.scale(
+                                  scale: value,
+                                  child: Transform.rotate(
+                                    angle: value * 3.14159 / 2,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.clear_rounded,
+                                        color: isDarkMode 
+                                            ? Colors.white.withValues(alpha: 0.7)
+                                            : Colors.grey.shade600,
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        ref.read(searchQueryProvider.notifier).state = '';
+                                        ref.read(isSearchingProvider.notifier).state = false;
+                                      },
                                     ),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      ref.read(searchQueryProvider.notifier).state = '';
-                                      ref.read(isSearchingProvider.notifier).state = false;
-                                    },
                                   ),
-                                ),
-                              );
-                            },
-                          )
-                        : null),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: isArabic ? 16 : 20,
-                  vertical: 16,
+                                );
+                              },
+                            )
+                          : null),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: isArabic ? 16 : 20,
+                    vertical: 16,
+                  ),
                 ),
               ),
             ),
@@ -423,13 +462,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final categoryKey = entry.key;
                     final categoryName = entry.value;
 
-                return CategoryCard(
+                    final card = CategoryCard(
                       key: ValueKey(categoryKey),
-                  title: categoryName,
+                      title: categoryName,
                       titleAr: categoryName,
                       heroTag: 'category_$categoryKey',
                       onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
                     );
+
+                    if (index == 0) {
+                      return Showcase.withWidget(
+                        key: _categoriesKey,
+                        targetBorderRadius: BorderRadius.circular(20),
+                        container: CustomShowcaseTooltip(
+                          title: l10n.showcaseHomeCategoryTitle,
+                          description: l10n.showcaseHomeCategoryDesc,
+                          icon: Icons.grid_view_rounded,
+                          isLastStep: true,
+                          onNext: () {
+                             ref.read(showcaseServiceProvider).markHomeShowcaseAsSeen();
+                             ShowCaseWidget.of(context).dismiss();
+                          },
+                        ),
+                        child: card,
+                      );
+                    }
+                    return card;
                   },
                 ),
               ),

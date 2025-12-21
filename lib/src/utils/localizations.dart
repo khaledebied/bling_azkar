@@ -147,6 +147,14 @@ class AppLocalizations {
   String get showcaseNext => _get('showcaseNext');
   String get showcaseFinish => _get('showcaseFinish');
   String get showcaseSkip => _get('showcaseSkip');
+  String get showcaseHomeSearchTitle => _get('showcaseHomeSearchTitle');
+  String get showcaseHomeSearchDesc => _get('showcaseHomeSearchDesc');
+  String get showcaseHomeCategoryTitle => _get('showcaseHomeCategoryTitle');
+  String get showcaseHomeCategoryDesc => _get('showcaseHomeCategoryDesc');
+  String get showcaseTasbihTitle => _get('showcaseTasbihTitle');
+  String get showcaseTasbihDesc => _get('showcaseTasbihDesc');
+  String get showcaseFavoritesTitle => _get('showcaseFavoritesTitle');
+  String get showcaseFavoritesDesc => _get('showcaseFavoritesDesc');
 
   // Tab Names
   String get azkar => _get('azkar');
@@ -399,6 +407,14 @@ If you have any questions or suggestions about our Privacy Policy, do not hesita
     'showcaseNext': 'Next',
     'showcaseFinish': 'Got it!',
     'showcaseSkip': 'Skip',
+    'showcaseHomeSearchTitle': 'Quick Search',
+    'showcaseHomeSearchDesc': 'Find any Zikr instantly by keywords',
+    'showcaseHomeCategoryTitle': 'Explore Categories',
+    'showcaseHomeCategoryDesc': 'Browse Azkar by occasion or topic',
+    'showcaseTasbihTitle': 'Digital Tasbih',
+    'showcaseTasbihDesc': 'Tap on any Tasbih to start counting. Tracks your progress automatically.',
+    'showcaseFavoritesTitle': 'Your Collection',
+    'showcaseFavoritesDesc': 'Play all your favorite Azkar in a continuous playlist.',
   };
 
   // Arabic strings
@@ -585,10 +601,18 @@ If you have any questions or suggestions about our Privacy Policy, do not hesita
     // Showcase
     'showcaseQuranTab': 'اضغط هنا لقراءة القرآن الكريم',
     'showcaseQuranTitle': 'القرآن الكريم بين يديك',
-    'showcaseQuranFeatures': 'تصفح السور، ابحث عن الآيات، احفظ العلامات، واقرأ التفسير',
+    'showcaseQuranFeatures': 'تصفح السور، ابحث في الآيات، احفظ العلامات، واقرأ التفسير',
     'showcaseNext': 'التالي',
-    'showcaseFinish': 'فهمت!',
+    'showcaseFinish': 'فهمت',
     'showcaseSkip': 'تخطي',
+    'showcaseHomeSearchTitle': 'بحث سريع',
+    'showcaseHomeSearchDesc': 'ابحث عن أي ذكر بسهولة',
+    'showcaseHomeCategoryTitle': 'تصفح الفئات',
+    'showcaseHomeCategoryDesc': 'استعرض الأذكار حسب المناسبة أو الموضوع',
+    'showcaseTasbihTitle': 'المسبحة الإلكترونية',
+    'showcaseTasbihDesc': 'اضغط على أي تسبيح للبدء. يتم حفظ تقدمك تلقائياً.',
+    'showcaseFavoritesTitle': 'مجموعتك المفضلة',
+    'showcaseFavoritesDesc': 'شغّل جميع أذكارك المفضلة في قائمة تشغيل متصلة.',
   };
 }
 

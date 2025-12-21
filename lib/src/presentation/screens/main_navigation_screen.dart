@@ -28,6 +28,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
   
   // Showcase Keys
   final GlobalKey _quranTabKey = GlobalKey();
+  
+  bool _hasCheckedShowcase = false;
 
   @override
   void initState() {
@@ -57,19 +59,16 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
 
     // Start animation for first tab
     _animationControllers[0].forward();
-    
-    // Check for showcase
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndStartShowcase();
-    });
   }
   
-  Future<void> _checkAndStartShowcase() async {
+  Future<void> _checkAndStartShowcase(BuildContext context) async {
     final showcaseService = ref.read(showcaseServiceProvider);
     final hasSeen = await showcaseService.hasSeenQuranTabShowcase();
     
-    if (!hasSeen && mounted) {
-      ShowCaseWidget.of(context).startShowCase([_quranTabKey]);
+    if (!hasSeen) {
+      if (context.mounted) {
+        ShowCaseWidget.of(context).startShowCase([_quranTabKey]);
+      }
     }
   }
 
@@ -120,6 +119,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
   }
 
   Widget _buildScaffold(BuildContext context) {
+    if (!_hasCheckedShowcase) {
+      _hasCheckedShowcase = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkAndStartShowcase(context);
+      });
+    }
+
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
 
