@@ -22,7 +22,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(),
           ),
           elevation: 0,
-          backgroundColor: context.theme.scaffoldBackgroundColor,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           foregroundColor: context.textPrimary,
         ),
         body: SingleChildScrollView(
