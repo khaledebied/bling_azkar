@@ -20,21 +20,14 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
   // Selected tasbih type (can be changed by user)
   late TasbihType _selectedType;
   
-  late AnimationController _rotationController;
   late AnimationController _scaleController;
   late AnimationController _rippleController;
   late AnimationController _bounceController;
   
-  late Animation<double> _rotationAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _rippleAnimation;
   late Animation<double> _bounceAnimation;
   
-  double _dragOffset = 0.0;
-  double _lastDragOffset = 0.0;
-  bool _isDragging = false;
-  double _rotationAngle = 0.0;
-
   @override
   void initState() {
     super.initState();
@@ -45,18 +38,6 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
         ? TasbihTypes.getById(lastSelectedId) ?? TasbihTypes.subhanallah
         : TasbihTypes.subhanallah;
     
-    // Rotation animation for drag
-    _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _rotationController,
-        curve: Curves.easeOut,
-      ),
-    );
-
     // Scale animation for tap
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 200),
@@ -96,7 +77,6 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
 
   @override
   void dispose() {
-    _rotationController.dispose();
     _scaleController.dispose();
     _rippleController.dispose();
     _bounceController.dispose();
@@ -134,13 +114,6 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
     }
   }
 
-  void _decrement() {
-    final counter = ref.read(tasbihCounterProvider(_selectedType).notifier);
-    counter.decrement();
-    _scaleController.forward(from: 0);
-    _rippleController.forward(from: 0);
-  }
-
   void _reset() {
     final counter = ref.read(tasbihCounterProvider(_selectedType).notifier);
     counter.reset();
@@ -152,62 +125,6 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
       _selectedType = newType;
     });
     ref.read(tasbihRepositoryProvider).saveLastSelectedType(newType.id);
-  }
-
-  void _handleDragStart(DragStartDetails details) {
-    setState(() {
-      _isDragging = true;
-      _lastDragOffset = 0.0;
-    });
-  }
-
-  void _handleDragUpdate(DragUpdateDetails details) {
-    setState(() {
-      _dragOffset += details.delta.dy;
-      _lastDragOffset = details.delta.dy;
-      
-      // Calculate rotation based on drag
-      _rotationAngle += details.delta.dy * 0.15;
-      
-      // Threshold for increment/decrement
-      double threshold = 25.0;
-      
-      if (_dragOffset.abs() > threshold) {
-        if (_dragOffset < 0) {
-          // Dragging up - increment
-          _increment();
-          _dragOffset = 0.0;
-        } else {
-          // Dragging down - decrement
-          _decrement();
-          _dragOffset = 0.0;
-        }
-      }
-    });
-    
-    double normalizedAngle = (_rotationAngle % (2 * math.pi)) / (2 * math.pi);
-    _rotationController.value = normalizedAngle;
-  }
-
-  void _handleDragEnd(DragEndDetails details) {
-    setState(() {
-      _isDragging = false;
-      _dragOffset = 0.0;
-    });
-    
-    _rotationController.animateTo(
-      0.0,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutBack,
-    );
-    
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) {
-        setState(() {
-          _rotationAngle = 0.0;
-        });
-      }
-    });
   }
 
   void _showCompletionDialog() {
@@ -513,9 +430,7 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
                       // Interactive Tasbih Bead
                       GestureDetector(
                         onTap: _increment,
-                        onPanStart: _handleDragStart,
-                        onPanUpdate: _handleDragUpdate,
-                        onPanEnd: _handleDragEnd,
+                        // Removed drag handlers
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
@@ -560,130 +475,119 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
                               ),
                             // Main rotating bead
                             AnimatedBuilder(
-                              animation: Listenable.merge([
-                                _rotationController,
-                                _scaleController,
-                              ]),
+                              animation: _scaleController,
                               builder: (context, child) {
-                                return Transform.rotate(
-                                  angle: _rotationAnimation.value * 2 * math.pi,
-                                  child: Transform.scale(
-                                    scale: _isDragging 
-                                        ? 1.1 
-                                        : _scaleAnimation.value,
-                                    child: Container(
-                                      width: 220,
-                                      height: 220,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Colors.white,
-                                            Colors.white.withOpacity(0.95),
-                                          ],
+                                // Removed rotation logic
+                                return Transform.scale(
+                                  scale: _scaleAnimation.value,
+                                  child: Container(
+                                    width: 220,
+                                    height: 220,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Colors.white,
+                                          Colors.white.withOpacity(0.95),
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.3),
+                                          blurRadius: 40,
+                                          offset: const Offset(0, 15),
+                                          spreadRadius: 5,
                                         ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.3),
-                                            blurRadius: 40,
-                                            offset: const Offset(0, 15),
-                                            spreadRadius: 5,
-                                          ),
-                                          BoxShadow(
-                                            color: _selectedType.color.withOpacity(0.3),
-                                            blurRadius: 30,
-                                            offset: const Offset(0, 10),
-                                            spreadRadius: 2,
-                                          ),
-                                        ],
-                                      ),
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          // Decorative inner circle
-                                          Container(
-                                            width: 180,
-                                            height: 180,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: _selectedType.color.withOpacity(0.2),
-                                                width: 2,
-                                              ),
+                                        BoxShadow(
+                                          color: _selectedType.color.withOpacity(0.3),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 10),
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        // Decorative inner circle
+                                        Container(
+                                          width: 180,
+                                          height: 180,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: _selectedType.color.withOpacity(0.2),
+                                              width: 2,
                                             ),
                                           ),
-                                          // Counter text
-                                          AnimatedSwitcher(
-                                            duration: const Duration(milliseconds: 200),
-                                            transitionBuilder: (child, animation) {
-                                              return ScaleTransition(
-                                                scale: animation,
-                                                child: FadeTransition(
-                                                  opacity: animation,
-                                                  child: child,
-                                                ),
-                                              );
-                                            },
-                                            child: Text(
-                                              '${counter.currentCount}',
-                                              key: ValueKey(counter.currentCount),
-                                              style: AppTheme.headlineLarge.copyWith(
-                                                fontSize: 72,
-                                                fontWeight: FontWeight.bold,
+                                        ),
+                                        // Counter text
+                                        AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 200),
+                                          transitionBuilder: (child, animation) {
+                                            return ScaleTransition(
+                                              scale: animation,
+                                              child: FadeTransition(
+                                                opacity: animation,
+                                                child: child,
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            '${counter.currentCount}',
+                                            key: ValueKey(counter.currentCount),
+                                            style: AppTheme.headlineLarge.copyWith(
+                                              fontSize: 72,
+                                              fontWeight: FontWeight.bold,
+                                              color: _selectedType.color,
+                                              letterSpacing: -2,
+                                            ),
+                                          ),
+                                        ),
+                                        // Drag indicator (REMOVED)
+                                        // Completed badge
+                                        if (counter.isCompleted)
+                                          Positioned(
+                                            bottom: 20,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
                                                 color: _selectedType.color,
-                                                letterSpacing: -2,
+                                                borderRadius: BorderRadius.circular(12),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: _selectedType.color.withOpacity(0.4),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.check_circle,
+                                                    color: Colors.white,
+                                                    size: 14,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Done',
+                                                    style: AppTheme.caption.copyWith(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
-                                          // Drag indicator
-                                          if (_isDragging)
-                                            Positioned(
-                                              top: 20,
-                                              child: Icon(
-                                                _lastDragOffset < 0 
-                                                    ? Icons.arrow_upward_rounded
-                                                    : Icons.arrow_downward_rounded,
-                                                color: _selectedType.color.withOpacity(0.6),
-                                                size: 24,
-                                              ),
-                                            ),
-                                          // Completed badge
-                                          if (counter.isCompleted)
-                                            Positioned(
-                                              bottom: 20,
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 4,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: _selectedType.color,
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.check_circle,
-                                                      color: Colors.white,
-                                                      size: 14,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Done',
-                                                      style: AppTheme.caption.copyWith(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
+                                      ],
                                     ),
                                   ),
                                 );
@@ -743,19 +647,7 @@ class _TasbihScreenNewState extends ConsumerState<TasbihScreenNew>
                                 color: Colors.white.withOpacity(0.8),
                               ),
                             ),
-                            const SizedBox(width: 24),
-                            Icon(
-                              Icons.swipe_vertical_rounded,
-                              color: Colors.white.withOpacity(0.8),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Drag up/down',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: Colors.white.withOpacity(0.8),
-                              ),
-                            ),
+                            // Removed "Drag up/down" section
                           ],
                         ),
                       ),
