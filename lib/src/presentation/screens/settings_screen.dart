@@ -9,6 +9,9 @@ import '../../utils/app_state_provider.dart';
 import '../../data/services/storage_service.dart';
 import '../../data/services/notification_service.dart';
 import '../../domain/models/user_preferences.dart';
+import 'privacy_policy_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io' show Platform;
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -862,6 +865,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
                 : Colors.grey.shade100,
           ),
           ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: Text(l10n.privacyPolicy),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+              );
+            },
+          ),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
+          ListTile(
+            leading: const Icon(Icons.star_rate_outlined),
+            title: Text(l10n.rateApp),
+            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
+            onTap: () {
+              _launchStore(l10n);
+            },
+          ),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
+          ListTile(
             leading: const Icon(Icons.feedback_outlined),
             title: Text(l10n.feedback),
             trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
@@ -1087,6 +1121,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         ],
       ),
     );
+  }
+
+  Future<void> _launchStore(AppLocalizations l10n) async {
+    const packageName = 'com.blingazkar.bling_azkar';
+    
+    final Uri uri;
+    if (Platform.isAndroid) {
+      uri = Uri.parse('market://details?id=$packageName');
+    } else {
+      uri = Uri.parse('https://apps.apple.com/search?term=Bling%20Azkar');
+    }
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        final webUri = Uri.parse(
+          Platform.isAndroid 
+              ? 'https://play.google.com/store/apps/details?id=$packageName'
+              : 'https://apps.apple.com/search?term=Bling%20Azkar'
+        );
+        if (await canLaunchUrl(webUri)) {
+          await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.errorOpeningStore),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 
