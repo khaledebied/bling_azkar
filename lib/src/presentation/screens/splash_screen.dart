@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _particleController;
   late AnimationController _gradientController;
   late AnimationController _shimmerController;
-
+  
   // Animations
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -181,7 +181,7 @@ class _SplashScreenState extends State<SplashScreen>
             isDarkMode ? Brightness.light : Brightness.dark,
       ),
     );
-
+    
     return Scaffold(
       body: AnimatedBuilder(
         animation: Listenable.merge([
@@ -194,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen>
         ]),
         builder: (context, child) {
           return Container(
-            decoration: BoxDecoration(
+        decoration: BoxDecoration(
               gradient: _buildBackgroundGradient(isDarkMode),
             ),
             child: Stack(
@@ -246,10 +246,10 @@ class _SplashScreenState extends State<SplashScreen>
       );
     } else {
       return LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white,
           Color.lerp(
             Colors.white,
             AppTheme.primaryGreen.withOpacity(0.08),
@@ -260,8 +260,8 @@ class _SplashScreenState extends State<SplashScreen>
             AppTheme.primaryTeal.withOpacity(0.12),
             _gradientAnimation.value,
           )!,
-        ],
-        stops: const [0.0, 0.5, 1.0],
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
       );
     }
   }
@@ -327,11 +327,11 @@ class _SplashScreenState extends State<SplashScreen>
         ),
         // Main logo container
         ScaleTransition(
-          scale: _scaleAnimation,
-          child: Container(
+                  scale: _scaleAnimation,
+                    child: Container(
             width: 160,
             height: 160,
-            decoration: BoxDecoration(
+                      decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -341,19 +341,19 @@ class _SplashScreenState extends State<SplashScreen>
                   AppTheme.primaryTeal,
                 ],
               ),
-              boxShadow: [
-                BoxShadow(
+                        boxShadow: [
+                          BoxShadow(
                   color: AppTheme.primaryGreen.withOpacity(0.5),
                   blurRadius: 40,
                   spreadRadius: 10,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
+                            offset: const Offset(0, 10),
+                          ),
+                          BoxShadow(
                   color: AppTheme.primaryTeal.withOpacity(0.3),
-                  blurRadius: 30,
-                  spreadRadius: 5,
-                  offset: const Offset(0, 5),
-                ),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                            offset: const Offset(0, 5),
+                          ),
               ],
             ),
             child: Stack(
@@ -372,28 +372,28 @@ class _SplashScreenState extends State<SplashScreen>
                           Colors.transparent,
                         ],
                       ),
-                    ),
+                          ),
                   ),
-                ),
+                      ),
                 // Logo image
                 Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Image.asset(
-                    'assets/icon/splash.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
+                        child: Image.asset(
+                          'assets/icon/splash.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
                       return Icon(
                         Icons.mosque,
                         size: 80,
                         color: Colors.white,
-                      );
-                    },
+                            );
+                          },
+                        ),
+                      ),
+              ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -441,7 +441,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
       ],
-    );
+            );
   }
 
   Widget _buildLoadingIndicator(bool isDarkMode) {

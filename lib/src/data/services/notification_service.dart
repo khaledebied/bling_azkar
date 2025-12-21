@@ -149,10 +149,10 @@ class NotificationService {
     
     // For Android 12+ - request exact alarm permission (required for exact scheduling)
     if (Platform.isAndroid) {
-      if (await Permission.scheduleExactAlarm.isDenied) {
-        final exactAlarmStatus = await Permission.scheduleExactAlarm.request();
-        if (!exactAlarmStatus.isGranted) {
-          debugPrint('⚠️ Exact alarm permission denied - notifications may not work reliably');
+    if (await Permission.scheduleExactAlarm.isDenied) {
+      final exactAlarmStatus = await Permission.scheduleExactAlarm.request();
+      if (!exactAlarmStatus.isGranted) {
+        debugPrint('⚠️ Exact alarm permission denied - notifications may not work reliably');
         }
       }
     }
@@ -628,7 +628,7 @@ class NotificationService {
     debugPrint('🔐 Notification permission: $notificationPermission');
     
     if (Platform.isAndroid) {
-      final exactAlarmPermission = await Permission.scheduleExactAlarm.status;
+    final exactAlarmPermission = await Permission.scheduleExactAlarm.status;
       debugPrint('🔐 Exact alarm permission: $exactAlarmPermission');
     }
   }

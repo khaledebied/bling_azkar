@@ -137,7 +137,7 @@ class PlaylistService {
 
     // Always start from the beginning when play() is called
     // This ensures consistent queue order
-    _currentIndex = 0;
+      _currentIndex = 0;
     debugPrint('Starting playlist from beginning (index 0)');
 
     await _playCurrentItem();
@@ -179,7 +179,7 @@ class PlaylistService {
       // Small delay before playing next track to ensure smooth transition
       Future.delayed(const Duration(milliseconds: 300), () {
         if (_state != PlaylistState.completed) {
-          _playCurrentItem();
+        _playCurrentItem();
         }
       });
     } else {

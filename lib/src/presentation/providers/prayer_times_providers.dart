@@ -55,17 +55,17 @@ final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
 
     // Permission granted, get current position
     if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-        ),
-      );
+    final position = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.medium,
+      ),
+    );
 
-      final repository = MuslimRepository();
-      final location = await repository.reverseGeocoder(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
+    final repository = MuslimRepository();
+    final location = await repository.reverseGeocoder(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
 
       // Save location to preferences for future use
       if (location != null) {
@@ -82,7 +82,7 @@ final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
         await storage.savePreferences(updatedPrefs);
       }
 
-      return location;
+    return location;
     }
 
     return null;

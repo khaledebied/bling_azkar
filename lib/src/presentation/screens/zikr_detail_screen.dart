@@ -57,29 +57,29 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
           style: AppTheme.titleMedium.copyWith(
             color: context.textPrimary,
             fontWeight: FontWeight.bold,
-          ),
+            ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
       ),
       body: CustomScrollView(
-        cacheExtent: 500,
-        slivers: [
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  RepaintBoundary(child: _buildArabicTextSection()),
-                  RepaintBoundary(child: _buildTranslationSection()),
-                  RepaintBoundary(child: _buildRepetitionSection()),
-                  const SizedBox(height: 100),
-                ],
+            cacheExtent: 500,
+            slivers: [
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    children: [
+                      RepaintBoundary(child: _buildArabicTextSection()),
+                      RepaintBoundary(child: _buildTranslationSection()),
+                      RepaintBoundary(child: _buildRepetitionSection()),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
       ),
     );
   }
@@ -109,12 +109,12 @@ class _ZikrDetailScreenState extends State<ZikrDetailScreen>
                 ),
               ]
             : [
-                BoxShadow(
+          BoxShadow(
                   color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

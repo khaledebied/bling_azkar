@@ -788,18 +788,18 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                               isServiceDisabled || isDeniedForever
                                   ? (l10n.isArabic ? 'فتح الإعدادات' : 'Open Settings')
                                   : (l10n.isArabic ? 'السماح' : 'Allow'),
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+              style: AppTheme.bodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ),
               ),
+                ),
+            ),
             ],
           ),
         ],
