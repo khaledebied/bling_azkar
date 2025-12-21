@@ -203,7 +203,6 @@ class _TasbihDetailScreenState extends ConsumerState<TasbihDetailScreen>
                             style: AppTheme.bodySmall.copyWith(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],
