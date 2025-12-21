@@ -264,7 +264,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
             ),
-            ),
+
             child: Showcase.withWidget(
               key: _searchKey,
               targetBorderRadius: BorderRadius.circular(20),
