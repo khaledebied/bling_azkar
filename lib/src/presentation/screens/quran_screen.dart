@@ -36,7 +36,7 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
     });
   }
   
-  }
+
 
   void _initializeAnimations() {
     _fadeController = AnimationController(
@@ -121,6 +121,36 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
           backgroundColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
+          title: Text(
+            l10n.quranKareem,
+            style: AppTheme.titleMedium.copyWith(
+              color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDarkMode
+                    ? [
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.transparent,
+                      ]
+                    : [
+                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+              ),
+            ),
+          ),
+        ),
+        body: _buildQuranLibrary(context, isArabic, isDarkMode, screenWidth, screenHeight),
+      ),
+    );
+  }
 
   Widget _buildQuranLibrary(
     BuildContext context,
@@ -129,8 +159,25 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
     double screenWidth,
     double screenHeight,
   ) {
-    try {
-      final l10n = AppLocalizations.ofWithFallback(context);
+    return QuranLibrary(
+      language: isArabic ? 'ar' : 'en',
+      isDarkMode: isDarkMode,
+      primaryColor: AppTheme.primaryGreen,
+      secondaryColor: AppTheme.primaryGold,
+      backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF5F5F5),
+      textColor: isDarkMode ? Colors.white : Colors.black87,
+      headerStyle: TextStyle(
+        fontFamily: isArabic ? 'Amiri' : 'Poppins',
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: isDarkMode ? Colors.white : Colors.black87,
+      ),
+      textStyle: TextStyle(
+        fontFamily: isArabic ? 'Amiri' : 'Poppins',
+        fontSize: 18,
+        color: isDarkMode ? Colors.white : Colors.black87,
+      ),
+    );
   }
 
   Widget _buildQuranError(String error, bool isDarkMode) {

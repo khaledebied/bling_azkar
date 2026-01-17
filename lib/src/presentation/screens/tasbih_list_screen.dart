@@ -30,7 +30,7 @@ class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
     });
   }
 
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +116,6 @@ class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
                   isArabic: isArabic,
                 );
 
-                if (index == 0) {
                 return card;
               },
             ),
