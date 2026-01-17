@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import '../../data/services/playlist_service.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
@@ -26,7 +27,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   int _currentRepetition = 0;
-  StreamSubscription<PlayerState>? _playerStateSubscription;
+  final _playlistService = PlaylistService();
+  StreamSubscription<PlaylistState>? _playlistStateSubscription;
+  StreamSubscription<PlaylistItem?>? _itemSubscription;
   bool _isCompleted = false;
 
   @override
@@ -51,68 +54,53 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
     _pulseController.repeat(reverse: true);
     
-    // Don't auto-play - let user control playback
-    _setupAudioCompletionListener();
+    _setupPlaylistListeners();
   }
 
-  void _setupAudioCompletionListener() {
-    final audioService = ref.read(audioPlayerServiceProvider);
-    _playerStateSubscription = audioService.playerStateStream.listen((state) {
-      if (mounted && 
-          state.processingState == ProcessingState.completed && 
-          !_isCompleted) {
-        _handleAudioCompletion();
+  void _setupPlaylistListeners() {
+    _playlistStateSubscription = _playlistService.stateStream.listen((state) {
+      if (!mounted) return;
+      if (state == PlaylistState.completed) {
+        _handlePlaylistCompletion();
+      }
+    });
+
+    _itemSubscription = _playlistService.currentItemStream.listen((item) {
+      if (!mounted || item == null) return;
+      
+      // Update local repetition state based on the current item in playlist
+      if (item.zikr.id == widget.zikr.id) {
+        setState(() {
+          _currentRepetition = item.repetition - 1;
+        });
       }
     });
   }
 
-  Future<void> _handleAudioCompletion() async {
+  void _handlePlaylistCompletion() {
     final l10n = AppLocalizations.ofWithFallback(context);
     setState(() {
-      _currentRepetition++;
+      _isCompleted = true;
+      _currentRepetition = widget.zikr.defaultCount - 1;
     });
 
-    if (_currentRepetition < widget.zikr.defaultCount) {
-      // Replay audio
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        await _playAudio();
-      }
-    } else {
-      // All repetitions completed
-      setState(() {
-        _isCompleted = true;
-      });
-      
-      // Show completion message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                Text(l10n.completedRepetitions(widget.zikr.defaultCount)),
-              ],
-            ),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-      
-      // Reset to initial state after a short delay
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) {
-        _resetToInitialState();
-      }
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(l10n.completedRepetitions(widget.zikr.defaultCount)),
+          ],
+        ),
+        backgroundColor: AppTheme.primaryGreen,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _resetToInitialState() {
-    final audioService = ref.read(audioPlayerServiceProvider);
-    audioService.stop();
-    
+    _playlistService.stop();
     setState(() {
       _currentRepetition = 0;
       _isCompleted = false;
@@ -120,38 +108,21 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   Future<void> _playAudio() async {
-    final l10n = AppLocalizations.ofWithFallback(context);
     try {
-      final audioService = ref.read(audioPlayerServiceProvider);
       if (widget.zikr.audio.isNotEmpty) {
         setState(() {
           _isCompleted = false;
         });
         
-        final audioInfo = widget.zikr.audio.first;
-        final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
-        
-        debugPrint('=== Playing Audio ===');
-        debugPrint('Zikr ID: ${widget.zikr.id}');
-        debugPrint('Zikr Title: ${widget.zikr.title.ar}');
-        debugPrint('Audio Path: $audioPath');
-        debugPrint('Short File: ${audioInfo.shortFile}');
-        debugPrint('Full File URL: ${audioInfo.fullFileUrl}');
-        
-        if (audioPath.isEmpty) {
-          throw Exception('No audio path available');
-        }
-        
-        await audioService.playAudio(
-          audioPath,
-          isLocal: true,
-          title: widget.zikr.title.ar,
-          artist: 'Bling Azkar',
-        );
+        // Use PlaylistService to handle all repetitions as a single operation
+        // This is much better for background playback
+        await _playlistService.loadPlaylist([widget.zikr]);
+        await _playlistService.play();
       }
     } catch (e) {
       debugPrint('Error playing: $e');
       if (mounted) {
+        final l10n = AppLocalizations.ofWithFallback(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${l10n.errorPlayingAudio}: ${e.toString()}'),
@@ -165,12 +136,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   @override
   void dispose() {
     _pulseController.dispose();
-    _playerStateSubscription?.cancel();
+    _playlistStateSubscription?.cancel();
+    _itemSubscription?.cancel();
     
-    // Stop audio when leaving the screen
-    // We need to do this before the widget is disposed
-    final audioService = AudioPlayerService();
-    audioService.stop();
+    // Don't stop audio when leaving the screen to allow background playback
+    // final audioService = AudioPlayerService();
+    // audioService.stop();
     
     super.dispose();
   }

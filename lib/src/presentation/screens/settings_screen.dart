@@ -116,8 +116,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
             const SizedBox(height: 16),
             
             // Prayer Time Notifications
-            _buildPrayerTimeNotificationsCard(l10n),
-            const SizedBox(height: 24),
+            // _buildPrayerTimeNotificationsCard(l10n),
+            // const SizedBox(height: 24),
 
             // Appearance Section
             _buildSectionHeader(l10n.appearance, Icons.palette),
@@ -230,6 +230,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
       ),
       child: Column(
         children: [
+          SwitchListTile(
+            title: Text(
+              l10n.isArabic ? 'تذكير دوري' : 'Periodic Reminder',
+              style: AppTheme.bodyMedium.copyWith(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              l10n.isArabic 
+                  ? 'تذكير بذكر الله كل 10 دقائق عند تفعيله من الإشعار'
+                  : 'Remind every 10 minutes when activated via notification',
+              style: AppTheme.bodySmall.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+            value: _prefs.notificationsEnabled,
+            onChanged: (value) async {
+              final notificationService = NotificationService();
+              
+              if (value) {
+                final hasPermission = await notificationService.requestPermissions();
+                if (hasPermission) {
+                  await notificationService.startPeriodicReminders();
+                  _updatePreferences(_prefs.copyWith(notificationsEnabled: true));
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.isArabic 
+                              ? 'تم تفعيل التذكير الدوري'
+                              : 'Periodic reminders enabled',
+                        ),
+                        backgroundColor: AppTheme.primaryGreen,
+                      ),
+                    );
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.pleaseEnableNotificationsDevice),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                }
+              } else {
+                await notificationService.stopPeriodicReminders();
+                _updatePreferences(_prefs.copyWith(notificationsEnabled: false));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        l10n.isArabic 
+                            ? 'تم إيقاف التذكير الدوري'
+                            : 'Periodic reminders disabled',
+                      ),
+                      backgroundColor: Colors.grey,
+                    ),
+                  );
+                }
+              }
+            },
+            activeColor: AppTheme.primaryGreen,
+          ),
+          Divider(
+            height: 1,
+            color: context.isDarkMode 
+                ? Colors.grey.shade700
+                : Colors.grey.shade100,
+          ),
           SwitchListTile(
             title: Text(
               l10n.isArabic ? 'الإشعارات المجدولة' : 'Scheduled Notifications',
@@ -816,26 +889,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
                 : Colors.grey.shade100,
           ),
           ListTile(
-            leading: const Icon(Icons.restart_alt, color: Colors.blue),
-            title: Text(l10n.isArabic ? 'إعادة ضبط العرض التوضيحي' : 'Reset Onboarding'),
-            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
-            onTap: () async {              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.isArabic ? 'تم إعادة ضبط العرض التوضيحي' : 'Onboarding reset'),
-                    backgroundColor: AppTheme.primaryGreen,
-                  ),
-                );
-              }
-            },
-          ),
-          Divider(
-            height: 1,
-            color: context.isDarkMode 
-                ? Colors.grey.shade700
-                : Colors.grey.shade100,
-          ),
-          ListTile(
             leading: const Icon(Icons.delete_forever, color: Colors.red),
             title: Text(l10n.clearAllData),
             trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
@@ -863,20 +916,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
             title: Text(l10n.version),
             subtitle: const Text('1.0.0'),
             trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
-          ),
-          Divider(
-            height: 1,
-            color: context.isDarkMode 
-                ? Colors.grey.shade700
-                : Colors.grey.shade100,
-          ),
-          ListTile(
-            leading: const Icon(Icons.help_outline),
-            title: Text(l10n.help),
-            trailing: Icon(DirectionIcons.listArrow(context), size: 16, color: Colors.grey),
-            onTap: () {
-              _showHelpDialog(l10n);
-            },
           ),
           Divider(
             height: 1,

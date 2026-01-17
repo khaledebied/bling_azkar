@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 import '../../domain/models/zikr.dart';
+import 'audio_player_service.dart';
 
 enum PlaylistState {
   idle,
@@ -33,7 +35,7 @@ class PlaylistService {
   factory PlaylistService() => _instance;
   PlaylistService._internal();
 
-  final AudioPlayer _player = AudioPlayer();
+  final _audioService = AudioPlayerService();
   final _stateController = StreamController<PlaylistState>.broadcast();
   final _currentItemController = StreamController<PlaylistItem?>.broadcast();
   final _progressController = StreamController<PlaylistProgress>.broadcast();
@@ -60,19 +62,37 @@ class PlaylistService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
+    await _audioService.initialize();
+    final handler = _audioService.audioHandler;
+    if (handler == null) return;
 
-    // Listen to player state changes
-    _player.playerStateStream.listen((playerState) {
-      if (playerState.processingState == ProcessingState.completed) {
-        _onTrackCompleted();
+    // Listen to handler state changes
+    handler.playbackState.listen((state) {
+      if (state.playing) {
+        _updateState(PlaylistState.playing);
+      } else if (state.processingState == AudioProcessingState.completed) {
+        _updateState(PlaylistState.completed);
+      } else {
+        _updateState(PlaylistState.paused);
+      }
+    });
+
+    // Listen to media item changes to update current index
+    handler.mediaItem.listen((item) {
+      if (item != null) {
+        final index = _playlist.indexWhere((p) => 
+            p.zikr.id == item.extras?['zikrId'] && 
+            p.repetition == item.extras?['repetition']);
+        if (index != -1) {
+          _currentIndex = index;
+          _currentItemController.add(_playlist[index]);
+        }
       }
     });
 
     // Listen to position changes for progress updates
-    _player.positionStream.listen((position) {
-      final duration = _player.duration;
+    handler.player.positionStream.listen((position) {
+      final duration = handler.player.duration;
       if (duration != null && currentItem != null) {
         _progressController.add(PlaylistProgress(
           currentPosition: position,
@@ -88,19 +108,22 @@ class PlaylistService {
 
   Future<void> loadPlaylist(List<Zikr> azkar) async {
     await initialize();
+    final handler = _audioService.audioHandler;
+    if (handler == null) return;
 
     _playlist = [];
 
-    // Ensure azkar are in order by sorting by ID
+    // Sort azkar
     final sortedAzkar = List<Zikr>.from(azkar);
     sortedAzkar.sort((a, b) {
-      // Extract numeric part from ID (format: categoryKey_id)
       final aIdNum = int.tryParse(a.id.split('_').last) ?? 0;
       final bIdNum = int.tryParse(b.id.split('_').last) ?? 0;
       return aIdNum.compareTo(bIdNum);
     });
 
-    // Build playlist in strict sequential order
+    final List<MediaItem> mediaItems = [];
+
+    // Build playlist
     for (int zikrIndex = 0; zikrIndex < sortedAzkar.length; zikrIndex++) {
       final zikr = sortedAzkar[zikrIndex];
       if (zikr.audio.isNotEmpty) {
@@ -108,131 +131,72 @@ class PlaylistService {
         final audioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
         final count = zikr.defaultCount;
 
-        // Create multiple playlist items based on the count
-        // Each repetition is added sequentially to maintain order
         for (int repetition = 1; repetition <= count; repetition++) {
-          _playlist.add(PlaylistItem(
+          final item = PlaylistItem(
             zikr: zikr,
             audioPath: audioPath,
             index: zikrIndex,
             repetition: repetition,
             totalRepetitions: count,
+          );
+          _playlist.add(item);
+          
+          mediaItems.add(MediaItem(
+            id: audioPath,
+            album: zikr.category,
+            title: zikr.title.ar,
+            artist: 'Bling Azkar',
+            extras: {
+              'zikrId': zikr.id,
+              'repetition': repetition,
+            },
           ));
         }
       }
     }
 
+    await handler.updateQueue(mediaItems);
     _currentIndex = -1;
     _updateState(PlaylistState.idle);
     _currentItemController.add(null);
-    
-    debugPrint('Playlist loaded: ${_playlist.length} items in order');
-    for (int i = 0; i < _playlist.length; i++) {
-      debugPrint('  [$i] ${_playlist[i].zikr.id} - Repetition ${_playlist[i].repetition}/${_playlist[i].totalRepetitions}');
-    }
   }
 
   Future<void> play() async {
     if (_playlist.isEmpty) return;
+    final handler = _audioService.audioHandler;
+    if (handler == null) return;
 
-    // Always start from the beginning when play() is called
-    // This ensures consistent queue order
-      _currentIndex = 0;
-    debugPrint('Starting playlist from beginning (index 0)');
-
-    await _playCurrentItem();
-  }
-
-  Future<void> _playCurrentItem() async {
-    if (_currentIndex < 0 || _currentIndex >= _playlist.length) {
-      _updateState(PlaylistState.completed);
-      return;
-    }
-
-    final item = _playlist[_currentIndex];
-    _currentItemController.add(item);
-    _updateState(PlaylistState.playing);
-
-    debugPrint('Playing item ${_currentIndex + 1}/${_playlist.length}: ${item.zikr.id} (Repetition ${item.repetition}/${item.totalRepetitions})');
-
-    try {
-      await _player.setAsset(item.audioPath);
-      await _player.play();
-    } catch (e) {
-      debugPrint('Error playing audio: $e');
-      _updateState(PlaylistState.error);
-      // Try to continue with next item
-      _currentIndex++;
-      if (_currentIndex < _playlist.length) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        await _playCurrentItem();
-      } else {
-        _updateState(PlaylistState.completed);
-      }
-    }
-  }
-
-  void _onTrackCompleted() {
-    debugPrint('Track ${_currentIndex + 1} completed, moving to next...');
-    _currentIndex++;
-    if (_currentIndex < _playlist.length) {
-      // Small delay before playing next track to ensure smooth transition
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (_state != PlaylistState.completed) {
-        _playCurrentItem();
-        }
-      });
-    } else {
-      debugPrint('Playlist completed! All ${_playlist.length} items played.');
-      _updateState(PlaylistState.completed);
-      _currentItemController.add(null);
-    }
+    _currentIndex = 0;
+    await handler.skipToQueueItem(0);
+    await handler.play();
   }
 
   Future<void> pause() async {
-    if (_state == PlaylistState.playing) {
-      await _player.pause();
-      _updateState(PlaylistState.paused);
-    }
+    await _audioService.audioHandler?.pause();
   }
 
   Future<void> resume() async {
-    if (_state == PlaylistState.paused) {
-      await _player.play();
-      _updateState(PlaylistState.playing);
-    } else if (_state == PlaylistState.idle || _state == PlaylistState.completed) {
-      await play();
-    }
+    await _audioService.audioHandler?.play();
   }
 
   Future<void> stop() async {
-    await _player.stop();
+    await _audioService.audioHandler?.stop();
     _currentIndex = -1;
     _updateState(PlaylistState.idle);
     _currentItemController.add(null);
   }
 
   Future<void> skipToNext() async {
-    if (_currentIndex < _playlist.length - 1) {
-      await _player.stop();
-      _currentIndex++;
-      await _playCurrentItem();
-    }
+    await _audioService.audioHandler?.skipToNext();
   }
 
   Future<void> skipToPrevious() async {
-    if (_currentIndex > 0) {
-      await _player.stop();
-      _currentIndex--;
-      await _playCurrentItem();
-    }
+    await _audioService.audioHandler?.skipToPrevious();
   }
 
   Future<void> skipToIndex(int index) async {
     if (index >= 0 && index < _playlist.length) {
-      await _player.stop();
-      _currentIndex = index;
-      await _playCurrentItem();
+      await _audioService.audioHandler?.skipToQueueItem(index);
     }
   }
 
@@ -241,13 +205,12 @@ class PlaylistService {
     _stateController.add(newState);
   }
 
-  Stream<Duration?> get durationStream => _player.durationStream;
-  Stream<Duration> get positionStream => _player.positionStream;
-  Duration? get duration => _player.duration;
-  Duration get position => _player.position;
+  Stream<Duration?> get durationStream => _audioService.audioHandler?.player.durationStream ?? const Stream.empty();
+  Stream<Duration> get positionStream => _audioService.audioHandler?.player.positionStream ?? const Stream.empty();
+  Duration? get duration => _audioService.audioHandler?.player.duration;
+  Duration get position => _audioService.audioHandler?.player.position ?? Duration.zero;
 
   Future<void> dispose() async {
-    await _player.dispose();
     await _stateController.close();
     await _currentItemController.close();
     await _progressController.close();

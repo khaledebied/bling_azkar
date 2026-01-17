@@ -23,20 +23,17 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
   
   bool _hasError = false;
   String _errorMessage = '';
+  
+  // For double tap detection using Listener
+  DateTime? _lastPointerDownTime;
+  DateTime? _lastTapTime;
+
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _checkInitialization();
-    
-    // Check immediately if we are already on tab 3 (for hot reload or initial state)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (ref.read(currentTabProvider) == 3) {
-      }
-    });
   }
-  
-
 
   void _initializeAnimations() {
     _fadeController = AnimationController(
@@ -63,10 +60,7 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
 
   Future<void> _checkInitialization() async {
     try {
-      // Verify QuranLibrary is initialized
-      // Small delay to ensure smooth animation
       await Future.delayed(const Duration(milliseconds: 100));
-      
       if (mounted) {
         _fadeController.forward();
         _slideController.forward();
@@ -91,63 +85,84 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Listen to tab changes to trigger showcase
-    ref.listen(currentTabProvider, (previous, next) {
-      if (next == 3) {
-      }
-    });
-
-    // Safe MediaQuery access
-    final mediaQuery = MediaQuery.of(context);
-    final screenWidth = mediaQuery.size.width;
-    final screenHeight = mediaQuery.size.height;
-    
+    // Detect dark mode and localizations
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
-    
-    // Detect dark mode
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
+    
     // Show error state if initialization failed
     if (_hasError) {
       return _buildErrorState(context, isDarkMode);
     }
 
+    // MediaQuery for responsive layout
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
+    final isSystemBarsVisible = ref.watch(showBottomNavProvider);
+
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
+        extendBody: true,
         extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          title: Text(
-            l10n.quranKareem,
-            style: AppTheme.titleMedium.copyWith(
-              color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isDarkMode
-                    ? [
-                        Colors.black.withValues(alpha: 0.4),
-                        Colors.transparent,
-                      ]
-                    : [
-                        AppTheme.primaryGreen.withValues(alpha: 0.3),
-                        Colors.transparent,
-                      ],
+        backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF5F5F5),
+        appBar: isSystemBarsVisible 
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              title: Text(
+                l10n.quranKareem,
+                style: AppTheme.titleMedium.copyWith(
+                  color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ),
+              centerTitle: true,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isDarkMode
+                        ? [
+                            Colors.black.withValues(alpha: 0.4),
+                            Colors.transparent,
+                          ]
+                        : [
+                            AppTheme.primaryGreen.withValues(alpha: 0.3),
+                            Colors.transparent,
+                          ],
+                  ),
+                ),
+              ),
+            )
+          : null,
+        body: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) => _lastPointerDownTime = DateTime.now(),
+          onPointerUp: (_) {
+            if (_lastPointerDownTime != null) {
+              final now = DateTime.now();
+              final duration = now.difference(_lastPointerDownTime!);
+              
+              if (duration.inMilliseconds < 300) {
+                // It's a valid tap (not a scroll/long press)
+                if (_lastTapTime != null && 
+                    now.difference(_lastTapTime!).inMilliseconds < 300) {
+                  // It's a double tap!
+                  ref.read(showBottomNavProvider.notifier).update((state) => !state);
+                  _lastTapTime = null; // Reset
+                } else {
+                  _lastTapTime = now;
+                }
+              }
+            }
+          },
+          child: _buildQuranLibrary(context, isArabic, isDarkMode, screenWidth, screenHeight),
         ),
-        body: _buildQuranLibrary(context, isArabic, isDarkMode, screenWidth, screenHeight),
       ),
     );
   }
@@ -159,78 +174,13 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
     double screenWidth,
     double screenHeight,
   ) {
-    return QuranLibrary(
-      language: isArabic ? 'ar' : 'en',
-      isDarkMode: isDarkMode,
-      primaryColor: AppTheme.primaryGreen,
-      secondaryColor: AppTheme.primaryGold,
+    return QuranLibraryScreen(
+      parentContext: context,
+      appLanguageCode: isArabic ? 'ar' : 'en',
+      isDark: isDarkMode,
       backgroundColor: isDarkMode ? const Color(0xFF0F1419) : const Color(0xFFF5F5F5),
       textColor: isDarkMode ? Colors.white : Colors.black87,
-      headerStyle: TextStyle(
-        fontFamily: isArabic ? 'Amiri' : 'Poppins',
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: isDarkMode ? Colors.white : Colors.black87,
-      ),
-      textStyle: TextStyle(
-        fontFamily: isArabic ? 'Amiri' : 'Poppins',
-        fontSize: 18,
-        color: isDarkMode ? Colors.white : Colors.black87,
-      ),
-    );
-  }
-
-  Widget _buildQuranError(String error, bool isDarkMode) {
-    final l10n = AppLocalizations.ofWithFallback(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.errorLoadingQuran,
-              style: AppTheme.titleLarge.copyWith(
-                color: isDarkMode ? Colors.white : context.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: AppTheme.bodyMedium.copyWith(
-                color: isDarkMode 
-                    ? Colors.white.withValues(alpha: 0.7)
-                    : context.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _hasError = false;
-                });
-                _checkInitialization();
-              },
-              icon: const Icon(Icons.refresh),
-              label: Text(l10n.retry),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ayahIconColor: AppTheme.primaryGreen,
     );
   }
 

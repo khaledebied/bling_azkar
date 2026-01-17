@@ -59,7 +59,7 @@ final gpsLocationProvider = FutureProvider.autoDispose<Location?>((ref) async {
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.medium,
       ),
-    );
+    ).timeout(const Duration(seconds: 5));
 
     final repository = MuslimRepository();
     final location = await repository.reverseGeocoder(

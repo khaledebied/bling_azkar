@@ -68,6 +68,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
 
     // Update provider
     ref.read(currentTabProvider.notifier).state = index;
+    ref.read(showBottomNavProvider.notifier).state = true;
 
     // If tapping Quran tab, check if we need to mark showcase as seen (if it wasn't shown automatically)
     if (index == 3) {
@@ -106,7 +107,19 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
                 );
               }).toList(),
             ),
-            bottomNavigationBar: _buildBottomNavigationBar(context),
+            bottomNavigationBar: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return SizeTransition(
+                  sizeFactor: animation,
+                  axisAlignment: -1.0,
+                  child: child,
+                );
+              },
+              child: ref.watch(showBottomNavProvider)
+                  ? _buildBottomNavigationBar(context)
+                  : const SizedBox.shrink(key: ValueKey('hide_nav')),
+            ),
             // Ensure SnackBar has proper margins
             resizeToAvoidBottomInset: false,
           ),
@@ -120,6 +133,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Container(
+      key: const ValueKey('bottom_nav_bar'),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         border: isDarkMode
@@ -231,6 +245,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
           ],
         ),
       ),
+    )
     );
   }
 }

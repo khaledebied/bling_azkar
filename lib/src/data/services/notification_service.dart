@@ -166,34 +166,20 @@ class NotificationService {
       await initialize();
     }
 
-    // Don't cancel all - check if we need to reschedule
-    try {
-      final pendingNotifications = await _notifications.pendingNotificationRequests();
-      
-      // If we have less than 50 pending notifications, reschedule
-      if (pendingNotifications.length < 50) {
-        await _cancelAllNotifications();
+    // Cancel existing periodic reminders first
+    await cancelPeriodicReminders();
 
-        // Schedule notifications for the next 12 hours (72 notifications every 10 minutes)
-        // This ensures we don't hit Android's notification limit
-        await _scheduleMultipleNotifications(
-          title: 'وقت الذكر',
-          body: 'لا تنسى ذكر الله ❤️',
-          intervalMinutes: 10,
-          hoursAhead: 12, // Schedule for next 12 hours
-        );
-      } else {
-        debugPrint('Notifications already scheduled (${pendingNotifications.length} pending)');
-      }
-    } catch (e) {
-      debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
-      await _cancelAllNotifications();
+    try {
+      // Schedule notifications for the next 12 hours (72 notifications every 10 minutes)
+      // This ensures we don't hit Android's notification limit
       await _scheduleMultipleNotifications(
         title: 'وقت الذكر',
         body: 'لا تنسى ذكر الله ❤️',
         intervalMinutes: 10,
-        hoursAhead: 12,
+        hoursAhead: 12, // Schedule for next 12 hours
       );
+    } catch (e) {
+      debugPrint('⚠️ Could not schedule periodic notifications: $e');
     }
   }
 
@@ -230,7 +216,7 @@ class NotificationService {
 
     final now = tz.TZDateTime.now(tz.local);
     final endTime = now.add(Duration(hours: hoursAhead));
-    int notificationId = 1000; // Start from 1000 to avoid conflicts
+    int notificationId = 1000; // Start from 1000 for periodic reminders
     int notificationCount = 0;
 
     // Calculate how many notifications we need
@@ -246,23 +232,24 @@ class NotificationService {
       if (scheduledDate.isAfter(now) && 
           (scheduledDate.isBefore(endTime) || scheduledDate.isAtSameMomentAs(endTime))) {
         try {
-        await _notifications.zonedSchedule(
-          notificationId,
+          await _notifications.zonedSchedule(
+            notificationId,
             title,
             body,
             scheduledDate,
-          details,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          payload: 'zikr_reminder',
+            details,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            payload: 'zikr_reminder',
           );
           notificationCount++;
           notificationId++;
           
-          // Prevent ID overflow
-          if (notificationId > 5000) {
-            notificationId = 1000;
+          // Prevent ID overflow into Daily Reminders range (2000+)
+          if (notificationId >= 2000) {
+            debugPrint('⚠️ Max periodic notification ID reached, stopping scheduling');
+            break;
           }
         } catch (e) {
           debugPrint('Error scheduling notification $notificationId: $e');
@@ -275,23 +262,30 @@ class NotificationService {
 
   // Reschedule notifications when app comes to foreground
   Future<void> rescheduleIfNeeded() async {
-    if (!_isInitialized) {
-      await initialize();
-    }
+    await startPeriodicReminders();
+  }
 
+  // Get initial notification when app is opened from notification
+  Future<void> stopPeriodicReminders() async {
+    await cancelPeriodicReminders();
+  }
+
+  Future<void> cancelPeriodicReminders() async {
     try {
-      final pendingNotifications = await _notifications.pendingNotificationRequests();
-      
-      // If we have less than 20 pending notifications, reschedule
-      if (pendingNotifications.length < 20) {
-        debugPrint('⚠️ Low notification count (${pendingNotifications.length}), rescheduling...');
-        await startPeriodicReminders();
-      } else {
-        debugPrint('✅ Notifications are up to date (${pendingNotifications.length} pending)');
+      final pending = await _notifications.pendingNotificationRequests();
+      for (final notification in pending) {
+        if (notification.id >= 1000 && notification.id < 2000) {
+          await _notifications.cancel(notification.id);
+        }
       }
+      debugPrint('Cancelled periodic notifications (1000-1999)');
     } catch (e) {
-      debugPrint('⚠️ Could not check pending notifications, rescheduling: $e');
-      await startPeriodicReminders();
+      debugPrint('⚠️ Could not get pending notifications, cancelling by ID range: $e');
+      for (int id = 1000; id < 2000; id++) {
+        try {
+          await _notifications.cancel(id);
+        } catch (_) {}
+      }
     }
   }
 
@@ -304,13 +298,10 @@ class NotificationService {
     return launchDetails?.notificationResponse;
   }
 
-  Future<void> stopPeriodicReminders() async {
-    await _cancelAllNotifications();
-  }
-
   Future<void> _cancelAllNotifications() async {
     await _notifications.cancelAll();
   }
+
 
   Future<void> showTestNotification(String title, String body) async {
     if (!_isInitialized) {

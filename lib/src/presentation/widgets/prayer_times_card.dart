@@ -62,6 +62,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.ofWithFallback(context);
@@ -75,14 +76,50 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
       return permissionStatusAsync.when(
         data: (status) {
           if (status == LocationPermissionStatus.granted) {
-            // Permission granted but location not loaded yet, show loading
-            return _buildLoadingLocationPrompt(context, l10n, isDarkMode);
+            // Permission granted, check GPS status
+            final gpsState = ref.watch(gpsLocationProvider);
+            return gpsState.when(
+              data: (data) {
+                if (data == null) {
+                  // Failed to get location despite permission
+                  return _buildErrorWidget(
+                    l10n, 
+                    isDarkMode,
+                    onRetry: () {
+                      ref.invalidate(gpsLocationProvider);
+                    },
+                  );
+                }
+                // Should not happen if locationAvailable is false and data is not null
+                return _buildLoadingLocationPrompt(
+                  context, 
+                  l10n, 
+                  isDarkMode,
+                );
+              },
+              error: (e, s) => _buildErrorWidget(
+                l10n, 
+                isDarkMode,
+                onRetry: () {
+                  ref.invalidate(gpsLocationProvider);
+                },
+              ),
+              loading: () => _buildLoadingLocationPrompt(
+                context, 
+                l10n, 
+                isDarkMode,
+              ),
+            );
           } else {
             // Permission denied, show permission request UI
             return _buildLocationPermissionPrompt(context, l10n, isDarkMode, status);
           }
         },
-        loading: () => _buildLoadingLocationPrompt(context, l10n, isDarkMode),
+        loading: () => _buildLoadingLocationPrompt(
+          context, 
+          l10n, 
+          isDarkMode,
+        ),
         error: (_, __) => _buildLocationPermissionPrompt(context, l10n, isDarkMode, LocationPermissionStatus.denied),
       );
     }
@@ -230,10 +267,24 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
               // Prayer Times List
               prayerTimesAsync.when(
                 loading: () => _buildLoadingSkeleton(isDarkMode),
-                error: (error, stack) => _buildErrorWidget(l10n, isDarkMode),
+                error: (error, stack) => _buildErrorWidget(
+                  l10n, 
+                  isDarkMode,
+                  onRetry: () {
+                    ref.invalidate(prayerTimesProvider);
+                    ref.invalidate(locationProvider);
+                    ref.invalidate(gpsLocationProvider);
+                  },
+                ),
                 data: (prayerTimes) {
                   if (prayerTimes == null) {
-                    return _buildErrorWidget(l10n, isDarkMode);
+                    return _buildErrorWidget(
+                      l10n, 
+                      isDarkMode,
+                      onRetry: () {
+                        ref.invalidate(prayerTimesProvider);
+                      },
+                    );
                   }
                   return _buildPrayerTimesList(prayerTimes, nextPrayer, l10n, isDarkMode);
                 },
@@ -434,7 +485,11 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     );
   }
 
-  Widget _buildErrorWidget(AppLocalizations l10n, bool isDarkMode) {
+  Widget _buildErrorWidget(
+    AppLocalizations l10n, 
+    bool isDarkMode, {
+    VoidCallback? onRetry,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Center(
@@ -454,6 +509,22 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                 color: context.textSecondary,
               ),
             ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: Text(l10n.isArabic ? 'إعادة المحاولة' : 'Retry'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.primaryGreen,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -796,18 +867,18 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
                               isServiceDisabled || isDeniedForever
                                   ? (l10n.isArabic ? 'فتح الإعدادات' : 'Open Settings')
                                   : (l10n.isArabic ? 'السماح' : 'Allow'),
-              style: AppTheme.bodyMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
-              ),
+                  ),
                 ),
-            ),
+              ),
             ],
           ),
         ],
@@ -815,4 +886,3 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard>
     );
   }
 }
-

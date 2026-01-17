@@ -160,6 +160,7 @@ class AudioPlayerService {
     bool isLocal = true,
     String? title,
     String? artist,
+    Duration? duration,
   }) async {
     if (audioPath.isEmpty) {
       throw ArgumentError('Audio path cannot be empty');
@@ -172,59 +173,19 @@ class AudioPlayerService {
     }
 
     try {
-      // Load audio
-      if (isLocal) {
-        await _globalAudioHandler!.loadAsset(audioPath);
-      } else {
-        await _globalAudioHandler!.loadUrl(audioPath);
-      }
-
-      // Get duration if available
-      Duration? duration;
-      try {
-        await Future.delayed(const Duration(milliseconds: 100));
-        duration = _globalAudioHandler!.player.duration;
-      } catch (e) {
-        debugPrint('Could not get duration: $e');
-      }
-
-      await _globalAudioHandler!.setMediaItem(
+      final mediaItem = MediaItem(
         id: audioPath,
         title: title ?? 'Bling Azkar',
         artist: artist ?? 'Islamic Remembrance',
         duration: duration,
+        playable: true,
       );
 
+      await _globalAudioHandler!.setMediaItem(mediaItem);
       await _globalAudioHandler!.play();
     } catch (e) {
-      final errorString = e.toString();
-      if (errorString.contains('Not a directory') || 
-          errorString.contains('errno = 20') ||
-          errorString.contains('just_audio_cache')) {
-        debugPrint('Cache directory error detected, clearing cache and retrying...');
-        await _clearCorruptedCache();
-        
-        try {
-          if (isLocal) {
-            await _globalAudioHandler!.loadAsset(audioPath);
-          } else {
-            await _globalAudioHandler!.loadUrl(audioPath);
-          }
-          await _globalAudioHandler!.setMediaItem(
-            id: audioPath,
-            title: title ?? 'Bling Azkar',
-            artist: artist ?? 'Islamic Remembrance',
-          );
-          await _globalAudioHandler!.play();
-          debugPrint('Audio playback successful after cache clear');
-        } catch (retryError) {
-          debugPrint('Error playing audio after cache clear: $retryError');
-          rethrow;
-        }
-      } else {
-        debugPrint('Error playing audio: $e');
-        rethrow;
-      }
+      debugPrint('Error playing audio: $e');
+      rethrow;
     }
   }
 
