@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:quran_library/quran_library.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/direction_icons.dart';
-import '../../data/services/showcase_service.dart';
-import '../widgets/custom_showcase_tooltip.dart';
 import '../providers/ui_providers.dart';
 
 class QuranScreen extends ConsumerStatefulWidget {
@@ -26,11 +23,6 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
   
   bool _hasError = false;
   String _errorMessage = '';
-
-  // Showcase Keys
-  final GlobalKey _titleKey = GlobalKey();
-  final GlobalKey _contentKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -40,26 +32,10 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
     // Check immediately if we are already on tab 3 (for hot reload or initial state)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(currentTabProvider) == 3) {
-        _checkAndStartShowcase();
       }
     });
   }
   
-  Future<void> _checkAndStartShowcase() async {
-    // Small delay to ensure UI is ready
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    final showcaseService = ref.read(showcaseServiceProvider);
-    
-    // Only show content showcase if tab showcase is already seen
-    final hasSeenTab = await showcaseService.hasSeenQuranTabShowcase();
-    if (hasSeenTab) {
-      final hasSeenContent = await showcaseService.hasSeenQuranContentShowcase();
-      if (!hasSeenContent) {
-        ShowCaseWidget.of(context).startShowCase([_titleKey, _contentKey]);
-      }
-    }
   }
 
   void _initializeAnimations() {
@@ -118,7 +94,6 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
     // Listen to tab changes to trigger showcase
     ref.listen(currentTabProvider, (previous, next) {
       if (next == 3) {
-        _checkAndStartShowcase();
       }
     });
 
@@ -146,71 +121,6 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
           backgroundColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: Showcase.withWidget(
-            key: _titleKey,
-            targetBorderRadius: BorderRadius.circular(12),
-            container: SizedBox(
-              width: 300,
-              height: 160,
-              child: CustomShowcaseTooltip(
-                title: l10n.showcaseQuranTitle,
-                description: l10n.showcaseQuranTab,
-                icon: Icons.menu_book_rounded,
-                onNext: () {
-                  ShowCaseWidget.of(context).next();
-                },
-              ),
-            ),
-            child: Text(
-              l10n.quranKareem,
-              style: AppTheme.titleMedium.copyWith(
-                color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.black54,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          centerTitle: true,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isDarkMode
-                    ? [
-                        Colors.black.withValues(alpha: 0.4),
-                        Colors.transparent,
-                      ]
-                    : [
-                        AppTheme.primaryGreen.withValues(alpha: 0.3),
-                        Colors.transparent,
-                      ],
-              ),
-            ),
-          ),
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? const Color(0xFF0F1419)
-                : const Color(0xFFF5F5F5),
-          ),
-          child: SafeArea(
-            top: false,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: _buildQuranLibrary(
-                context,
-                isArabic,
-                isDarkMode,
-                screenWidth,
-                screenHeight,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildQuranLibrary(
     BuildContext context,
@@ -221,49 +131,6 @@ class _QuranScreenState extends ConsumerState<QuranScreen>
   ) {
     try {
       final l10n = AppLocalizations.ofWithFallback(context);
-      return Showcase.withWidget(
-        key: _contentKey,
-        targetBorderRadius: BorderRadius.circular(20),
-        container: SizedBox(
-          width: 300,
-          height: 180,
-          child: CustomShowcaseTooltip(
-            title: l10n.quranKareem,
-            description: l10n.showcaseQuranFeatures,
-            isLastStep: true,
-            icon: Icons.search_rounded,
-            onNext: () {
-              ref.read(showcaseServiceProvider).markQuranContentShowcaseAsSeen();
-              ShowCaseWidget.of(context).dismiss();
-            },
-          ),
-        ),
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          color: isDarkMode
-              ? const Color(0xFF0F1419)
-              : const Color(0xFFF5F5F5),
-          child: QuranLibraryScreen(
-            parentContext: context,
-            isDark: isDarkMode,
-            showAyahBookmarkedIcon: true,
-            appLanguageCode: isArabic ? 'ar' : 'en',
-            ayahIconColor: AppTheme.primaryGreen,
-            backgroundColor: isDarkMode
-                ? const Color(0xFF0F1419)
-                : const Color(0xFFF5F5F5),
-            textColor: isDarkMode
-                ? Colors.white.withValues(alpha: 0.95)
-                : Colors.black87,
-            isFontsLocal: false,
-          ),
-        ),
-      );
-    } catch (e) {
-      debugPrint('Error building QuranLibrary: $e');
-      return _buildQuranError(e.toString(), isDarkMode);
-    }
   }
 
   Widget _buildQuranError(String error, bool isDarkMode) {

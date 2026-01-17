@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:showcaseview/showcaseview.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
-import '../../data/services/showcase_service.dart';
-import '../widgets/custom_showcase_tooltip.dart';
 import 'home_screen.dart';
 import 'tasbih_list_screen.dart';
 import 'favorites_screen.dart';
@@ -25,11 +22,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
   late List<Widget> _screens;
   late List<AnimationController> _animationControllers;
   late List<Animation<double>> _fadeAnimations;
-  
-  // Showcase Keys
-  final GlobalKey _quranTabKey = GlobalKey();
-  
-  bool _hasCheckedShowcase = false;
 
   @override
   void initState() {
@@ -59,17 +51,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
 
     // Start animation for first tab
     _animationControllers[0].forward();
-  }
-  
-  Future<void> _checkAndStartShowcase(BuildContext context) async {
-    final showcaseService = ref.read(showcaseServiceProvider);
-    final hasSeen = await showcaseService.hasSeenQuranTabShowcase();
-    
-    if (!hasSeen) {
-      if (context.mounted) {
-        ShowCaseWidget.of(context).startShowCase([_quranTabKey]);
-      }
-    }
   }
 
   @override
@@ -104,28 +85,10 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
 
   @override
   Widget build(BuildContext context) {
-    return ShowCaseWidget(
-      onComplete: (index, key) {
-        if (key == _quranTabKey) {
-          ref.read(showcaseServiceProvider).markQuranTabShowcaseAsSeen();
-          // Navigate to Quran tab
-          _onTabTapped(3);
-          // We can optionally start another showcase flow inside Quran Screen here
-          // But QuranScreen will handle its own showcase via the same service check
-        }
-      },
-      builder: (context) => _buildScaffold(context),
-    );
+    return _buildScaffold(context);
   }
 
   Widget _buildScaffold(BuildContext context) {
-    if (!_hasCheckedShowcase) {
-      _hasCheckedShowcase = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _checkAndStartShowcase(context);
-      });
-    }
-
     final l10n = AppLocalizations.ofWithFallback(context);
     final isArabic = l10n.isArabic;
 
@@ -201,9 +164,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
                 icon: Icons.menu_book_rounded,
                 label: l10n.quranKareem,
                 index: 3,
-                showcaseKey: _quranTabKey,
-                showcaseTitle: l10n.showcaseQuranTitle,
-                showcaseDesc: l10n.showcaseQuranTab,
               ),
             ],
           ),
@@ -216,13 +176,11 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
     required IconData icon,
     required String label,
     required int index,
-    GlobalKey? showcaseKey,
-    String? showcaseTitle,
-    String? showcaseDesc,
   }) {
     final isSelected = _currentIndex == index;
 
-    Widget content = GestureDetector(
+    return Expanded(
+      child: GestureDetector(
       onTap: () => _onTabTapped(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
@@ -274,31 +232,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
         ),
       ),
     );
-
-    if (showcaseKey != null && showcaseTitle != null && showcaseDesc != null) {
-      return Expanded(
-        child: Showcase.withWidget(
-          key: showcaseKey,
-          targetPadding: const EdgeInsets.all(4),
-          targetBorderRadius: BorderRadius.circular(16),
-          container: SizedBox(
-            width: 300,
-            height: 200,
-            child: CustomShowcaseTooltip(
-              title: showcaseTitle,
-              description: showcaseDesc,
-              icon: icon,
-              onNext: () {
-                ShowCaseWidget.of(context).next();
-              },
-            ),
-          ),
-          child: content,
-        ),
-      );
-    }
-
-    return Expanded(child: content);
   }
 }
 

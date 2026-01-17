@@ -8,9 +8,6 @@ import '../../domain/models/tasbih_type.dart';
 import '../providers/tasbih_providers.dart';
 import 'tasbih_detail_screen.dart';
 
-import '../../data/services/showcase_service.dart';
-import '../widgets/custom_showcase_tooltip.dart';
-import 'package:showcaseview/showcaseview.dart';
 import '../providers/ui_providers.dart';
 
 /// Main listing screen showing all 10 Tasbih types in a grid
@@ -22,9 +19,6 @@ class TasbihListScreen extends ConsumerStatefulWidget {
 }
 
 class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
-  // Showcase Keys
-  final GlobalKey _tasbihKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -32,24 +26,10 @@ class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
     // Listen for tab changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(currentTabProvider) == 1) { // 1 is Tasbih Tab
-        _checkAndStartShowcase();
       }
     });
   }
 
-  Future<void> _checkAndStartShowcase() async {
-    // Small delay to ensure UI is ready
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
-    final showcaseService = ref.read(showcaseServiceProvider);
-    final hasSeen = await showcaseService.hasSeenTasbihShowcase();
-    
-    if (!hasSeen) {
-       if (mounted) {
-        ShowCaseWidget.of(context).startShowCase([_tasbihKey]);
-      }
-    }
   }
 
   @override
@@ -57,7 +37,6 @@ class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
     // Listen to tab changes to trigger showcase
     ref.listen(currentTabProvider, (previous, next) {
       if (next == 1) {
-        _checkAndStartShowcase();
       }
     });
 
@@ -138,22 +117,6 @@ class _TasbihListScreenState extends ConsumerState<TasbihListScreen> {
                 );
 
                 if (index == 0) {
-                  return Showcase.withWidget(
-                    key: _tasbihKey,
-                    targetBorderRadius: BorderRadius.circular(20),
-                    container: CustomShowcaseTooltip(
-                      title: l10n.showcaseTasbihTitle,
-                      description: l10n.showcaseTasbihDesc,
-                      icon: Icons.touch_app_rounded,
-                      isLastStep: true,
-                      onNext: () {
-                         ref.read(showcaseServiceProvider).markTasbihShowcaseAsSeen();
-                         ShowCaseWidget.of(context).dismiss();
-                      },
-                    ),
-                    child: card,
-                  );
-                }
                 return card;
               },
             ),

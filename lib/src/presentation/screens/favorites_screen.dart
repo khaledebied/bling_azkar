@@ -11,9 +11,6 @@ import '../widgets/zikr_list_item.dart';
 import '../widgets/floating_playlist_player.dart';
 import 'zikr_detail_screen.dart';
 import 'player_screen.dart';
-import '../../data/services/showcase_service.dart';
-import '../widgets/custom_showcase_tooltip.dart';
-import 'package:showcaseview/showcaseview.dart';
 import '../providers/ui_providers.dart';
 
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -27,10 +24,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   final _playlistService = PlaylistService();
   bool _isPlayingAll = false;
   PlaylistState _playlistState = PlaylistState.idle;
-  
-  // Showcase Keys
-  final GlobalKey _favoritesKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -48,25 +41,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     // Listen for tab changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(currentTabProvider) == 2) { // 2 is Favorites Tab
-        _checkAndStartShowcase();
       }
     });
   }
 
-  Future<void> _checkAndStartShowcase() async {
-    // Small delay to ensure UI is ready
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
 
-    final showcaseService = ref.read(showcaseServiceProvider);
-    final hasSeen = await showcaseService.hasSeenFavoritesShowcase();
-    
-    if (!hasSeen) {
-       if (mounted) {
-        ShowCaseWidget.of(context).startShowCase([_favoritesKey]);
-      }
-    }
-  }
 
   Future<void> _playAllFavorites(List<Zikr> favorites) async {
     if (favorites.isEmpty) return;
@@ -89,10 +68,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to tab changes to trigger showcase
+    // Listen to tab changes
     ref.listen(currentTabProvider, (previous, next) {
       if (next == 2) {
-        _checkAndStartShowcase();
       }
     });
 
@@ -155,35 +133,36 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                     ),
                   ],
                 ),
-          // Floating playlist player
-          StreamBuilder<PlaylistState>(
-            stream: _playlistService.stateStream,
-            initialData: PlaylistState.idle,
-            builder: (context, snapshot) {
-              final state = snapshot.data ?? PlaylistState.idle;
-              final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
-              
-              return AnimatedPositioned(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                bottom: isVisible ? 0 : -100,
-                left: 0,
-                right: 0,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: isVisible ? 1.0 : 0.0,
-                  child: FloatingPlaylistPlayer(
-                    playlistService: _playlistService,
-                  ),
+                // Floating playlist player
+                StreamBuilder<PlaylistState>(
+                  stream: _playlistService.stateStream,
+                  initialData: PlaylistState.idle,
+                  builder: (context, snapshot) {
+                    final state = snapshot.data ?? PlaylistState.idle;
+                    final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
+                    
+                    return AnimatedPositioned(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      bottom: isVisible ? 0 : -100,
+                      left: 0,
+                      right: 0,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: isVisible ? 1.0 : 0.0,
+                        child: FloatingPlaylistPlayer(
+                          playlistService: _playlistService,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildFavoritesList(List<Zikr> favorites) {
@@ -197,46 +176,46 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.primaryGreen.withValues(alpha: 0.15),
-                      AppTheme.primaryTeal.withValues(alpha: 0.15),
-                    ],
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primaryGreen.withValues(alpha: 0.15),
+                        AppTheme.primaryTeal.withValues(alpha: 0.15),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
                   ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.favorite_border,
-                  size: 80,
-                  color: AppTheme.primaryGreen,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.noFavoritesYet,
-                style: AppTheme.titleLarge.copyWith(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 48.0),
-                child: Text(
-                  l10n.addFavoritesHint,
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: context.textSecondary,
+                  child: Icon(
+                    Icons.favorite_border,
+                    size: 80,
+                    color: AppTheme.primaryGreen,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                Text(
+                  l10n.noFavoritesYet,
+                  style: AppTheme.titleLarge.copyWith(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                  child: Text(
+                    l10n.addFavoritesHint,
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: context.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       );
     }
 
@@ -335,99 +314,46 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildPlayAllButton(List<Zikr> favorites, AppLocalizations l10n) {
-    final totalItems = favorites.fold<int>(0, (sum, z) => sum + z.defaultCount);
-    
-    return Showcase.withWidget(
-      key: _favoritesKey,
-      targetBorderRadius: BorderRadius.circular(16),
-      container: CustomShowcaseTooltip(
-        title: l10n.showcaseFavoritesTitle,
-        description: l10n.showcaseFavoritesDesc,
-        icon: Icons.playlist_play_rounded,
-        isLastStep: true,
-        onNext: () {
-            ref.read(showcaseServiceProvider).markFavoritesShowcaseAsSeen();
-            ShowCaseWidget.of(context).dismiss();
-        },
-      ),
-      child: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: _isPlayingAll
-              ? [AppTheme.primaryTeal, AppTheme.primaryGreen]
-              : [AppTheme.primaryGreen, AppTheme.primaryTeal],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (_isPlayingAll ? AppTheme.primaryTeal : AppTheme.primaryGreen)
-                .withOpacity(0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+    return SizedBox(
+      width: double.infinity,
+      child: GestureDetector(
+        onTap: () => _playAllFavorites(favorites),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _playAllFavorites(favorites),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isPlayingAll && _playlistState == PlaylistState.playing
-                        ? Icons.pause
-                        : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _isPlayingAll && _playlistState == PlaylistState.playing
+                    ? Icons.pause_circle_filled_rounded
+                    : Icons.play_circle_fill_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _isPlayingAll && _playlistState == PlaylistState.playing
+                    ? l10n.pauseAll
+                    : l10n.playAll,
+                style: AppTheme.titleMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  _isPlayingAll
-                      ? (_playlistState == PlaylistState.playing
-                          ? l10n.pauseAll
-                          : l10n.resumeAll)
-                      : l10n.playAllFavorites,
-                  style: AppTheme.titleMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$totalItems',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      ),
       ),
     );
   }
@@ -473,29 +399,29 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppTheme.primaryGreen,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.errorLoadingFavorites,
-              style: AppTheme.titleMedium.copyWith(
-                color: context.textSecondary,
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.primaryGreen,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: AppTheme.caption.copyWith(
-                color: context.textSecondary,
+              const SizedBox(height: 16),
+              Text(
+                l10n.errorLoadingFavorites,
+                style: AppTheme.titleMedium.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: AppTheme.caption.copyWith(
+                  color: context.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
