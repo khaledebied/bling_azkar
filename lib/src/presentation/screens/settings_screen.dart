@@ -1115,7 +1115,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with WidgetsBin
         content: SingleChildScrollView(
           child: Text(
             l10n.isArabic
-                ? 'تطبيق بلينج أذكار يساعدك على تذكر الأذكار اليومية.\n\n'
+                ? 'تطبيق Noor - نُور يساعدك على تذكر الأذكار اليومية.\n\n'
                     '• تصفح الأذكار حسب الفئات\n'
                     '• أضف الأذكار إلى المفضلة\n'
                     '• استمع إلى الأذكار بصوت\n'
