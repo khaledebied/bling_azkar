@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,10 +8,27 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Load keystore properties from key.properties file
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.blingazkar.bling_azkar"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
+
+    configurations.all {
+        resolutionStrategy {
+            force("com.google.android.play:app-update:2.1.0")
+            force("com.google.android.play:feature-delivery:2.1.0")
+            force("com.google.android.play:review:2.0.1")
+            force("com.google.android.play:asset-delivery:2.2.2")
+        }
+        exclude(group = "com.google.android.play", module = "core")
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -31,11 +51,19 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Sign with release keystore
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -53,8 +81,10 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     
-    // Google Play Core (for Flutter deferred components support)
-    // Required to prevent R8 errors about missing classes
-    // R8 needs these classes at build time even if not used at runtime
-    implementation("com.google.android.play:core:1.10.3")
+    // Modern Google Play split libraries (replacing legacy monolithic com.google.android.play:core:1.10.3)
+    // Required for Android 14 (SDK 34) compatibility
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:feature-delivery:2.1.0")
+    implementation("com.google.android.play:review:2.0.1")
+    implementation("com.google.android.play:asset-delivery:2.2.2")
 }

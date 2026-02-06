@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:async';
+import 'package:flutter/services.dart';
 import '../../domain/models/zikr.dart';
 import '../../utils/theme.dart';
 import '../../utils/theme_extensions.dart';
 import '../../utils/direction_icons.dart';
-import '../../data/services/audio_player_service.dart';
-import 'package:just_audio/just_audio.dart';
 
 class ZikrListItem extends StatefulWidget {
   final Zikr zikr;
@@ -30,19 +27,6 @@ class _ZikrListItemState extends State<ZikrListItem>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  late AnimationController _playController;
-  late AnimationController _pulseController;
-  late Animation<double> _playScaleAnimation;
-  late Animation<double> _pulseAnimation;
-  
-  final _audioService = AudioPlayerService();
-  StreamSubscription<PlayerState>? _playerStateSubscription;
-  bool _isPlaying = false;
-  bool _isCurrentAudio = false;
-  String? _currentAudioPath;
-  
-  // Static variable to track which audio is currently playing
-  static String? _currentlyPlayingPath;
 
   @override
   void initState() {
@@ -51,179 +35,15 @@ class _ZikrListItemState extends State<ZikrListItem>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-
-    _playController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _playScaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _playController, curve: Curves.easeInOut),
-    );
-
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    // Get current audio path for this zikr
-    if (widget.zikr.audio.isNotEmpty) {
-      final audioInfo = widget.zikr.audio.first;
-      _currentAudioPath = audioInfo.shortFile ?? audioInfo.fullFileUrl;
-    }
-
-    // Initialize audio service and listen to player state
-    _initializeAudioListener();
-  }
-
-  void _initializeAudioListener() {
-    // AudioService is already initialized in main.dart
-    // Just listen to player state if available
-    if (!_audioService.isReady) {
-      debugPrint('AudioService not ready yet, will retry on first play');
-      return;
-    }
-
-    // Listen to audio player state
-    _playerStateSubscription = _audioService.playerStateStream.listen((state) {
-      if (mounted && _currentAudioPath != null) {
-        final wasPlaying = _isPlaying;
-        final wasCurrent = _isCurrentAudio;
-        _isPlaying = state.playing;
-        
-        // Reset playing path if audio stopped or completed
-        if (state.processingState == ProcessingState.completed || 
-            (!_isPlaying && _currentlyPlayingPath == _currentAudioPath)) {
-          _currentlyPlayingPath = null;
-        }
-        
-        // Check if this is the current audio being played
-        _isCurrentAudio = _isPlaying && _currentlyPlayingPath == _currentAudioPath;
-        
-        if (_isCurrentAudio && !wasCurrent) {
-          _pulseController.repeat(reverse: true);
-        } else if (!_isCurrentAudio && wasCurrent) {
-          _pulseController.stop();
-          _pulseController.reset();
-        }
-        
-        if (wasPlaying != _isPlaying || wasCurrent != _isCurrentAudio) {
-          setState(() {});
-        }
-      }
-    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _playController.dispose();
-    _pulseController.dispose();
-    _playerStateSubscription?.cancel();
     super.dispose();
-  }
-
-  Future<void> _handlePlayPause() async {
-    if (widget.zikr.audio.isEmpty || _currentAudioPath == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No audio available for this zikr'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Initialize audio service if not ready (lazy initialization)
-    if (!_audioService.isReady) {
-      final initialized = await _audioService.initialize();
-      if (!initialized) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Audio service could not be initialized. Please try again.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      }
-    }
-
-    try {
-      // Set up listener if not already done
-      if (_playerStateSubscription == null) {
-        _initializeAudioListener();
-      }
-      
-      // Animate button press
-      _playController.forward().then((_) {
-        _playController.reverse();
-      });
-      
-      if (_isPlaying && _isCurrentAudio) {
-        // Pause current audio - update UI immediately
-        _currentlyPlayingPath = null;
-        _isPlaying = false;
-        _isCurrentAudio = false;
-        _pulseController.stop();
-        _pulseController.reset();
-        if (mounted) setState(() {});
-        
-        await _audioService.pause();
-      } else {
-        // Stop any currently playing audio
-        if (_currentlyPlayingPath != null && _currentlyPlayingPath != _currentAudioPath) {
-          await _audioService.stop();
-        }
-        
-        // Set path BEFORE playing so stream listener can match it
-        _currentlyPlayingPath = _currentAudioPath;
-        
-        // Update UI immediately - show playing state
-        _isPlaying = true;
-        _isCurrentAudio = true;
-        _pulseController.repeat(reverse: true);
-        if (mounted) setState(() {});
-        
-        // Play this audio
-        await _audioService.playAudio(
-          _currentAudioPath!,
-          isLocal: true,
-          title: widget.zikr.title.ar,
-          artist: 'Bling Azkar',
-        );
-      }
-    } catch (e) {
-      debugPrint('Error in _handlePlayPause: $e');
-      // Reset state on error
-      _isPlaying = false;
-      _isCurrentAudio = false;
-      _currentlyPlayingPath = null;
-      _pulseController.stop();
-      _pulseController.reset();
-      if (mounted) setState(() {});
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error playing audio: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -239,149 +59,131 @@ class _ZikrListItemState extends State<ZikrListItem>
       onTapCancel: () => _controller.reverse(),
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Hero(
-          tag: 'zikr_${widget.zikr.id}',
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            constraints: const BoxConstraints(
-              minHeight: 90,
-            ),
-            decoration: BoxDecoration(
-              color: context.cardColor,
-              borderRadius: BorderRadius.circular(20),
-              border: isDarkMode
-                  ? Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1,
-                    )
-                  : null,
-              boxShadow: [
-                BoxShadow(
-                  color: isDarkMode
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : Colors.black.withValues(alpha: 0.06),
-                  blurRadius: isDarkMode ? 15 : 10,
-                  offset: const Offset(0, 3),
-                ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: context.cardColor,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: isDarkMode
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+            gradient: isDarkMode ? null : LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                context.cardColor,
+                context.cardColor.withValues(alpha: 0.95),
               ],
             ),
-            child: IntrinsicHeight(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            widget.zikr.title.ar,
-                            style: AppTheme.arabicMedium.copyWith(
-                              fontSize: 15,
-                              color: context.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (widget.zikr.translation?.en.isNotEmpty ?? false) ...[
-                            const SizedBox(height: 3),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              children: [
+                // Decorative ornament or gradient
+                Positioned(
+                  top: -20,
+                  right: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Number/Repetition Badge
+                      _buildRepetitionBadge(),
+                      
+                      const SizedBox(width: 16),
+                      
+                      // Text Content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             Text(
-                              widget.zikr.translation!.en,
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: context.textSecondary,
-                                fontSize: 12,
+                              widget.zikr.title.ar,
+                              style: AppTheme.arabicMedium.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: context.textPrimary,
+                                height: 1.2,
                               ),
-                              maxLines: 1,
+                            ),
+                            if (widget.zikr.translation?.en.isNotEmpty ?? false) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.zikr.translation!.en,
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                            const SizedBox(height: 12),
+                            Text(
+                              widget.zikr.text,
+                              style: AppTheme.arabicSmall.copyWith(
+                                color: context.textSecondary,
+                                fontSize: 15,
+                                height: 1.6,
+                              ),
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
-                          const SizedBox(height: 6),
-                          Text(
-                            widget.zikr.text,
-                            style: AppTheme.arabicSmall.copyWith(
-                              color: context.textSecondary,
-                              fontSize: 13,
-                              height: 1.5,
+                        ),
+                      ),
+                      
+                      // Actions
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              widget.isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: widget.isFavorite
+                                  ? AppTheme.primaryGreen
+                                  : context.textSecondary.withValues(alpha: 0.5),
+                              size: 24,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              widget.onFavoriteToggle();
+                            },
                           ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              // Repetition badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: AppTheme.primaryGradient,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.repeat,
-                                      size: 12,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      '${widget.zikr.defaultCount}x',
-                                      style: AppTheme.caption.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Play button
-                              if (widget.zikr.audio.isNotEmpty)
-                                _buildPlayButton(),
-                            ],
+                          const SizedBox(height: 20),
+                          Icon(
+                            DirectionIcons.listArrow(context),
+                            size: 16,
+                            color: context.textSecondary.withValues(alpha: 0.3),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            widget.isFavorite
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: widget.isFavorite
-                                ? (isDarkMode ? Colors.red.shade400 : Colors.red)
-                                : context.textSecondary,
-                            size: 20,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
-                          ),
-                          onPressed: widget.onFavoriteToggle,
-                        ),
-                         Icon(
-                          DirectionIcons.listArrow(context),
-                          size: 12,
-                          color: context.textSecondary.withValues(alpha: 0.5),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -389,83 +191,35 @@ class _ZikrListItemState extends State<ZikrListItem>
     );
   }
 
-  Widget _buildPlayButton() {
-    final isDarkMode = context.isDarkMode;
-    
-    // Use Material + InkWell for better tap handling with nested gestures
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-      onTap: _handlePlayPause,
-        customBorder: const CircleBorder(),
-        splashColor: Colors.white.withValues(alpha: 0.3),
-        highlightColor: Colors.white.withValues(alpha: 0.1),
-      child: ScaleTransition(
-        scale: _playScaleAnimation,
-        child: Container(
-            width: 44, // Slightly larger for easier tapping
-            height: 44,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: _isPlaying && _isCurrentAudio
-                  ? [
-                      AppTheme.primaryTeal,
-                      AppTheme.primaryGreen,
-                    ]
-                  : [
-                      AppTheme.primaryGreen,
-                      AppTheme.primaryTeal,
-                    ],
+  Widget _buildRepetitionBadge() {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '${widget.zikr.defaultCount}',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.primaryGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: (_isPlaying && _isCurrentAudio
-                        ? AppTheme.primaryTeal
-                        : AppTheme.primaryGreen)
-                    .withValues(alpha: isDarkMode ? 0.5 : 0.4),
-                blurRadius: isDarkMode ? 15 : 12,
-                offset: const Offset(0, 4),
-                spreadRadius: 0,
+            Text(
+              'x',
+              style: AppTheme.caption.copyWith(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.7),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Pulsing ring when playing
-              if (_isPlaying && _isCurrentAudio)
-                ScaleTransition(
-                  scale: _pulseAnimation,
-                  child: Container(
-                      width: 44,
-                      height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              // Play/Pause icon
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  _isPlaying && _isCurrentAudio
-                      ? Icons.pause
-                      : Icons.play_arrow,
-                  key: ValueKey(_isPlaying && _isCurrentAudio),
-                  color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-              ],
-              ),
-          ),
+            ),
+          ],
         ),
       ),
     );

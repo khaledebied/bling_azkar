@@ -55,7 +55,10 @@ mixin _$UserPreferences {
   List<String> get scheduledNotificationTimes =>
       throw _privateConstructorUsedError; // Format: "HH:mm" (e.g., "08:00", "12:30")
   @HiveField(17)
-  bool get prayerTimeNotificationsEnabled => throw _privateConstructorUsedError;
+  bool get prayerTimeNotificationsEnabled =>
+      throw _privateConstructorUsedError; // Notify at each prayer time
+  @HiveField(18)
+  List<String> get favoriteCategoryIds => throw _privateConstructorUsedError;
 
   /// Serializes this UserPreferences to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -90,7 +93,8 @@ abstract class $UserPreferencesCopyWith<$Res> {
       @HiveField(14) String? selectedLocationCountryCode,
       @HiveField(15) String? selectedLocationCountryName,
       @HiveField(16) List<String> scheduledNotificationTimes,
-      @HiveField(17) bool prayerTimeNotificationsEnabled});
+      @HiveField(17) bool prayerTimeNotificationsEnabled,
+      @HiveField(18) List<String> favoriteCategoryIds});
 }
 
 /// @nodoc
@@ -125,6 +129,7 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
     Object? selectedLocationCountryName = freezed,
     Object? scheduledNotificationTimes = null,
     Object? prayerTimeNotificationsEnabled = null,
+    Object? favoriteCategoryIds = null,
   }) {
     return _then(_value.copyWith(
       language: null == language
@@ -195,6 +200,10 @@ class _$UserPreferencesCopyWithImpl<$Res, $Val extends UserPreferences>
           ? _value.prayerTimeNotificationsEnabled
           : prayerTimeNotificationsEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
+      favoriteCategoryIds: null == favoriteCategoryIds
+          ? _value.favoriteCategoryIds
+          : favoriteCategoryIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -224,7 +233,8 @@ abstract class _$$UserPreferencesImplCopyWith<$Res>
       @HiveField(14) String? selectedLocationCountryCode,
       @HiveField(15) String? selectedLocationCountryName,
       @HiveField(16) List<String> scheduledNotificationTimes,
-      @HiveField(17) bool prayerTimeNotificationsEnabled});
+      @HiveField(17) bool prayerTimeNotificationsEnabled,
+      @HiveField(18) List<String> favoriteCategoryIds});
 }
 
 /// @nodoc
@@ -257,6 +267,7 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
     Object? selectedLocationCountryName = freezed,
     Object? scheduledNotificationTimes = null,
     Object? prayerTimeNotificationsEnabled = null,
+    Object? favoriteCategoryIds = null,
   }) {
     return _then(_$UserPreferencesImpl(
       language: null == language
@@ -327,6 +338,10 @@ class __$$UserPreferencesImplCopyWithImpl<$Res>
           ? _value.prayerTimeNotificationsEnabled
           : prayerTimeNotificationsEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
+      favoriteCategoryIds: null == favoriteCategoryIds
+          ? _value._favoriteCategoryIds
+          : favoriteCategoryIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ));
   }
 }
@@ -351,9 +366,11 @@ class _$UserPreferencesImpl implements _UserPreferences {
       @HiveField(14) this.selectedLocationCountryCode,
       @HiveField(15) this.selectedLocationCountryName,
       @HiveField(16) final List<String> scheduledNotificationTimes = const [],
-      @HiveField(17) this.prayerTimeNotificationsEnabled = false})
+      @HiveField(17) this.prayerTimeNotificationsEnabled = false,
+      @HiveField(18) final List<String> favoriteCategoryIds = const []})
       : _favoriteZikrIds = favoriteZikrIds,
-        _scheduledNotificationTimes = scheduledNotificationTimes;
+        _scheduledNotificationTimes = scheduledNotificationTimes,
+        _favoriteCategoryIds = favoriteCategoryIds;
 
   factory _$UserPreferencesImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserPreferencesImplFromJson(json);
@@ -433,10 +450,22 @@ class _$UserPreferencesImpl implements _UserPreferences {
   @JsonKey()
   @HiveField(17)
   final bool prayerTimeNotificationsEnabled;
+// Notify at each prayer time
+  final List<String> _favoriteCategoryIds;
+// Notify at each prayer time
+  @override
+  @JsonKey()
+  @HiveField(18)
+  List<String> get favoriteCategoryIds {
+    if (_favoriteCategoryIds is EqualUnmodifiableListView)
+      return _favoriteCategoryIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_favoriteCategoryIds);
+  }
 
   @override
   String toString() {
-    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName, scheduledNotificationTimes: $scheduledNotificationTimes, prayerTimeNotificationsEnabled: $prayerTimeNotificationsEnabled)';
+    return 'UserPreferences(language: $language, selectedSheikhId: $selectedSheikhId, notificationsEnabled: $notificationsEnabled, favoriteZikrIds: $favoriteZikrIds, dndStartTime: $dndStartTime, dndEndTime: $dndEndTime, dndEnabled: $dndEnabled, textScale: $textScale, themeMode: $themeMode, selectedLocationId: $selectedLocationId, selectedLocationName: $selectedLocationName, selectedLocationLatitude: $selectedLocationLatitude, selectedLocationLongitude: $selectedLocationLongitude, selectedLocationCountryCode: $selectedLocationCountryCode, selectedLocationCountryName: $selectedLocationCountryName, scheduledNotificationTimes: $scheduledNotificationTimes, prayerTimeNotificationsEnabled: $prayerTimeNotificationsEnabled, favoriteCategoryIds: $favoriteCategoryIds)';
   }
 
   @override
@@ -468,8 +497,7 @@ class _$UserPreferencesImpl implements _UserPreferences {
                 other.selectedLocationName == selectedLocationName) &&
             (identical(other.selectedLocationLatitude, selectedLocationLatitude) ||
                 other.selectedLocationLatitude == selectedLocationLatitude) &&
-            (identical(other.selectedLocationLongitude,
-                    selectedLocationLongitude) ||
+            (identical(other.selectedLocationLongitude, selectedLocationLongitude) ||
                 other.selectedLocationLongitude == selectedLocationLongitude) &&
             (identical(other.selectedLocationCountryCode,
                     selectedLocationCountryCode) ||
@@ -485,7 +513,9 @@ class _$UserPreferencesImpl implements _UserPreferences {
             (identical(other.prayerTimeNotificationsEnabled,
                     prayerTimeNotificationsEnabled) ||
                 other.prayerTimeNotificationsEnabled ==
-                    prayerTimeNotificationsEnabled));
+                    prayerTimeNotificationsEnabled) &&
+            const DeepCollectionEquality()
+                .equals(other._favoriteCategoryIds, _favoriteCategoryIds));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -508,7 +538,8 @@ class _$UserPreferencesImpl implements _UserPreferences {
       selectedLocationCountryCode,
       selectedLocationCountryName,
       const DeepCollectionEquality().hash(_scheduledNotificationTimes),
-      prayerTimeNotificationsEnabled);
+      prayerTimeNotificationsEnabled,
+      const DeepCollectionEquality().hash(_favoriteCategoryIds));
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.
@@ -545,7 +576,8 @@ abstract class _UserPreferences implements UserPreferences {
           @HiveField(14) final String? selectedLocationCountryCode,
           @HiveField(15) final String? selectedLocationCountryName,
           @HiveField(16) final List<String> scheduledNotificationTimes,
-          @HiveField(17) final bool prayerTimeNotificationsEnabled}) =
+          @HiveField(17) final bool prayerTimeNotificationsEnabled,
+          @HiveField(18) final List<String> favoriteCategoryIds}) =
       _$UserPreferencesImpl;
 
   factory _UserPreferences.fromJson(Map<String, dynamic> json) =
@@ -602,7 +634,10 @@ abstract class _UserPreferences implements UserPreferences {
       get scheduledNotificationTimes; // Format: "HH:mm" (e.g., "08:00", "12:30")
   @override
   @HiveField(17)
-  bool get prayerTimeNotificationsEnabled;
+  bool get prayerTimeNotificationsEnabled; // Notify at each prayer time
+  @override
+  @HiveField(18)
+  List<String> get favoriteCategoryIds;
 
   /// Create a copy of UserPreferences
   /// with the given fields replaced by the non-null parameter values.

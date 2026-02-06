@@ -77,6 +77,19 @@ class StorageService {
     await savePreferences(prefs.copyWith(favoriteZikrIds: favorites));
   }
 
+  Future<void> toggleCategoryFavorite(String categoryId) async {
+    final prefs = getPreferences();
+    final favorites = List<String>.from(prefs.favoriteCategoryIds);
+
+    if (favorites.contains(categoryId)) {
+      favorites.remove(categoryId);
+    } else {
+      favorites.add(categoryId);
+    }
+
+    await savePreferences(prefs.copyWith(favoriteCategoryIds: favorites));
+  }
+
   // Sheikhs
   Future<void> saveSheikh(Sheikh sheikh) async {
     await _ensureSheikhsBox();

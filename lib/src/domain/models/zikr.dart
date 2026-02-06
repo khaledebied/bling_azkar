@@ -12,7 +12,7 @@ class Zikr with _$Zikr {
     required LocalizedText? translation,
     required String category,
     required int defaultCount,
-    required List<AudioInfo> audio,
+    String? reference,
   }) = _Zikr;
 
   factory Zikr.fromJson(Map<String, dynamic> json) => _$ZikrFromJson(json);
@@ -27,16 +27,4 @@ class LocalizedText with _$LocalizedText {
 
   factory LocalizedText.fromJson(Map<String, dynamic> json) =>
       _$LocalizedTextFromJson(json);
-}
-
-@freezed
-class AudioInfo with _$AudioInfo {
-  const factory AudioInfo({
-    String? sheikhId,
-    String? shortFile,
-    required String fullFileUrl,
-  }) = _AudioInfo;
-
-  factory AudioInfo.fromJson(Map<String, dynamic> json) =>
-      _$AudioInfoFromJson(json);
 }

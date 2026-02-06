@@ -5,9 +5,9 @@ import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/direction_icons.dart';
 import '../widgets/category_card.dart';
-import '../widgets/category_audio_bottom_sheet.dart';
-import '../widgets/floating_playlist_player.dart';
-import '../../data/services/playlist_service.dart';
+import '../providers/azkar_providers.dart';
+import 'zikr_reading_screen.dart';
+import '../../data/repositories/azkar_repository.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   final List<String> categories;
@@ -24,14 +24,13 @@ class CategoriesListScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
-  final _playlistService = PlaylistService();
+  final _azkarRepo = AzkarRepository();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _playlistService.initialize();
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -161,73 +160,46 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
-                        childAspectRatio: 1.0, // Square cards for better grid layout
+                        childAspectRatio: 1.0,
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final categoryKey = _filteredCategories[index];
                           final categoryName = widget.categoryMap[categoryKey] ?? categoryKey;
 
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 200 + (index * 30)),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, child) {
-                            return Opacity(
-                              opacity: value,
-                              child: Transform.scale(
-                                scale: 0.8 + (0.2 * value),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: CategoryCard(
-                            title: categoryName,
-                            titleAr: categoryName,
-                            heroTag: 'category_grid_$categoryKey',
-                            onTap: () {
-                              _showCategoryAudioSheet(
-                                context,
-                                categoryKey,
-                                categoryName,
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: Duration(milliseconds: 200 + (index * 30)),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, value, child) {
+                              return Opacity(
+                                opacity: value,
+                                child: Transform.scale(
+                                  scale: 0.8 + (0.2 * value),
+                                  child: child,
+                                ),
                               );
                             },
-                          ),
-                        );
-                      },
-                      childCount: _filteredCategories.length,
+                            child: CategoryCard(
+                              categoryId: categoryKey,
+                              title: categoryName,
+                              titleAr: categoryName,
+                              heroTag: 'category_grid_$categoryKey',
+                              onTap: () {
+                                _navigateToZikrReading(
+                                  context,
+                                  categoryKey,
+                                  categoryName,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                        childCount: _filteredCategories.length,
+                      ),
                     ),
                   ),
-                  ),
-                // Add bottom padding for floating player
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 100),
-                ),
               ],
-            ),
-            // Floating playlist player
-            StreamBuilder<PlaylistState>(
-              stream: _playlistService.stateStream,
-              initialData: PlaylistState.idle,
-              builder: (context, snapshot) {
-                final state = snapshot.data ?? PlaylistState.idle;
-                final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
-                
-                return AnimatedPositioned(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  bottom: isVisible ? 0 : -100,
-                  left: 0,
-                  right: 0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: isVisible ? 1.0 : 0.0,
-                    child: FloatingPlaylistPlayer(
-                      playlistService: _playlistService,
-                    ),
-                  ),
-                );
-              },
             ),
           ],
         ),
@@ -330,21 +302,40 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
     );
   }
 
-  void _showCategoryAudioSheet(
+  Future<void> _navigateToZikrReading(
     BuildContext context,
     String categoryKey,
     String categoryName,
-  ) {
-    showModalBottomSheet(
+  ) async {
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      enableDrag: true,
-      builder: (context) => CategoryAudioBottomSheet(
-        categoryKey: categoryKey,
-        categoryName: categoryName,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      final azkar = await _azkarRepo.getAzkarByCategory(categoryKey);
+      if (context.mounted) {
+        Navigator.pop(context); // Remove loading indicator
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ZikrReadingScreen(
+              azkar: azkar,
+              categoryName: categoryName,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading azkar: $e')),
+        );
+      }
+    }
   }
 }
-

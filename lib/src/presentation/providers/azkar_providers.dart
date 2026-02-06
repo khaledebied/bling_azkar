@@ -42,15 +42,14 @@ final searchedAzkarProvider = FutureProvider<List<Zikr>>((ref) async {
 /// Provider for favorite azkar
 final favoriteAzkarProvider = FutureProvider<List<Zikr>>((ref) async {
   final allAzkar = await ref.watch(allAzkarProvider.future);
-  final prefs = ref.watch(userPreferencesProvider);
+  final favoriteIds = ref.watch(userPreferencesProvider.select((p) => p.favoriteZikrIds));
   
-  return allAzkar.where((zikr) => prefs.favoriteZikrIds.contains(zikr.id)).toList();
+  return allAzkar.where((zikr) => favoriteIds.contains(zikr.id)).toList();
 });
 
 /// Provider to check if a specific zikr is favorite
 final isFavoriteProvider = Provider.family<bool, String>((ref, zikrId) {
-  final prefs = ref.watch(userPreferencesProvider);
-  return prefs.favoriteZikrIds.contains(zikrId);
+  return ref.watch(userPreferencesProvider.select((p) => p.favoriteZikrIds.contains(zikrId)));
 });
 
 /// Provider to toggle favorite status
@@ -63,26 +62,60 @@ final toggleFavoriteProvider = Provider<Future<void> Function(String)>((ref) {
     final newPrefs = storage.getPreferences();
     ref.read(userPreferencesProvider.notifier).state = newPrefs;
     
-    // Force immediate refresh of all dependent providers
-    ref.invalidate(userPreferencesProvider);
-    ref.invalidate(favoriteAzkarProvider);
+    // Only invalidate the specific zikr favorite status
     ref.invalidate(isFavoriteProvider(zikrId));
+    ref.invalidate(favoriteAzkarProvider);
+  };
+});
+
+/// Provider for favorite categories
+final favoriteCategoriesProvider = FutureProvider<Map<String, String>>((ref) async {
+  final allCategories = await ref.watch(allCategoriesProvider.future);
+  final favoriteIds = ref.watch(userPreferencesProvider.select((p) => p.favoriteCategoryIds));
+  
+  final favorites = <String, String>{};
+  for (var categoryId in favoriteIds) {
+    if (allCategories.containsKey(categoryId)) {
+      favorites[categoryId] = allCategories[categoryId]!;
+    }
+  }
+  return favorites;
+});
+
+/// Provider to check if a category is favorite
+final isCategoryFavoriteProvider = Provider.family<bool, String>((ref, categoryId) {
+  return ref.watch(userPreferencesProvider.select((p) => p.favoriteCategoryIds.contains(categoryId)));
+});
+
+/// Provider to toggle category favorite status
+final toggleCategoryFavoriteProvider = Provider<Future<void> Function(String)>((ref) {
+  return (String categoryId) async {
+    final storage = ref.read(storageServiceProvider);
+    await storage.toggleCategoryFavorite(categoryId);
     
-    // Refresh to trigger immediate rebuild
-    ref.refresh(favoriteAzkarProvider);
+    // Update the preferences provider with fresh data immediately
+    final newPrefs = storage.getPreferences();
+    ref.read(userPreferencesProvider.notifier).state = newPrefs;
+    
+    // Invalidate dependent providers
+    ref.invalidate(favoriteCategoriesProvider);
+    ref.invalidate(isCategoryFavoriteProvider(categoryId));
   };
 });
 
 /// Provider for limited categories (first 5 for home screen)
 final limitedCategoriesProvider = Provider<Map<String, String>>((ref) {
   final repository = ref.watch(azkarRepositoryProvider);
-  final allCategories = repository.getCategoryDisplayNames();
+  final language = ref.watch(userPreferencesProvider.select((p) => p.language));
+  final allCategories = repository.getCategoryDisplayNames(language);
   
   if (allCategories.isEmpty) {
     return {};
   }
   
-  final entries = allCategories.entries.take(5).toList();
+  // Prioritize Morning and Evening Azkar (IDs 27 and 28)
+  final sortedEntries = _sortCategories(allCategories.entries.toList());
+  final entries = sortedEntries.take(5).toList();
   return Map.fromEntries(entries);
 });
 
@@ -95,9 +128,36 @@ final azkarByCategoryProvider = FutureProvider.family<List<Zikr>, String>((ref, 
 /// Provider for all categories
 final allCategoriesProvider = FutureProvider<Map<String, String>>((ref) async {
   final repository = ref.watch(azkarRepositoryProvider);
+  final language = ref.watch(userPreferencesProvider.select((p) => p.language));
   await repository.loadAzkar(); // Ensure azkar are loaded first
-  return repository.getCategoryDisplayNames();
+  final allCategories = repository.getCategoryDisplayNames(language);
+  
+  final sortedEntries = _sortCategories(allCategories.entries.toList());
+  return Map.fromEntries(sortedEntries);
 });
+
+/// Helper to sort categories with Morning/Evening first
+List<MapEntry<String, String>> _sortCategories(List<MapEntry<String, String>> entries) {
+  final morningIds = ['27']; // Common IDs for Morning Azkar
+  final eveningIds = ['28']; // Common IDs for Evening Azkar
+  
+  final morningEntries = <MapEntry<String, String>>[];
+  final eveningEntries = <MapEntry<String, String>>[];
+  final otherEntries = <MapEntry<String, String>>[];
+  
+  for (var entry in entries) {
+    final name = entry.value.toLowerCase();
+    if (morningIds.contains(entry.key) || name.contains('صباح') || name.contains('morning')) {
+      morningEntries.add(entry);
+    } else if (eveningIds.contains(entry.key) || name.contains('مساء') || name.contains('evening')) {
+      eveningEntries.add(entry);
+    } else {
+      otherEntries.add(entry);
+    }
+  }
+  
+  return [...morningEntries, ...eveningEntries, ...otherEntries];
+}
 
 /// Provider for current page index (pagination)
 final currentPageProvider = StateProvider<int>((ref) => 0);

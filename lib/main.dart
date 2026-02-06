@@ -22,8 +22,6 @@ void main() async {
   await StorageService().initialize();
 
   // Start app immediately - heavy initializations will happen in background
-  // Note: AudioService is initialized lazily on first use to avoid conflicts
-  // with quran_library which also initializes AudioService
   runApp(const ProviderScope(child: BlingAzkarApp()));
   
   // Defer heavy initializations to background after app starts
@@ -107,7 +105,6 @@ void _initializeServicesInBackground() async {
   }
   
   // Initialize other services lazily (they'll initialize on first use)
-  // AudioPlayerService will initialize when first used
   // SharedPreferences will initialize when first accessed via FutureProvider
 }
 

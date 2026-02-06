@@ -26,7 +26,7 @@ mixin _$Zikr {
   LocalizedText? get translation => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
   int get defaultCount => throw _privateConstructorUsedError;
-  List<AudioInfo> get audio => throw _privateConstructorUsedError;
+  String? get reference => throw _privateConstructorUsedError;
 
   /// Serializes this Zikr to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -49,7 +49,7 @@ abstract class $ZikrCopyWith<$Res> {
       LocalizedText? translation,
       String category,
       int defaultCount,
-      List<AudioInfo> audio});
+      String? reference});
 
   $LocalizedTextCopyWith<$Res> get title;
   $LocalizedTextCopyWith<$Res>? get translation;
@@ -76,7 +76,7 @@ class _$ZikrCopyWithImpl<$Res, $Val extends Zikr>
     Object? translation = freezed,
     Object? category = null,
     Object? defaultCount = null,
-    Object? audio = null,
+    Object? reference = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -103,10 +103,10 @@ class _$ZikrCopyWithImpl<$Res, $Val extends Zikr>
           ? _value.defaultCount
           : defaultCount // ignore: cast_nullable_to_non_nullable
               as int,
-      audio: null == audio
-          ? _value.audio
-          : audio // ignore: cast_nullable_to_non_nullable
-              as List<AudioInfo>,
+      reference: freezed == reference
+          ? _value.reference
+          : reference // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
@@ -149,7 +149,7 @@ abstract class _$$ZikrImplCopyWith<$Res> implements $ZikrCopyWith<$Res> {
       LocalizedText? translation,
       String category,
       int defaultCount,
-      List<AudioInfo> audio});
+      String? reference});
 
   @override
   $LocalizedTextCopyWith<$Res> get title;
@@ -175,7 +175,7 @@ class __$$ZikrImplCopyWithImpl<$Res>
     Object? translation = freezed,
     Object? category = null,
     Object? defaultCount = null,
-    Object? audio = null,
+    Object? reference = freezed,
   }) {
     return _then(_$ZikrImpl(
       id: null == id
@@ -202,10 +202,10 @@ class __$$ZikrImplCopyWithImpl<$Res>
           ? _value.defaultCount
           : defaultCount // ignore: cast_nullable_to_non_nullable
               as int,
-      audio: null == audio
-          ? _value._audio
-          : audio // ignore: cast_nullable_to_non_nullable
-              as List<AudioInfo>,
+      reference: freezed == reference
+          ? _value.reference
+          : reference // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -220,8 +220,7 @@ class _$ZikrImpl implements _Zikr {
       required this.translation,
       required this.category,
       required this.defaultCount,
-      required final List<AudioInfo> audio})
-      : _audio = audio;
+      this.reference});
 
   factory _$ZikrImpl.fromJson(Map<String, dynamic> json) =>
       _$$ZikrImplFromJson(json);
@@ -238,17 +237,12 @@ class _$ZikrImpl implements _Zikr {
   final String category;
   @override
   final int defaultCount;
-  final List<AudioInfo> _audio;
   @override
-  List<AudioInfo> get audio {
-    if (_audio is EqualUnmodifiableListView) return _audio;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_audio);
-  }
+  final String? reference;
 
   @override
   String toString() {
-    return 'Zikr(id: $id, title: $title, text: $text, translation: $translation, category: $category, defaultCount: $defaultCount, audio: $audio)';
+    return 'Zikr(id: $id, title: $title, text: $text, translation: $translation, category: $category, defaultCount: $defaultCount, reference: $reference)';
   }
 
   @override
@@ -265,13 +259,14 @@ class _$ZikrImpl implements _Zikr {
                 other.category == category) &&
             (identical(other.defaultCount, defaultCount) ||
                 other.defaultCount == defaultCount) &&
-            const DeepCollectionEquality().equals(other._audio, _audio));
+            (identical(other.reference, reference) ||
+                other.reference == reference));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, title, text, translation,
-      category, defaultCount, const DeepCollectionEquality().hash(_audio));
+      category, defaultCount, reference);
 
   /// Create a copy of Zikr
   /// with the given fields replaced by the non-null parameter values.
@@ -297,7 +292,7 @@ abstract class _Zikr implements Zikr {
       required final LocalizedText? translation,
       required final String category,
       required final int defaultCount,
-      required final List<AudioInfo> audio}) = _$ZikrImpl;
+      final String? reference}) = _$ZikrImpl;
 
   factory _Zikr.fromJson(Map<String, dynamic> json) = _$ZikrImpl.fromJson;
 
@@ -314,7 +309,7 @@ abstract class _Zikr implements Zikr {
   @override
   int get defaultCount;
   @override
-  List<AudioInfo> get audio;
+  String? get reference;
 
   /// Create a copy of Zikr
   /// with the given fields replaced by the non-null parameter values.
@@ -488,193 +483,5 @@ abstract class _LocalizedText implements LocalizedText {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LocalizedTextImplCopyWith<_$LocalizedTextImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-AudioInfo _$AudioInfoFromJson(Map<String, dynamic> json) {
-  return _AudioInfo.fromJson(json);
-}
-
-/// @nodoc
-mixin _$AudioInfo {
-  String? get sheikhId => throw _privateConstructorUsedError;
-  String? get shortFile => throw _privateConstructorUsedError;
-  String get fullFileUrl => throw _privateConstructorUsedError;
-
-  /// Serializes this AudioInfo to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of AudioInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AudioInfoCopyWith<AudioInfo> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $AudioInfoCopyWith<$Res> {
-  factory $AudioInfoCopyWith(AudioInfo value, $Res Function(AudioInfo) then) =
-      _$AudioInfoCopyWithImpl<$Res, AudioInfo>;
-  @useResult
-  $Res call({String? sheikhId, String? shortFile, String fullFileUrl});
-}
-
-/// @nodoc
-class _$AudioInfoCopyWithImpl<$Res, $Val extends AudioInfo>
-    implements $AudioInfoCopyWith<$Res> {
-  _$AudioInfoCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of AudioInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? sheikhId = freezed,
-    Object? shortFile = freezed,
-    Object? fullFileUrl = null,
-  }) {
-    return _then(_value.copyWith(
-      sheikhId: freezed == sheikhId
-          ? _value.sheikhId
-          : sheikhId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      shortFile: freezed == shortFile
-          ? _value.shortFile
-          : shortFile // ignore: cast_nullable_to_non_nullable
-              as String?,
-      fullFileUrl: null == fullFileUrl
-          ? _value.fullFileUrl
-          : fullFileUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$AudioInfoImplCopyWith<$Res>
-    implements $AudioInfoCopyWith<$Res> {
-  factory _$$AudioInfoImplCopyWith(
-          _$AudioInfoImpl value, $Res Function(_$AudioInfoImpl) then) =
-      __$$AudioInfoImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String? sheikhId, String? shortFile, String fullFileUrl});
-}
-
-/// @nodoc
-class __$$AudioInfoImplCopyWithImpl<$Res>
-    extends _$AudioInfoCopyWithImpl<$Res, _$AudioInfoImpl>
-    implements _$$AudioInfoImplCopyWith<$Res> {
-  __$$AudioInfoImplCopyWithImpl(
-      _$AudioInfoImpl _value, $Res Function(_$AudioInfoImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AudioInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? sheikhId = freezed,
-    Object? shortFile = freezed,
-    Object? fullFileUrl = null,
-  }) {
-    return _then(_$AudioInfoImpl(
-      sheikhId: freezed == sheikhId
-          ? _value.sheikhId
-          : sheikhId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      shortFile: freezed == shortFile
-          ? _value.shortFile
-          : shortFile // ignore: cast_nullable_to_non_nullable
-              as String?,
-      fullFileUrl: null == fullFileUrl
-          ? _value.fullFileUrl
-          : fullFileUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$AudioInfoImpl implements _AudioInfo {
-  const _$AudioInfoImpl(
-      {this.sheikhId, this.shortFile, required this.fullFileUrl});
-
-  factory _$AudioInfoImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AudioInfoImplFromJson(json);
-
-  @override
-  final String? sheikhId;
-  @override
-  final String? shortFile;
-  @override
-  final String fullFileUrl;
-
-  @override
-  String toString() {
-    return 'AudioInfo(sheikhId: $sheikhId, shortFile: $shortFile, fullFileUrl: $fullFileUrl)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AudioInfoImpl &&
-            (identical(other.sheikhId, sheikhId) ||
-                other.sheikhId == sheikhId) &&
-            (identical(other.shortFile, shortFile) ||
-                other.shortFile == shortFile) &&
-            (identical(other.fullFileUrl, fullFileUrl) ||
-                other.fullFileUrl == fullFileUrl));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode =>
-      Object.hash(runtimeType, sheikhId, shortFile, fullFileUrl);
-
-  /// Create a copy of AudioInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AudioInfoImplCopyWith<_$AudioInfoImpl> get copyWith =>
-      __$$AudioInfoImplCopyWithImpl<_$AudioInfoImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AudioInfoImplToJson(
-      this,
-    );
-  }
-}
-
-abstract class _AudioInfo implements AudioInfo {
-  const factory _AudioInfo(
-      {final String? sheikhId,
-      final String? shortFile,
-      required final String fullFileUrl}) = _$AudioInfoImpl;
-
-  factory _AudioInfo.fromJson(Map<String, dynamic> json) =
-      _$AudioInfoImpl.fromJson;
-
-  @override
-  String? get sheikhId;
-  @override
-  String? get shortFile;
-  @override
-  String get fullFileUrl;
-
-  /// Create a copy of AudioInfo
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AudioInfoImplCopyWith<_$AudioInfoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

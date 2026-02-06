@@ -1,7 +1,7 @@
 name: bling_azkar
 description: "A production-ready Islamic Azkar/adhkar app with beautiful UX, local reminders, and offline audio playback"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+4
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -97,8 +97,6 @@ flutter:
   uses-material-design: true
   
   assets:
-    - assets/adhkar.json
-    - assets/audio/
     - assets/lottie/
     - assets/icons/
     - assets/icon/

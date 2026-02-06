@@ -25,6 +25,7 @@ class UserPreferences with _$UserPreferences {
     @HiveField(15) String? selectedLocationCountryName,
     @HiveField(16) @Default([]) List<String> scheduledNotificationTimes, // Format: "HH:mm" (e.g., "08:00", "12:30")
     @HiveField(17) @Default(false) bool prayerTimeNotificationsEnabled, // Notify at each prayer time
+    @HiveField(18) @Default([]) List<String> favoriteCategoryIds,
   }) = _UserPreferences;
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>

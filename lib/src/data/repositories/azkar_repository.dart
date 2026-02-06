@@ -1,5 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:muslim_data_flutter/muslim_data_flutter.dart';
 import '../../domain/models/zikr.dart';
 
 class AzkarRepository {
@@ -7,71 +7,94 @@ class AzkarRepository {
   factory AzkarRepository() => _instance;
   AzkarRepository._internal();
 
+  final _muslimRepo = MuslimRepository();
   List<Zikr>? _cachedAzkar;
-  Map<String, String>? _categoryMap; // Maps category Arabic name to itself (for consistency)
+  final Map<String, String> _categoryNamesAr = {};
+  final Map<String, String> _categoryNamesEn = {};
+  
+  Future<List<Zikr>>? _loadingFuture;
 
   Future<List<Zikr>> loadAzkar() async {
     if (_cachedAzkar != null) {
       return _cachedAzkar!;
     }
 
-    final String jsonString = await rootBundle.loadString('assets/adhkar.json');
-    final List<dynamic> jsonList = json.decode(jsonString);
-    
-    final List<Zikr> azkar = [];
-    _categoryMap = {};
-
-    for (var categoryJson in jsonList) {
-      final String categoryNameAr = categoryJson['category'];
-      // Use the Arabic category name as the category key
-      final String categoryKey = categoryNameAr;
-      // Store category in map
-      _categoryMap![categoryKey] = categoryNameAr;
-      
-      final List<dynamic> zikrArray = categoryJson['array'];
-      
-      for (var zikrJson in zikrArray) {
-        final int id = zikrJson['id'];
-        final String text = zikrJson['text'];
-        final int count = zikrJson['count'];
-        final String audioPath = zikrJson['audio'];
-        
-        // Construct local asset path
-        final String audioFilename = audioPath.split('/').last;
-        final String fullAudioUrl = 'assets/audio/$audioFilename';
-        
-        azkar.add(Zikr(
-          id: '${categoryKey}_$id',
-          title: LocalizedText(en: categoryNameAr, ar: categoryNameAr), // Use Arabic for both for now
-          text: text,
-          translation: null,
-          category: categoryKey,
-          defaultCount: count,
-          audio: [
-            AudioInfo(
-              fullFileUrl: fullAudioUrl,
-            ),
-          ],
-        ));
-      }
+    if (_loadingFuture != null) {
+      return _loadingFuture!;
     }
 
-    _cachedAzkar = azkar;
-    return _cachedAzkar!;
+    _loadingFuture = _performLoad();
+    try {
+      final result = await _loadingFuture!;
+      return result;
+    } finally {
+      _loadingFuture = null;
+    }
   }
 
-  Future<List<Zikr>> getAzkarByCategory(String category) async {
+  Future<List<Zikr>> _performLoad() async {
+    final List<Zikr> allAzkar = [];
+    _categoryNamesAr.clear();
+    _categoryNamesEn.clear();
+
+    try {
+      // In muslim_data_flutter 1.4.1:
+      // AzkarChapter uses: id, name
+      // AzkarItem uses: id, item, translation, reference
+      // Language is an enum: Language.ar, Language.en
+      
+      final chaptersAr = await _muslimRepo.getAzkarChapters(language: Language.ar);
+      final chaptersEn = await _muslimRepo.getAzkarChapters(language: Language.en);
+      
+      final Map<int, String> enNames = {for (var c in chaptersEn) c.id: c.name};
+      
+      for (var chapter in chaptersAr) {
+        final chapterIdStr = chapter.id.toString();
+        final chapterAr = chapter.name;
+        final chapterEn = enNames[chapter.id] ?? 'Zikr';
+        
+        _categoryNamesAr[chapterIdStr] = chapterAr;
+        _categoryNamesEn[chapterIdStr] = chapterEn;
+        
+        // Fetch items for this chapter. 
+        // Using Language.en fetches item.item in Arabic and item.translation in English.
+        final items = await _muslimRepo.getAzkarItems(
+          chapterId: chapter.id,
+          language: Language.en,
+        );
+        
+        for (var item in items) {
+          allAzkar.add(Zikr(
+            id: '${chapter.id}_${item.id}',
+            title: LocalizedText(
+              en: chapterEn,
+              ar: chapterAr,
+            ),
+            text: item.item ?? '',
+            translation: (item.translation != null && item.translation.isNotEmpty)
+                ? LocalizedText(
+                    en: item.translation, 
+                    ar: item.item ?? '',
+                  )
+                : null,
+            category: chapterIdStr,
+            defaultCount: 1, // Repeat count is not explicitly in this package version
+            reference: item.reference,
+          ));
+        }
+      }
+
+      _cachedAzkar = allAzkar;
+      return _cachedAzkar!;
+    } catch (e) {
+      debugPrint('Error loading Azkar from muslim_data_flutter: $e');
+      return [];
+    }
+  }
+
+  Future<List<Zikr>> getAzkarByCategory(String categoryId) async {
     final azkar = await loadAzkar();
-    // Filter by category and sort by ID to maintain consistent order
-    final categoryAzkar = azkar.where((z) => z.category == category).toList();
-    // Sort by ID to ensure consistent order (IDs contain category and number)
-    categoryAzkar.sort((a, b) {
-      // Extract numeric part from ID (format: categoryKey_id)
-      final aIdNum = int.tryParse(a.id.split('_').last) ?? 0;
-      final bIdNum = int.tryParse(b.id.split('_').last) ?? 0;
-      return aIdNum.compareTo(bIdNum);
-    });
-    return categoryAzkar;
+    return azkar.where((z) => z.category == categoryId).toList();
   }
 
   Future<Zikr?> getZikrById(String id) async {
@@ -95,24 +118,16 @@ class AzkarRepository {
     }).toList();
   }
 
-  /// Get all unique categories from the JSON
-  Future<List<String>> getAllCategories() async {
+  Future<List<String>> getAllCategoryKeys() async {
     await loadAzkar();
-    return _categoryMap?.keys.toList() ?? [];
+    return _categoryNamesAr.keys.toList();
   }
 
-  /// Get category display name (Arabic)
-  String getCategoryDisplayName(String categoryKey) {
-    return _categoryMap?[categoryKey] ?? categoryKey;
+  Map<String, String> getCategoryDisplayNames(String language) {
+    return language.startsWith('ar') ? _categoryNamesAr : _categoryNamesEn;
   }
 
-  /// Get all categories as a map (for backward compatibility)
-  Map<String, String> getCategoryDisplayNames() {
-    return _categoryMap ?? {};
-  }
-
-  /// Get all categories as a map (Arabic names)
   Map<String, String> getCategoryDisplayNamesAr() {
-    return _categoryMap ?? {};
+    return _categoryNamesAr;
   }
 }

@@ -6,18 +6,17 @@ import '../../utils/theme_extensions.dart';
 import '../../utils/localizations.dart';
 import '../../utils/direction_icons.dart';
 import '../widgets/category_card.dart';
-import '../widgets/floating_playlist_player.dart';
-import '../widgets/category_audio_bottom_sheet.dart';
 import '../widgets/animated_zikr_header.dart';
 import '../providers/search_providers.dart';
 import '../providers/azkar_providers.dart';
-import '../../data/services/playlist_service.dart';
 import '../widgets/zikr_list_item.dart';
 import '../widgets/prayer_times_card.dart';
 import '../providers/prayer_times_providers.dart';
 import 'zikr_detail_screen.dart';
 import 'settings_screen.dart';
 import 'categories_list_screen.dart';
+import 'zikr_reading_screen.dart';
+import '../../data/repositories/azkar_repository.dart';
 
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -28,18 +27,13 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final _playlistService = PlaylistService();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  
-
+  final _azkarRepo = AzkarRepository();
 
   @override
   void initState() {
     super.initState();
-    _playlistService.initialize();
-    
-
   }
 
 
@@ -110,71 +104,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ? const Color(0xFF0F1419)
                 : const Color(0xFFF5F5F5),
               ),
-              child: SafeArea(
+          child: SafeArea(
             top: true,
-            child: Stack(
-              children: [
-                CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
-                    SliverToBoxAdapter(
-                child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
-                  child: Column(
-                    children: [
-                            if (!isSearching) ...[
-                              _buildSearchBar(ref),
-                              const SizedBox(height: 16),
-                              Consumer(
-                                builder: (context, ref, child) {
-                                  final locationAvailable = ref.watch(locationAvailableProvider);
-                                  if (locationAvailable) {
-                                    return const PrayerTimesCard();
-                                  }
-                                  return const PrayerTimesCard(); // Will show selection prompt
-                                },
-                              ),
-                            ] else ...[
-                              _buildSearchBar(ref),
-                              const SizedBox(height: 16),
+            child: CustomScrollView(
+              controller: _scrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
+                    child: Column(
+                      children: [
+                        if (!isSearching) ...[
+                          _buildSearchBar(ref),
+                          const SizedBox(height: 16),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final locationAvailable = ref.watch(locationAvailableProvider);
+                              return const PrayerTimesCard();
+                            },
+                          ),
+                        ] else ...[
+                          _buildSearchBar(ref),
+                          const SizedBox(height: 16),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-                    if (!isSearching) ...[
-                      _buildCategoriesGridSection(ref),
-                    ] else ...[
-                      _buildSearchResults(ref),
-                    ],
-                  ],
-                ),
-                // Floating playlist player
-                StreamBuilder<PlaylistState>(
-                  stream: _playlistService.stateStream,
-                  initialData: PlaylistState.idle,
-                  builder: (context, snapshot) {
-                    final state = snapshot.data ?? PlaylistState.idle;
-                    final isVisible = state == PlaylistState.playing || state == PlaylistState.paused;
-                    
-                    return AnimatedPositioned(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOutCubic,
-                      bottom: isVisible ? 0 : -100,
-                      left: 0,
-                      right: 0,
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 300),
-                        opacity: isVisible ? 1.0 : 0.0,
-                        child: FloatingPlaylistPlayer(
-                          playlistService: _playlistService,
+                if (!isSearching) ...[
+                  _buildCategoriesGridSection(ref),
+                ] else ...[
+                  _buildSearchResults(ref),
+                ],
+              ],
             ),
-          ),
-        );
-      },
-          ),
-        ],
-      ),
           ),
         ),
       ),
@@ -257,6 +221,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ref.read(searchQueryProvider.notifier).state = value;
                   ref.read(isSearchingProvider.notifier).state = value.isNotEmpty;
                 },
+                onSubmitted: (_) {
+                  FocusScope.of(context).unfocus();
+                },
                 decoration: InputDecoration(
                   hintText: isArabic ? 'ابحث عن الأذكار...' : 'Search azkar...',
                   hintStyle: AppTheme.bodyMedium.copyWith(
@@ -311,6 +278,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         _searchController.clear();
                                         ref.read(searchQueryProvider.notifier).state = '';
                                         ref.read(isSearchingProvider.notifier).state = false;
+                                        FocusScope.of(context).unfocus();
                                       },
                                     ),
                                   ),
@@ -432,15 +400,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final categoryKey = entry.key;
                     final categoryName = entry.value;
 
-                    final card = CategoryCard(
+                    return CategoryCard(
                       key: ValueKey(categoryKey),
+                      categoryId: categoryKey,
                       title: categoryName,
                       titleAr: categoryName,
                       heroTag: 'category_$categoryKey',
-                      onTap: () => _showCategoryBottomSheet(context, categoryKey, categoryName),
+                      onTap: () => _navigateToZikrReading(context, categoryKey, categoryName),
                     );
-
-                    return card;
                   },
                 ),
               ),
@@ -631,15 +598,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showCategoryBottomSheet(BuildContext context, String categoryKey, String categoryName) {
-    showModalBottomSheet(
+  Future<void> _navigateToZikrReading(BuildContext context, String categoryKey, String categoryName) async {
+    // Show loading indicator
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CategoryAudioBottomSheet(
-        categoryKey: categoryKey,
-        categoryName: categoryName,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      final azkar = await _azkarRepo.getAzkarByCategory(categoryKey);
+      if (context.mounted) {
+        Navigator.pop(context); // Remove loading indicator
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ZikrReadingScreen(
+              azkar: azkar,
+              categoryName: categoryName,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading azkar: $e')),
+        );
+      }
+    }
   }
 }
